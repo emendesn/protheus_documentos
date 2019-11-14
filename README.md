@@ -1,1 +1,0 @@
-# protheus_documentos

@@ -216,6 +216,7 @@ Tesouraria (v11)                                  - tesouraria-v11.pdf
 Tesouraria (v12)                                  - tesouraria-v12.pdf
 Tipos de Entradas e Saidas                        - tipos_de_entradas_e_saidas.pdf
 Tipos de Entradas e Saidas (v12)                  - tipos_de_entradas_e_saidas-v12.pdf
+Tipos de Lancamentos e Rateio (v10)               - tipos_de_lancamentos_e_rateios-v10.pdf
 Totvs Busines Conector - RM                       - totvs_busines_conector-rm.pdf
 Totvs Folha de Pagamento - RM                     - totvs_folha_de_pagamento-rm.pdf
 Totvs Gestao de Estoque e Ressuprimento (v12)     - totvs_gestao_de_estoque_e_ressuprimento-v12.pdf

@@ -72,6 +72,7 @@ Controle de Estoque (v11)                         - controle_de_estoque-v11.pdf
 Controle de nao Conformidades (v10)               - controle_de_nao_conformidades-v10.pdf
 Controle de Vendas do Loja (v10)                  - controle_de_vendas_do_loja-v10.pdf
 Controle de Vendas (v10)                          - controle_de_vendas-v10.pdf
+Controle Direitos Autorais                        - controle_direitos_autorais.pdf
 Controle Poder de Terceiros (v10)                 - controle_poder_de_terceiros-v10.pdf
 CRM (v10)                                         - crm-v10.pdf
 Custos APP 01                                     - custos_ap01.pdf

@@ -1,6 +1,7 @@
 # protheus_documentos
 
 // Rotinas
+     Rotina para a leitura das rotinas contidas no RPO - lerrpo.prw
      Pedido de Compra - Modelo Grafico                 - pc_grafico.prw
      Pedido de Compra - Word                           - pc_word.zip
      Solicitacao de Compras - Modelo Grafico           - sc_grafico.prw

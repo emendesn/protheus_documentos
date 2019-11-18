@@ -197,6 +197,7 @@ Recebimento de Materiais (v10)                    - recebimento_de_materiais-v10
 Recebimento de Materiais (v12)                    - recebimento_de_materiais-v12.pdf
 Recrutamento Selecao (v10)                        - recrutamento_selecao-v10.pdf
 Recrutamento Selecao (v11)                        - recrutamento_selecao-v11.pdf
+Reinf                                             - reinf.pdf
 Relatorios Personalizaveis (v10)                  - relatorios_personalizaveis-v10.pdf
 Relatorios (v10)                                  - relatorios-v10.pdf
 Relatorios (v12)                                  - relatorios-v12.pdf

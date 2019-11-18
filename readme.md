@@ -2,6 +2,7 @@
 
 // Rotinas
      Rotina para a leitura das rotinas contidas no RPO - lerrpo.prw
+     Rotina para analise de estoque                    - ana_est.prw
      Pedido de Compra - Modelo Grafico                 - pc_grafico.prw
      Pedido de Compra - Word                           - pc_word.zip
      Solicitacao de Compras - Modelo Grafico           - sc_grafico.prw

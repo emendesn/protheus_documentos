@@ -7,6 +7,7 @@
      Pedido de Compra - Word                           - pc_word.zip
      Solicitacao de Compras - Modelo Grafico           - sc_grafico.prw
      Rotina para listar os acessos dos usuarios        - pro_acesso.prw
+     Tatamento do retorno do Worflow Pedido de Compra  - ppcom001.prw
 
 // Apostilas
      Acompanhamento de Processos Trabalhistas (v12)    - acompanhamento_de_processos_trabalhistas-v12.pdf

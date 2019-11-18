@@ -143,6 +143,7 @@ Gestao Fiscal (v12)                               - gestao_fiscal-v12.pdf
 Gestao Patrimonial (v12)                          - gestao_patrimonial-v12.pdf
 Globais - RM                                      - globais-rm.pdf
 Implantacao SIGAEEC                               - implantacao_sigaeec.pdf
+Impostos no Protheus (v11)                        - impostos_no_protheus-v11.pdf
 Inspecao de Entradas                              - inspecao_de_entradas.pdf
 Inspecao de Entradas (v10)                        - inspecao_de_entradas-v10.pdf
 Inspecao de Processos (v10)                       - inspecao_de_processos-v10.pdf

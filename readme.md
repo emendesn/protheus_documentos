@@ -216,6 +216,7 @@ Telecobranca (v12)                                - telecobranca-v12.pdf
 Tesouraria (v10)                                  - tesouraria-v10.pdf
 Tesouraria (v11)                                  - tesouraria-v11.pdf
 Tesouraria (v12)                                  - tesouraria-v12.pdf
+Tesouraria Gestao Financeira (v11)                - tesouraria_gestao_financeira-v11.pdf
 Tipos de Entradas e Saidas                        - tipos_de_entradas_e_saidas.pdf
 Tipos de Entradas e Saidas (v12)                  - tipos_de_entradas_e_saidas-v12.pdf
 Tipos de Lancamentos e Rateio (v10)               - tipos_de_lancamentos_e_rateios-v10.pdf

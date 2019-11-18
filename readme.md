@@ -34,6 +34,7 @@
      Ativo Fixo AP 03 (v12)                            - ativo-fixo_ap_03-v12.pdf
      Ativo Fixo - Implantacao                          - ativo-fixo_implantacao.pdf
      Audit Trail                                       - audit_trail.pdf 
+     Audit Trail - Configuracao                        - audit_trail-configuracao.pdf
      Automacao Ponto - RM (v12)                        - automacao_ponto-rm-v12.pdf
      Avaliacao e Pesquisa e Desempenho (v11)           - avaliacao_e_pesquisa_e_desempenho-v11.pdf
      Avaliacao e Pesquisa e Desempenho (v12)           - avaliacao_e_pesquisa_e_desempenho-v12.pdf

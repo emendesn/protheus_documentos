@@ -188,6 +188,7 @@
      MRP (v10)                                         - mrp-v10.pdf
      MRP (v12)                                         - mrp-v12.pdf
      MVC (v12)                                         - mvc-v12.pdf
+     Oracle - Apostila SQL                             - oracle_apostila_SQL.pdf 
      OMS (v10)                                         - oms-v10.pdf
      Planejamento e Controle Orcamentario              - planejamento_e_controle_orcamentario.pdf
      Planejamento e Controle Orcamentario (v10)        - planejamento_e_controle_orcamentario-v10.pdf

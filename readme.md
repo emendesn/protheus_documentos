@@ -80,6 +80,7 @@ Custos Aplicaveis II (v12)                        - custos_aplicaveis_ii-v12.pdf
 Custos Aplicaveis I (v12)                         - custos_aplicaveis_i-v12.pdf
 Data Warehouse (v10)                              - data_warehouse-v10.pdf
 DevStudio                                         - devstudio.pdf
+Easy Export Control                               - easy_export_control.pdf
 Easy Export Control (v11)                         - easy_export_control-eec-v11.pdf
 Easy Export Control - implantacao                 - easy_export_control-implantacao.pdf
 ECD Escrituracao Contabil Digital - RM            - ecd_escrituracao_contabil_digital-rm.pdf

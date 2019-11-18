@@ -83,6 +83,7 @@ DevStudio                                         - devstudio.pdf
 Easy Export Control                               - easy_export_control.pdf
 Easy Export Control (v11)                         - easy_export_control-eec-v11.pdf
 Easy Export Control - implantacao                 - easy_export_control-implantacao.pdf
+Easy Export Control - Integ. FAT x FIN x CTB (v11)- easy_export_control-integracao_fat_fin_ctb-v11.pdf
 ECD Escrituracao Contabil Digital - RM            - ecd_escrituracao_contabil_digital-rm.pdf
 ECD Escrituracao Contabil Digital (v12)           - ecd_escrituracao_contabil_digital-v12.pdf
 ECF Escrituracao Contabil Fiscal - RM             - ecf_escrituracao_contabil_fiscal-rm.pdf

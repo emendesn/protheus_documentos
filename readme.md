@@ -26,6 +26,7 @@
      Arquitetura e Instalcao 02 (v12)                  - arquitetura_e_instalcao_02-v12.pdf
      Arquitetura e Instalcao 03 Advpl                  - arquitetura_e_instalcao_03_advpl.pdf
      Arquitetura e Instalcao                           - arquitetura_e_instalcao.pdf
+     Ativo Imobilizado                                 - ativo_imobilizado.pdf
      Ativo Fixo 01 Datasul                             - ativo-fixo_01_datasul.pdf
      Ativo Fixo AP 01 (v11)                            - ativo-fixo_ap_01-v11.pdf
      Ativo Fixo AP 02 (v11)                            - ativo-fixo_ap_02-v11.pdf

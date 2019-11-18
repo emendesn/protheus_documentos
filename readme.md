@@ -1,6 +1,7 @@
 # protheus_documentos
 
 // Rotinas
+     Realiza o mapeamento dos acesso dos usuarios      - mapausu.prw
      Rotina para a leitura das rotinas contidas no RPO - lerrpo.prw
      Rotina para analise de estoque                    - ana_est.prw
      Pedido de Compra - Modelo Grafico                 - pc_grafico.prw

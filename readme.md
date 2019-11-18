@@ -1,7 +1,8 @@
 # protheus_documentos
 
 // Rotinas
-     Rotina para listar os acessos dos usuarios     - pro_acesso.prw
+     Solicitacao de Compras - Modelo Grafico           - sc_grafico.prw
+     Rotina para listar os acessos dos usuarios        - pro_acesso.prw
 
 // Apostilas
      Acompanhamento de Processos Trabalhistas (v12)    - acompanhamento_de_processos_trabalhistas-v12.pdf

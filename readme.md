@@ -220,6 +220,7 @@
      Sistema de Gestao de Indicadores (v10)            - sistema_de_gestao_de_indicadores-v10.pdf
      SPED Contabil e Fiscal                            - sped_contabil_e_fiscal.pdf
      SPED Contabil (v12)                               - sped_contabil-v12.pdf
+     SPED Fiscal - CIAP                                - sped_fiscal-ciap.pdf
      SPED Fiscal e Contribuicoes (v12)                 - sped_fiscal_e_contribuicoes-v12.pdf
      SPED Fiscal (v11)                                 - sped_fiscal-v11.pdf
      SPED                                              - sped.pdf

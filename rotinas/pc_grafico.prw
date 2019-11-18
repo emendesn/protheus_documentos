@@ -1,24 +1,15 @@
 #include 'fivewin.ch'
 #include 'topconn.ch'
 
-/*
-ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
-±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
-±±ºPrograma  ³ LC13R    ºAutor ³Luis Henrique Robustoº Data ³  25/10/04   º±±
-±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
-±±ºDesc.     ³ PEDIDO DE COMPRAS (Emissao em formato Grafico)             º±±
-±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
-±±ºUso       ³ Compras                                                    º±±
-±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
-±±ºDATA      ³ ANALISTA ³ MOTIVO                                          º±±
-±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
-±±º          ³          ³                                                 º±±
-±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
-±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
-*/
-
+/****************************************************************************
+** Programa: LC13R       * Autor:Luis Henrique Robusto * Data: 25/10/04   ***
+*****************************************************************************
+** Desc.: Pedido de Compra Modelo Grafico                                 ***
+*****************************************************************************
+** DATA      * ANALISTA *  MOTIVO                                         ***
+*****************************************************************************
+**           *          *                                                 ***
+****************************************************************************/
 User Function LC13R()
 Private	lEnd		:= .f.,;
 		aAreaSC7	:= SC7->(GetArea()),;
@@ -28,9 +19,9 @@ Private	lEnd		:= .f.,;
 	 	cPerg		:= 'LC13R '            
 	 	//	aAreaSZF	:= SZF->(GetArea()),;
 
-		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-		//³Ajusta os parametros.³
-		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		//************************
+		//* Ajusta os parametros *
+		//************************
 		AjustaSX1(cPerg)
 
 		If	( ! Pergunte(cPerg,.T.) )
@@ -49,18 +40,18 @@ Private	lEnd		:= .f.,;
 		DbSelectArea('SC7')
 		SC7->(DbSetOrder(1))
 		If	( ! SC7->(DbSeek(xFilial('SC7') + cNumPed)) )
-			Help('',1,'LC13R',,OemToAnsi('Pedido não encontrado.'),1)
+			Help('',1,'LC13R',,OemToAnsi('Pedido nï¿½o encontrado.'),1)
 			Return .f.
 		EndIf
 
-		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-		//³Executa a rotina de impressao ³
-		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
-		Processa({ |lEnd| xPrintRel(),OemToAnsi('Gerando o relatório.')}, OemToAnsi('Aguarde...'))
+		//*********************************
+		//* Executa a rotina de impressao *
+		//*********************************
+		Processa({ |lEnd| xPrintRel(),OemToAnsi('Gerando o relatï¿½rio.')}, OemToAnsi('Aguarde...'))
 		
-		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-		//³Restaura a area anterior ao processamento. !³
-		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		//**********************************************
+		//* Restaura a area anterior ao processamento. *
+		//**********************************************
 		RestArea(aAreaSC7)
 		RestArea(aAreaSA2)
 		RestArea(aAreaSA5)
@@ -69,24 +60,15 @@ Private	lEnd		:= .f.,;
 
 Return
 
-/*
-ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
-±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
-±±ºPrograma  ³ xPrintRelºAutor ³Luis Henrique Robustoº Data ³  10/09/04   º±±
-±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
-±±ºDesc.     ³ Imprime a Duplicata...                                     º±±
-±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
-±±ºUso       ³ Funcao Principal                                           º±±
-±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
-±±ºDATA      ³ ANALISTA ³ MOTIVO                                          º±±
-±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
-±±º          ³          ³                                                 º±±
-±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
-±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
-*/
-
+/****************************************************************************
+** Programa: xPrintRel   * Autor:Luis Henrique Robusto * Data: 10/09/04   ***
+*****************************************************************************
+** Desc.: Imprime a Duplicata...                                          ***
+*****************************************************************************
+** DATA      * ANALISTA *  MOTIVO                                         ***
+*****************************************************************************
+**           *          *                                                 ***
+****************************************************************************/
 Static Function xPrintRel()
 Private	oPrint		:= TMSPrinter():New(OemToAnsi('Pedido de Compras')),;
 		oBrush		:= TBrush():New(,4),;
@@ -123,9 +105,9 @@ Private	_nQtdReg	:= 0,;		// Numero de registros para intruir a regua
 		_nTotFre	:= 0,;		// Valor de Frete
 		_nTotIcmsRet:= 0		// Valor do ICMS Retido
 
-		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-		//³Posiciona nos arquivos necessarios. !³
-		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		//****************************************
+		//* Posiciona nos arquivos necessarios. !*
+		//****************************************
 		DbSelectArea('SA2')
 		SA2->(DbSetOrder(1))
 		If	! SA2->(DbSeek(xFilial('SA2')+SC7->(C7_FORNECE+C7_LOJA)))
@@ -133,14 +115,14 @@ Private	_nQtdReg	:= 0,;		// Numero de registros para intruir a regua
 			Return .f.
 		EndIf
 		
-		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-		//³Define que a impressao deve ser RETRATO³
-		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		//*******************************************
+		//* Define que a impressao deve ser RETRATO *
+		//*******************************************
 		oPrint:SetPortrait()
 
-		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-		//³Monta query !³    //SC7.C7_CODPRF, 
-		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		//****************************************
+		//* Monta query !     //SC7.C7_CODPRF,   *
+		//****************************************
 		cSELECT :=	'SC7.C7_FILIAL, SC7.C7_NUM, SC7.C7_EMISSAO, SC7.C7_FORNECE, SC7.C7_LOJA, '+;
 					'SC7.C7_ITEM, SC7.C7_PRODUTO, SC7.C7_DESCRI, SC7.C7_QUANT, '+;
 					'SC7.C7_PRECO, SC7.C7_IPI, SC7.C7_TOTAL, SC7.C7_VLDESC, SC7.C7_DESPESA, '+;
@@ -175,14 +157,14 @@ Private	_nQtdReg	:= 0,;		// Numero de registros para intruir a regua
 				xVerPag()
 
 				If	( lFlag )
-					//ÚÄÄÄÄÄÄÄÄÄÄ¿
-					//³Fornecedor³
-					//ÀÄÄÄÄÄÄÄÄÄÄÙ
+					//****************************************
+					//* Fornecedor                           *
+					//****************************************
 					oPrint:Say(0530,0100,OemToAnsi('Fornecedor:'),oFont10)
 					oPrint:Say(0520,0430,AllTrim(SA2->A2_NOME) + '  ('+AllTrim(SA2->A2_COD)+'/'+AllTrim(SA2->A2_LOJA)+')',oFont13)
-					oPrint:Say(0580,0100,OemToAnsi('Endereço:'),oFont10)
+					oPrint:Say(0580,0100,OemToAnsi('Endereï¿½o:'),oFont10)
 					oPrint:Say(0580,0430,SA2->A2_END,oFont11)
-					oPrint:Say(0630,0100,OemToAnsi('Município/U.F.:'),oFont10)
+					oPrint:Say(0630,0100,OemToAnsi('Municï¿½pio/U.F.:'),oFont10)
 					oPrint:Say(0630,0430,AllTrim(SA2->A2_MUN)+'/'+AllTrim(SA2->A2_EST),oFont11)
 					oPrint:Say(0630,1200,OemToAnsi('Cep:'),oFont10)
 					oPrint:Say(0630,1370,TransForm(SA2->A2_CEP,'@R 99.999-999'),oFont11)
@@ -190,9 +172,9 @@ Private	_nQtdReg	:= 0,;		// Numero de registros para intruir a regua
 					oPrint:Say(0680,0430,SA2->A2_TEL,oFont11)
 					oPrint:Say(0680,1200,OemToAnsi('Fax:'),oFont10)
 					oPrint:Say(0680,1370,SA2->A2_FAX,oFont11)
-					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-					//³Numero/Emissao³
-					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					//****************************************
+					//* Numero/Emissao                       *
+					//****************************************
 					oPrint:Box(0530,1900,0730,2300)
 					oPrint:FillRect({0530,1900,0730,2300},oBrush)
 					oPrint:Say(0535,1960,OemToAnsi('Numero documento'),oFont08)
@@ -212,8 +194,8 @@ Private	_nQtdReg	:= 0,;		// Numero de registros para intruir a regua
 					oPrint:Line(nLinha,2040,nLinha+70,2040)
 					oPrint:Line(nLinha,2300,nLinha+70,2300)
 					oPrint:Say(nLinha,0120,OemToAnsi('Item'),oFont12)
-					oPrint:Say(nLinha,0300,OemToAnsi('Código'),oFont12)
-					oPrint:Say(nLinha,0750,OemToAnsi('Descrição'),oFont12)
+					oPrint:Say(nLinha,0300,OemToAnsi('Cï¿½digo'),oFont12)
+					oPrint:Say(nLinha,0750,OemToAnsi('Descriï¿½ï¿½o'),oFont12)
 					oPrint:Say(nLinha,1400,OemToAnsi('Qtde'),oFont12)
 					oPrint:Say(nLinha,1620,OemToAnsi('Vlr.Unit.'),oFont12)
 					oPrint:Say(nLinha,1850,OemToAnsi('IPI (%)'),oFont12)
@@ -282,9 +264,9 @@ Private	_nQtdReg	:= 0,;		// Numero de registros para intruir a regua
 
 		xVerPag()
 
-		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-		//³Imprime TOTAL DE MERCADORIAS³
-		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		//****************************************
+		//* Imprime TOTAL DE MERCADORIAS         *
+		//****************************************
 		If	( lImpPrc )
 			oPrint:Line(nLinha,1390,nLinha+80,1390)
 			oPrint:Line(nLinha,1840,nLinha+80,1840)
@@ -297,9 +279,9 @@ Private	_nQtdReg	:= 0,;		// Numero de registros para intruir a regua
 
 		xVerPag()
 
-		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-		//³Imprime TOTAL DE I.P.I. ³
-		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		//****************************************
+		// Imprime TOTAL DE I.P.I.               *
+		//****************************************
 		If	( lImpPrc ) .and. ( _nValIpi > 0 )
 			oPrint:Line(nLinha,1390,nLinha+80,1390)
 			oPrint:Line(nLinha,1840,nLinha+80,1840)
@@ -312,9 +294,9 @@ Private	_nQtdReg	:= 0,;		// Numero de registros para intruir a regua
 
 		xVerPag()
 
-		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-		//³Imprime TOTAL DE DESCONTO³
-		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		//****************************************
+		// Imprime TOTAL DE DESCONTO             *
+		//****************************************
 		If	( lImpPrc ) .and. ( _nValDesc > 0 )
 			oPrint:Line(nLinha,1390,nLinha+80,1390)
 			oPrint:Line(nLinha,1840,nLinha+80,1840)
@@ -327,9 +309,9 @@ Private	_nQtdReg	:= 0,;		// Numero de registros para intruir a regua
 
 		xVerPag()
 
-		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-		//³Imprime TOTAL DE ACRESCIMO ³
-		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		//****************************************
+		// Imprime TOTAL DE ACRESCIMO            *
+		//****************************************
 		If	( lImpPrc ) .and. ( _nTotAcr > 0 )
 			oPrint:Line(nLinha,1390,nLinha+80,1390)
 			oPrint:Line(nLinha,1840,nLinha+80,1840)
@@ -342,9 +324,9 @@ Private	_nQtdReg	:= 0,;		// Numero de registros para intruir a regua
 
 		xVerPag()
 
-		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-		//³Imprime TOTAL DE SEGURO ³
-		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		//****************************************
+		// Imprime TOTAL DE SEGURO               *
+		//****************************************
 		If	( lImpPrc ) .and. ( _nTotSeg > 0 )
 			oPrint:Line(nLinha,1390,nLinha+80,1390)
 			oPrint:Line(nLinha,1840,nLinha+80,1840)
@@ -357,9 +339,9 @@ Private	_nQtdReg	:= 0,;		// Numero de registros para intruir a regua
 
 		xVerPag()
 
-		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-		//³Imprime TOTAL DE FRETE ³
-		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		//****************************************
+		// Imprime TOTAL DE FRETE                *
+		//****************************************
 		If	( lImpPrc ) .and. ( _nTotFre > 0 )
 			oPrint:Line(nLinha,1390,nLinha+80,1390)
 			oPrint:Line(nLinha,1840,nLinha+80,1840)
@@ -372,9 +354,9 @@ Private	_nQtdReg	:= 0,;		// Numero de registros para intruir a regua
 
 		xVerPag()
 
-		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-		//³Imprime ICMS RETIDO    ³
-		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		//****************************************
+		// Imprime ICMS RETIDO                   *
+		//****************************************
 		If	( lImpPrc ) .and. ( _nTotIcmsRet > 0 )
 			oPrint:Line(nLinha,1390,nLinha+80,1390)
 			oPrint:Line(nLinha,1840,nLinha+80,1840)
@@ -387,9 +369,9 @@ Private	_nQtdReg	:= 0,;		// Numero de registros para intruir a regua
 
 		xVerPag()
 
-		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-		//³Imprime o VALOR TOTAL !³
-		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		//****************************************
+		// Imprime o VALOR TOTAL !               *
+		//****************************************
 		oPrint:FillRect({nLinha,1390,nLinha+80,2300},oBrush)
 		oPrint:Line(nLinha,1390,nLinha+80,1390)
 		oPrint:Line(nLinha,1840,nLinha+80,1840)
@@ -405,10 +387,10 @@ Private	_nQtdReg	:= 0,;		// Numero de registros para intruir a regua
 
 		xVerPag()
 
-		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-		//³Imprime as observacoes dos parametros. !³
-		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
-		oPrint:Say(nLinha,0100,OemToAnsi('Observações:'),oFont12)
+		//******************************************
+		// Imprime as observacoes dos parametros. !*
+		//******************************************
+		oPrint:Say(nLinha,0100,OemToAnsi('Observaï¿½ï¿½es:'),oFont12)
 		oPrint:Say(nLinha,0500,cObserv1,oFont12n)
 		nLinha += 60
 		xVerPag()
@@ -432,9 +414,9 @@ Private	_nQtdReg	:= 0,;		// Numero de registros para intruir a regua
 		nLinha += 20
 		xVerPag()
 
-		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-		//³Imprime o Representante comercial do fornecedor³
-		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ   
+		//**************************************************
+		// Imprime o Representante comercial do fornecedor *
+		//**************************************************
 		/*
 		DbSelectArea('SZF')
 		SZF->(DbSetOrder(1))
@@ -450,9 +432,9 @@ Private	_nQtdReg	:= 0,;		// Numero de registros para intruir a regua
 		nLinha += 20
 		xVerPag()
 
-		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-		//³Imprime a linha de prazo pagamento/entrega!³
-		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		//**********************************************
+		// Imprime a linha de prazo pagamento/entrega! *
+		//**********************************************
 		oPrint:Say(nLinha,0100,OemToAnsi('Prazo Pagamento:'),oFont12)
 		oPrint:Say(nLinha,0500,'_____________________',oFont12n)
 		oPrint:Say(nLinha,1120,OemToAnsi('Prazo Entrega:'),oFont12)
@@ -463,9 +445,9 @@ Private	_nQtdReg	:= 0,;		// Numero de registros para intruir a regua
 		nLinha += 20
 		xVerPag()
 
-		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-		//³Imprime a linha de transportadora !³
-		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		//****************************************
+		// Imprime a linha de transportadora !   *
+		//****************************************
 		oPrint:Say(nLinha,0100,OemToAnsi('Transportadora:'),oFont12)
 		oPrint:Say(nLinha,0500,'____________________________________________________',oFont12n)
 		nLinha += 60
@@ -474,9 +456,9 @@ Private	_nQtdReg	:= 0,;		// Numero de registros para intruir a regua
 		nLinha += 20
 		xVerPag()
 
-		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-		//³Imprime o Contato.³
-		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		//****************************************
+		// Imprime o Contato.                    *
+		//****************************************
 		If	( ! Empty(SA2->A2_CONTATO) )
 			oPrint:Say(nLinha,0100,OemToAnsi('Contato: '),oFont12)
 			oPrint:Say(nLinha,0500,SA2->A2_CONTATO,oFont12n)
@@ -492,36 +474,27 @@ Private	_nQtdReg	:= 0,;		// Numero de registros para intruir a regua
 
 		xRodape()
 
-		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-		//³Imprime em Video, e finaliza a impressao. !³
-		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ	
+		//**********************************************
+		// Imprime em Video, e finaliza a impressao. ! *
+		//**********************************************
 		oPrint:Preview()
 
 Return
 
-/*
-ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
-±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
-±±ºPrograma  ³ xCabec() ºAutor ³Luis Henrique Robustoº Data ³  25/10/04   º±±
-±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
-±±ºDesc.     ³ Imprime o Cabecalho do relatorio...                        º±±
-±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
-±±ºUso       ³ Funcao Principal                                           º±±
-±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
-±±ºDATA      ³ ANALISTA ³  MOTIVO                                         º±±
-±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
-±±º          ³          ³                                                 º±±
-±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
-±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
-*/
-
+/****************************************************************************
+** Programa: xCabec      * Autor:Luis Henrique Robusto * Data: 25/10/04   ***
+*****************************************************************************
+** Desc.: Imprime o Cabecalho do relatorio...                             ***
+*****************************************************************************
+** DATA      * ANALISTA *  MOTIVO                                         ***
+*****************************************************************************
+**           *          *                                                 ***
+****************************************************************************/
 Static Function xCabec()
 
-		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-		//³Imprime o cabecalho da empresa. !³
-		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		//************************************
+		//* Imprime o cabecalho da empresa. !*
+		//************************************
 		oPrint:SayBitmap(050,100,cFileLogo,1050,260)
 		oPrint:Say(050,1300,AllTrim(Upper(SM0->M0_NOMECOM)),oFont16)
 		oPrint:Say(135,1300,AllTrim(SM0->M0_ENDCOB),oFont11)
@@ -531,35 +504,26 @@ Static Function xCabec()
 		oPrint:Say(300,1300,TransForm(SM0->M0_CGC,'@R 99.999.999/9999-99'),oFont12)
 		oPrint:Say(300,1850,SM0->M0_INSC,oFont12)
 
-		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-		//³Titulo do Relatorio³
-		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		//************************************
+		// Titulo do Relatorio               *
+		//************************************
 		If	( nTitulo == 1 ) // Cotacao
-			oPrint:Say(0400,0800,OemToAnsi('Cotação de Mercadorias'),oFont22)
+			oPrint:Say(0400,0800,OemToAnsi('Cotacao de Mercadorias'),oFont22)
 		Else
 			oPrint:Say(0400,0800,OemToAnsi('Pedido de Mercadorias'),oFont22)
 		EndIf
 
 Return
 
-/*
-ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
-±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
-±±ºPrograma  ³ xRodape()ºAutor ³Luis Henrique Robustoº Data ³  25/10/04   º±±
-±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
-±±ºDesc.     ³ Imprime o Rodape do Relatorio....                          º±±
-±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
-±±ºUso       ³ Funcao Principal                                           º±±
-±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
-±±ºDATA      ³ ANALISTA ³  MOTIVO                                         º±±
-±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
-±±º          ³          ³                                                 º±±
-±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
-±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
-*/
-
+/****************************************************************************
+** Programa: xRodape     * Autor:Luis Henrique Robusto * Data: 25/10/04   ***
+*****************************************************************************
+** Desc.: Imprime o Rodape do Relatorio....                               ***
+*****************************************************************************
+** DATA      * ANALISTA *  MOTIVO                                         ***
+*****************************************************************************
+**           *          *                                                 ***
+****************************************************************************/
 Static Function xRodape()
 
 	oPrint:Line(3100,0100,3100,2300)
@@ -569,29 +533,20 @@ Static Function xRodape()
 
 Return
 
-/*
-ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
-±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
-±±ºPrograma  ³ xVerPag()ºAutor ³Luis Henrique Robustoº Data ³  25/10/04   º±±
-±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
-±±ºDesc.     ³ Verifica se deve ou nao saltar pagina...                   º±±
-±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
-±±ºUso       ³ Funcao Principal                                           º±±
-±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
-±±ºDATA      ³ ANALISTA ³  MOTIVO                                         º±±
-±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
-±±º          ³          ³                                                 º±±
-±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
-±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
-*/
-
+/****************************************************************************
+** Programa: xVerPag     * Autor:Luis Henrique Robusto * Data: 25/10/04   ***
+*****************************************************************************
+** Desc.: Verifica se deve ou nao saltar pagina...                        ***
+*****************************************************************************
+** DATA      * ANALISTA *  MOTIVO                                         ***
+*****************************************************************************
+**           *          *                                                 ***
+****************************************************************************/
 Static Function xVerPag()
 
-	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-	//³Inicia a montagem da impressao.³
-	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	//************************************
+	// Inicia a montagem da impressao.   *
+	//************************************
 	If	( nLinha >= 3000 )
 
 		If	( ! lFlag )
@@ -612,61 +567,52 @@ Static Function xVerPag()
 
 Return
 
-/*
-ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
-±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
-±±ºPrograma  ³ AjustaSX1ºAutor ³Luis Henrique Robustoº Data ³  25/10/04   º±±
-±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
-±±ºDesc.     ³ Ajusta o SX1 - Arquivo de Perguntas..                      º±±
-±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
-±±ºUso       ³ Funcao Principal                                           º±±
-±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
-±±ºDATA      ³ ANALISTA ³ MOTIVO                                          º±±
-±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
-±±º          ³          ³                                                 º±±
-±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
-±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
-*/
-
+/****************************************************************************
+** Programa: AjustaSX1   * Autor:Luis Henrique Robusto * Data: 25/10/04   ***
+*****************************************************************************
+** Desc.: Ajusta o SX1 - Arquivo de Perguntas..                           ***
+*****************************************************************************
+** DATA      * ANALISTA *  MOTIVO                                         ***
+*****************************************************************************
+**           *          *                                                 ***
+****************************************************************************/
 Static Function AjustaSX1(cPerg)
 Local	aRegs   := {},;
 		_sAlias := Alias(),;
 		nX
 
-		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-		//³Campos a serem grav. no SX1³
-		//³aRegs[nx][01] - X1_GRUPO   ³
-		//³aRegs[nx][02] - X1_ORDEM   ³
-		//³aRegs[nx][03] - X1_PERGUNTE³
-		//³aRegs[nx][04] - X1_PERSPA  ³
-		//³aRegs[nx][05] - X1_PERENG  ³
-		//³aRegs[nx][06] - X1_VARIAVL ³
-		//³aRegs[nx][07] - X1_TIPO    ³
-		//³aRegs[nx][08] - X1_TAMANHO ³
-		//³aRegs[nx][09] - X1_DECIMAL ³
-		//³aRegs[nx][10] - X1_PRESEL  ³
-		//³aRegs[nx][11] - X1_GSC     ³
-		//³aRegs[nx][12] - X1_VALID   ³
-		//³aRegs[nx][13] - X1_VAR01   ³
-		//³aRegs[nx][14] - X1_DEF01   ³
-		//³aRegs[nx][15] - X1_DEF02   ³
-		//³aRegs[nx][16] - X1_DEF03   ³
-		//³aRegs[nx][17] - X1_F3      ³
-		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		//************************************
+		// Campos a serem grav. no SX1       *
+		// aRegs[nx][01] - X1_GRUPO          *
+		// aRegs[nx][02] - X1_ORDEM          *
+		// aRegs[nx][03] - X1_PERGUNTE       *
+		// aRegs[nx][04] - X1_PERSPA         *
+		// aRegs[nx][05] - X1_PERENG         *
+		// aRegs[nx][06] - X1_VARIAVL        *
+		// aRegs[nx][07] - X1_TIPO           *
+		// aRegs[nx][08] - X1_TAMANHO        *
+		// aRegs[nx][09] - X1_DECIMAL        *
+		// aRegs[nx][10] - X1_PRESEL         *
+		// aRegs[nx][11] - X1_GSC            *
+		// aRegs[nx][12] - X1_VALID          *
+		// aRegs[nx][13] - X1_VAR01          *
+		// aRegs[nx][14] - X1_DEF01          *
+		// aRegs[nx][15] - X1_DEF02          *
+		// aRegs[nx][16] - X1_DEF03          *
+		// aRegs[nx][17] - X1_F3             *
+		//************************************
 
-		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-		//³Cria uma array, contendo todos os valores...³
-		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		//***********************************************
+		// Cria uma array, contendo todos os valores... *
+		//***********************************************
 		aAdd(aRegs,{cPerg,'01','Numero do Pedido   ?','Numero do Pedido   ?','Numero do Pedido   ?','mv_ch1','C', 6,0,0,'G','','mv_par01','','','',''})
-		aAdd(aRegs,{cPerg,'02','Imprime precos     ?','Imprime precos     ?','Imprime precos     ?','mv_ch2','N', 1,0,1,'C','','mv_par02',OemToAnsi('Não'),'Sim','',''})
-		aAdd(aRegs,{cPerg,'03','Titulo do Relatorio?','Titulo do Relatorio?','Titulo do Relatorio?','mv_ch3','N', 1,0,1,'C','','mv_par03',OemToAnsi('Cotação'),'Pedido','',''})
-		aAdd(aRegs,{cPerg,'04',OemToAnsi('Observações'),'Observações         ','Observações         ','mv_ch4','C',70,0,1,'G','','mv_par04','','','',''})
+		aAdd(aRegs,{cPerg,'02','Imprime precos     ?','Imprime precos     ?','Imprime precos     ?','mv_ch2','N', 1,0,1,'C','','mv_par02',OemToAnsi('Nï¿½o'),'Sim','',''})
+		aAdd(aRegs,{cPerg,'03','Titulo do Relatorio?','Titulo do Relatorio?','Titulo do Relatorio?','mv_ch3','N', 1,0,1,'C','','mv_par03',OemToAnsi('Cotaï¿½ï¿½o'),'Pedido','',''})
+		aAdd(aRegs,{cPerg,'04',OemToAnsi('Observaï¿½ï¿½es'),'Observaï¿½ï¿½es         ','Observaï¿½ï¿½es         ','mv_ch4','C',70,0,1,'G','','mv_par04','','','',''})
 		aAdd(aRegs,{cPerg,'05','                    ','                    ','                    ','mv_ch5','C',70,0,1,'G','','mv_par05','','','',''})
 		aAdd(aRegs,{cPerg,'06','                    ','                    ','                    ','mv_ch6','C',70,0,0,'G','','mv_par06','','','',''})
 		aAdd(aRegs,{cPerg,'07','                    ','                    ','                    ','mv_ch7','C',70,0,0,'G','','mv_par07','','','',''})
-		aAdd(aRegs,{cPerg,'08','Imp. Cod. Prod. For?','Imp. Cod. Prod. For?','Imp. Cod. Prod. For?','mv_ch8','N', 1,0,1,'C','','mv_par08',OemToAnsi('Sim'),OemToAnsi('Não'),'',''})
+		aAdd(aRegs,{cPerg,'08','Imp. Cod. Prod. For?','Imp. Cod. Prod. For?','Imp. Cod. Prod. For?','mv_ch8','N', 1,0,1,'C','','mv_par08',OemToAnsi('Sim'),OemToAnsi('Nï¿½o'),'',''})
 
 		DbSelectArea('SX1')
 		SX1->(DbSetOrder(1))

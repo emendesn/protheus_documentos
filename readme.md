@@ -249,4 +249,6 @@
      Totvs Gestao de Estoque e Ressuprimento (v12)     - totvs_gestao_de_estoque_e_ressuprimento-v12.pdf
      Treinamentos (v12)                                - treinamentos-v12.pdf
      Virada de Versao (v12)                            - virada_de_versao-v12.pdf
+     Wms                                               - wms.pdf
+     Wms (v10)                                         - wms-v10.pdf
      Workflow (v10)                                    - workflow-v10.pdf

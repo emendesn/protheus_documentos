@@ -39,6 +39,7 @@
      Avaliacao e Pesquisa e Desempenho (v11)           - avaliacao_e_pesquisa_e_desempenho-v11.pdf
      Avaliacao e Pesquisa e Desempenho (v12)           - avaliacao_e_pesquisa_e_desempenho-v12.pdf
      Avaliacao e Pesquisa RM (v12)                     - avaliacao_e_pesquisa-rm-v12.pdf
+     Balanceamento de Carga entre Servidores           - balanceamento_de_carga_entre_servidores.pdf
      Beneficios (v12)                                  - beneficios-v12.pdf
      Bloco K (v12)                                     - bloco_k-v12.pdf
      BPM                                               - bpm.pdf

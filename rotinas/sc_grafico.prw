@@ -1,15 +1,16 @@
 #include "rwmake.ch"        // incluido pelo assistente de conversao do AP5 IDE em 19/07/00
 //#include "protheu2.ch"
-/*/
-ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
-±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-±±ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
-±±³ SOLIGRAF -> SOLICITACAO DE COMPRA   MODELO GRAFICO                    ³±±
-±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
-±±³ Autor   ³ JOSE MACEDO               !          Data   06/09/2005      ³±±
-±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
-±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-/*/
+
+/****************************************************************************
+** Programa: SOLIGRAF    * Autor:                    * Data:              ***
+*****************************************************************************
+** Desc.: Solicitacao de Compras Modelo Grafico                           ***
+*****************************************************************************
+** DATA      * ANALISTA *  MOTIVO                                         ***
+*****************************************************************************
+**           *          *                                                 ***
+****************************************************************************/
+
 
 #IFNDEF WINDOWS
 	#DEFINE PSAY SAY
@@ -19,7 +20,7 @@
 User Function SOLIGRAF()
 //************************************
 
-cDesc1 := "Este programa ira  imprimir SOLIC DE COMPRA"
+cDesc1 := "Este programa iraï¿½ imprimir SOLIC DE COMPRA"
 cDesc2 := ""
 cDesc3 := ""
 cString:="SC1"
@@ -100,9 +101,9 @@ nTipo   :=IIF(aReturn[4]==1,15,18)
 wNFS:=MV_PAR01
 wSER:=MV_PAR08
 
-//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-//³ Localiza o 1.Cheque a ser impresso                                                            ³
-//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+//****************************************************************
+//* Localiza o 1.Cheque a ser impresso                           *
+//****************************************************************
 
 fa490Cabec(nTipo)
 
@@ -125,11 +126,11 @@ nContador:=NCONTADOR+1
 IF nContador>2;nContador:=1;li:=1;EndIF
 __LogPages()
 
-//****************************************************************************************************************
-//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-//³ Pegar e gravar o proximo numero da Copia do Cheque                ³
-//³ Posicionar no sx6 utilizando GetMv. N„o Utilize Seek !!! ³
-//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+//***********************************************************
+//* Pegar e gravar o proximo numero da Copia do Cheque       *
+//* Posicionar no sx6 utilizando GetMv. Nï¿½o Utilize Seek !!! *
+//************************************************************
 
 
 //                             Tam  Bold   Under
@@ -239,7 +240,7 @@ oPrn:Say( Linha:=Linha+50     ,550 ,"DATA                                 ASSINA
 
 LINHA:=LINHA+50
 oPrn:Box( Linha:=Linha     ,150 ,Linha+60,2300)
-oPrn:Say( Linha:=Linha+10  ,1100 ,"C O T A Ç Ã O " , oFont)
+oPrn:Say( Linha:=Linha+10  ,1100 ,"C O T A ï¿½ ï¿½ O " , oFont)
 
 LINHA:=LINHA+50
 oPrn:Box( Linha:=Linha     ,150 ,Linha+60,800)
@@ -334,7 +335,7 @@ oPrn:Say( Linha+10  , 160,"Total de Contas", oFont7)
 x:=Linha
 
 oPrn:Box( Linha:=Linha+75     ,150,Linha+75,2300)
-oPrn:Say( Linha+10  , 160,"Condição", oFont7)
+oPrn:Say( Linha+10  , 160,"Condiï¿½ï¿½o", oFont7)
 oPrn:Box( Linha:=Linha+75     ,150,Linha+75,2300)
 oPrn:Say( Linha+10  , 160,"Vendedor", oFont7)
 oPrn:Box( Linha:=Linha+75     ,150,Linha+75,2300)

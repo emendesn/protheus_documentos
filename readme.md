@@ -1,5 +1,8 @@
 # protheus_documentos
 
+// mvc
+     Exemplo Modelo 1 em MVC                           - zmodel1.prw
+
 // Rotinas
      Realiza o mapeamento dos acesso dos usuarios      - mapausu.prw
      Rotina para a leitura das rotinas contidas no RPO - lerrpo.prw

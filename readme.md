@@ -3,6 +3,7 @@
 // mvc
      Exemplo Modelo 1 em MVC                           - zmodel1.prw
      Exemplo Modelo 3 em MVC                           - zmodel3.prw
+     Exemplo Modelo X em MVC                           - zmodelx.prw
 
 // Rotinas
      Realiza o mapeamento dos acesso dos usuarios      - mapausu.prw

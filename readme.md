@@ -1,6 +1,8 @@
 # protheus_documentos
 
 // mvc
+     Exemplo utilizando a chamada staticCall           - ztpfuna,prw
+                                                       - ztpfunb.prw
      Exemplo utilizando nickname no indice             - zindpos.prw
      Exemplo utilizando Begin Transaction              - zgravacao.prw
      Exemplo Modelo 1 em MVC                           - zmodel1.prw

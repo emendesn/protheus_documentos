@@ -1,6 +1,6 @@
 # protheus_documentos
 
-// mvc
+// mvc    
      Exemplo utilizando a chamada staticCall           - ztpfuna,prw
                                                        - ztpfunb.prw
      Exemplo utilizando nickname no indice             - zindpos.prw
@@ -9,6 +9,7 @@
      Exemplo Modelo 3 em MVC                           - zmodel3.prw
      Exemplo Modelo X em MVC                           - zmodelx.prw
      Exemplo de MarkBrowse em MVC                      - zmkmvc.prw
+     Rotina para criacao de tabelas                    - zcriatab.prw
 
 // Rotinas
      Realiza o mapeamento dos acesso dos usuarios      - mapausu.prw

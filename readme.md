@@ -1,80 +1,81 @@
-# protheus_documentos
+![GitHub repo size](https://img.shields.io/github/repo-size/emendesn/protheus_documentos)
+![GitHub](https://img.shields.io/github/license/emendesn/protheus_documentos)
+# Documentos Protheus 10, 11 e 12
 
-// mvc    
-     Exemplo utilizando a chamada staticCall           - ztpfuna,prw
-                                                       - ztpfunb.prw
-     Exemplo utilizando nickname no indice             - zindpos.prw
-     Exemplo utilizando Begin Transaction              - zgravacao.prw
-     Exemplo Modelo 1 em MVC                           - zmodel1.prw
-     Exemplo Modelo 3 em MVC                           - zmodel3.prw
-     Exemplo Modelo X em MVC                           - zmodelx.prw
-     Exemplo de MarkBrowse em MVC                      - zmkmvc.prw
-     Rotina para criacao de tabelas                    - zcriatab.prw
+## mvc    
+   - Exemplo utilizando a chamada staticCall           - ztpfuna,prw / ztpfunb.prw
+   - Exemplo utilizando nickname no indice             - zindpos.prw
+   - Exemplo utilizando Begin Transaction              - zgravacao.prw
+   - Exemplo Modelo 1 em MVC                           - zmodel1.prw
+   - Exemplo Modelo 3 em MVC                           - zmodel3.prw
+   - Exemplo Modelo X em MVC                           - zmodelx.prw
+   - Exemplo de MarkBrowse em MVC                      - zmkmvc.prw
+   - Rotina para criacao de tabelas                    - zcriatab.prw
 
-// Rotinas
-     Realiza o mapeamento dos acesso dos usuarios      - mapausu.prw
-     Rotina para a leitura das rotinas contidas no RPO - lerrpo.prw
-     Rotina para analise de estoque                    - ana_est.prw
-     Rotina para o tratamento de json em advpl         - json-advpl-master.zip 
-     Pedido de Compra - Modelo Grafico                 - pc_grafico.prw
-     Pedido de Compra - Word                           - pc_word.zip
-     Solicitacao de Compras - Modelo Grafico           - sc_grafico.prw
-     Rotina para listar os acessos dos usuarios        - pro_acesso.prw
-     Tatamento do retorno do Worflow Pedido de Compra  - ppcom001.prw
+## Rotinas
+   - Realiza o mapeamento dos acesso dos usuarios      - mapausu.prw
+   - Rotina para a leitura das rotinas contidas no RPO - lerrpo.prw
+   - Rotina para analise de estoque                    - ana_est.prw
+   - Rotina para o tratamento de json em advpl         - json-advpl-master.zip 
+   - Pedido de Compra - Modelo Grafico                 - pc_grafico.prw
+   - Pedido de Compra - Word                           - pc_word.zip
+   - Solicitacao de Compras - Modelo Grafico           - sc_grafico.prw
+   - Rotina para listar os acessos dos usuarios        - pro_acesso.prw
+   - Tatamento do retorno do Worflow Pedido de Compra  - ppcom001.prw
 
-// Apostilas
-     Acompanhamento de Processos Trabalhistas (v12)    - acompanhamento_de_processos_trabalhistas-v12.pdf
-     Administracao de Vendas CRM (v12)                 - administracao_de_vendas-crm-v12.pdf 
-     Advpl Avancado (v12)                              - advpl_avancado-v12.pdf
-     Advpl Fundamental (v12)                           - advpl_fundamental-v12.pdf
-     Advpl II 02                                       - advpl_ii_02.pdf
-     Advpl II 03                                       - advpl_ii_03.pdf
-     Advpl II 03 SLIDES                                - advpl_ii_03_slides.pdf
-     Advpl III 01 Rotinas Web                          - advpl_iii_01_rotinas_web.pdf
-     Advpl III 02 Rotinas Web                          - advpl_iii_02_rotinas_web.pdf
-     Advpl III (v10)                                   - advpl_iii-v10.pdf
-     Advpl II (v10)                                    - advpl_ii-v10.pdf
-     Advpl I Plus 02                                   - advpl_i-plus_02.pdf
-     Advpl I  Slides 03                                - advpl_i-slides_03.pdf
-     Advpl I (v10)                                     - advpl_i-v10.pdf
-     Advpl (v10)                                       - advpl-v10.pdf
-     Advpl (v12)                                       - advpl-v12.pdf
-     Advpl Webservices 01 (v12)                        - advpl_webservices_01-v12.pdf
-     Advpl Webservices 02 (v12)                        - advpl_webservices_02-v12.pdf
-     Advpl Web (v12)                                   - advpl_web-v12.pdf
-     Arquitetura Basica Datasul Postgres Schema Bolder - arquitetura_basica_datasul_postgres_schema_bolder.pdf
-     Arquitetura e Instalcao 02 (v12)                  - arquitetura_e_instalcao_02-v12.pdf
-     Arquitetura e Instalcao 03 Advpl                  - arquitetura_e_instalcao_03_advpl.pdf
-     Arquitetura e Instalcao                           - arquitetura_e_instalcao.pdf
-     Ativo Imobilizado                                 - ativo_imobilizado.pdf
-     Ativo Fixo 01 Datasul                             - ativo-fixo_01_datasul.pdf
-     Ativo Fixo AP 01 (v11)                            - ativo-fixo_ap_01-v11.pdf
-     Ativo Fixo AP 02 (v11)                            - ativo-fixo_ap_02-v11.pdf
-     Ativo Fixo AP 03 (v12)                            - ativo-fixo_ap_03-v12.pdf
-     Ativo Fixo - Implantacao                          - ativo-fixo_implantacao.pdf
-     Audit Trail                                       - audit_trail.pdf 
-     Audit Trail - Configuracao                        - audit_trail-configuracao.pdf
-     Automacao Ponto - RM (v12)                        - automacao_ponto-rm-v12.pdf
-     Avaliacao e Pesquisa e Desempenho (v11)           - avaliacao_e_pesquisa_e_desempenho-v11.pdf
-     Avaliacao e Pesquisa e Desempenho (v12)           - avaliacao_e_pesquisa_e_desempenho-v12.pdf
-     Avaliacao e Pesquisa RM (v12)                     - avaliacao_e_pesquisa-rm-v12.pdf
-     Balanceamento de Carga entre Servidores           - balanceamento_de_carga_entre_servidores.pdf
-     Beneficios (v12)                                  - beneficios-v12.pdf
-     Bloco K (v12)                                     - bloco_k-v12.pdf
-     BPM                                               - bpm.pdf
-     Call Center                                       - call_center.pdf
-     Call Center (v10)                                 - call_center-v10.pdf
-     Call Center (v12)                                 - call_center-v12.pdf
-     Cargos e Salarios (v12)                           - cargos_e_salarios-v12.pdf
-     Compras 01                                        - compras_01.pdf
-     Compras 03                                        - compras_03.pdf
-     Compras - DATASUL (v12)                           - compras-datasul-v12.pdf
-     Compras (v12)                                     - compras-v12.pdf
-     Comunicacao Bancaria CNAB                         - comunicacao_bancaria_cnab.pdf
-     Comunicacao Bancaria CNAB (v10)                   - comunicacao_bancaria_cnab-v10.pdf
-     Comunicacao Bancaria CNAB (v12)                   - comunicacao_bancaria_cnab-v12.pdf
-     Concessionarias Auto Pecas (v10)                  - concessionarias_auto_pecas-v10.pdf
-     Concessionarias Oficinas (v10)                    - concessionarias_oficinas-v10.pdf
+## Apostilas
+   - Acompanhamento de Processos Trabalhistas (v12)    - acompanhamento_de_processos_trabalhistas-v12.pdf
+   - Administracao de Vendas CRM (v12)                 - administracao_de_vendas-crm-v12.pdf 
+   - Advpl Avancado (v12)                              - advpl_avancado-v12.pdf
+   - Advpl Fundamental (v12)                           - advpl_fundamental-v12.pdf
+   - Advpl II 02                                       - advpl_ii_02.pdf
+   - Advpl II 03                                       - advpl_ii_03.pdf
+   - Advpl II 03 SLIDES                                - advpl_ii_03_slides.pdf
+   - Advpl III 01 Rotinas Web                          - advpl_iii_01_rotinas_web.pdf
+   - Advpl III 02 Rotinas Web                          - advpl_iii_02_rotinas_web.pdf
+   - Advpl III (v10)                                   - advpl_iii-v10.pdf
+   - Advpl II (v10)                                    - advpl_ii-v10.pdf
+   - Advpl I Plus 02                                   - advpl_i-plus_02.pdf
+   - Advpl I  Slides 03                                - advpl_i-slides_03.pdf
+   - Advpl I (v10)                                     - advpl_i-v10.pdf
+   - Advpl (v10)                                       - advpl-v10.pdf
+   - Advpl (v12)                                       - advpl-v12.pdf
+   - Advpl Webservices 01 (v12)                        - advpl_webservices_01-v12.pdf
+   - Advpl Webservices 02 (v12)                        - advpl_webservices_02-v12.pdf
+   - Advpl Web (v12)                                   - advpl_web-v12.pdf
+   - Arquitetura Basica Datasul Postgres Schema Bolder - arquitetura_basica_datasul_postgres_schema_bolder.pdf
+   - Arquitetura e Instalcao 02 (v12)                  - arquitetura_e_instalcao_02-v12.pdf
+   - Arquitetura e Instalcao 03 Advpl                  - arquitetura_e_instalcao_03_advpl.pdf
+   - Arquitetura e Instalcao                           - arquitetura_e_instalcao.pdf
+   - Ativo Imobilizado                                 - ativo_imobilizado.pdf
+   - Ativo Fixo 01 Datasul                             - ativo-fixo_01_datasul.pdf
+   - Ativo Fixo AP 01 (v11)                            - ativo-fixo_ap_01-v11.pdf
+   - Ativo Fixo AP 02 (v11)                            - ativo-fixo_ap_02-v11.pdf
+   - Ativo Fixo AP 03 (v12)                            - ativo-fixo_ap_03-v12.pdf
+   - Ativo Fixo - Implantacao                          - ativo-fixo_implantacao.pdf
+   - Audit Trail                                       - audit_trail.pdf 
+   - Audit Trail - Configuracao                        - audit_trail-configuracao.pdf
+   - Automacao Ponto - RM (v12)                        - automacao_ponto-rm-v12.pdf
+   - Avaliacao e Pesquisa e Desempenho (v11)           - avaliacao_e_pesquisa_e_desempenho-v11.pdf
+   - Avaliacao e Pesquisa e Desempenho (v12)           - avaliacao_e_pesquisa_e_desempenho-v12.pdf
+   - Avaliacao e Pesquisa RM (v12)                     - avaliacao_e_pesquisa-rm-v12.pdf
+   - Balanceamento de Carga entre Servidores           - balanceamento_de_carga_entre_servidores.pdf
+   - Beneficios (v12)                                  - beneficios-v12.pdf
+   - Bloco K (v12)                                     - bloco_k-v12.pdf
+   - BPM                                               - bpm.pdf
+   - Call Center                                       - call_center.pdf
+   - Call Center (v10)                                 - call_center-v10.pdf
+   - Call Center (v12)                                 - call_center-v12.pdf
+   - Cargos e Salarios (v12)                           - cargos_e_salarios-v12.pdf
+   - Compras 01                                        - compras_01.pdf
+   - Compras 03                                        - compras_03.pdf
+   - Compras - DATASUL (v12)                           - compras-datasul-v12.pdf
+   - Compras (v12)                                     - compras-v12.pdf
+   - Comunicacao Bancaria CNAB                         - comunicacao_bancaria_cnab.pdf
+   - Comunicacao Bancaria CNAB (v10)                   - comunicacao_bancaria_cnab-v10.pdf
+   - Comunicacao Bancaria CNAB (v12)                   - comunicacao_bancaria_cnab-v12.pdf
+   - Concessionarias Auto Pecas (v10)                  - concessionarias_auto_pecas-v10.pdf
+   - Concessionarias Oficinas (v10)                    - concessionarias_oficinas-v10.pdf
      Concessionarias Veiculos (v10)                    - concessionarias_veiculos-v10.pdf
      Configurador 01 (v10)                             - configurador_01-v10.pdf
      Configurador 02 (v10)                             - configurador_02-v10.pdf

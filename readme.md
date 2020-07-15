@@ -1,5 +1,6 @@
 ![GitHub repo size](https://img.shields.io/github/repo-size/emendesn/protheus_documentos)
 ![GitHub](https://img.shields.io/github/license/emendesn/protheus_documentos)
+![Twitter Follow](https://img.shields.io/twitter/follow/emendesn?label=seguir&style=social)
 # Documentos Protheus 10, 11 e 12
 
 ## mvc    

@@ -3,6 +3,63 @@
 ![Twitter Follow](https://img.shields.io/twitter/follow/emendesn?label=seguir&style=social)
 # Documentos Protheus 10, 11 e 12
 
+## cnab
+### Contas a Pagar
+   - Arquivos CNAB Remessa/Retorno de 240 posicoes
+      | Arquivo        | Diretorio | Descricao |
+      |----------------|-----------|-----------|
+      | bbpoup.2pe            | remessa\ |  - |
+      | bbrasil.2pe           | remessa\ |  - |
+      | bradesco.2pe          | remessa\ |  - |
+      | bradpoup.2pe          | remessa\ |  - |
+      | CAIXAPAG.2pe          | remessa\ |  - |
+      | folsan.2pe            | remessa\ |  - |
+      | REAL.2PE              | remessa\ |  - |
+      | safra.2pe             | remessa\ |  - |
+      | santcc.2pe            | remessa\ |  - |
+      | santpoup.2pe          | remessa\ |  - |
+      | SISPITAU.pag          | remessa\ |  - |
+      | bbrasil.2pr           | retorno\ |  - |
+      | bradesco.2pr          | retorno\ |  - |
+      | CAIXAPAG.2pr          | retorno\ |  - |
+      | CPBBra.2pr            | retorno\ |  - |
+      | CPBrad.2pr            | retorno\ |  - |
+      | CPSant.2pr            | retorno\ |  - |
+      | safra.2pr             | retorno\ |  - |
+      | SISPITAURET.pag       | retorno\ |  - |
+### Contas a Receber
+   - Arquivos CNAB Remessa/Retorno de 400 posicoes
+      | Arquivo        | Diretorio | Descricao |
+      |----------------|-----------|-----------|
+      | 001RINST.REM          | instrucao_bancaria\ |  - |
+      | 033RINST.REM          | instrucao_bancaria\ |  - |
+      | 341RINST.REM          | instrucao_bancaria\ |  - |
+      | 422RINST.REM          | instrucao_bancaria\ |  - |
+      | 745RINST.REM          | instrucao_bancaria\ |  - |
+      | ABC.REM               | remessa\ |  - |
+      | BB_REG_BCO.rem        | remessa\ |  - |
+      | BB_REG_EMP.rem        | remessa\ |  - |
+      | CITI_REG_BCO.REM      | remessa\ |  - |
+      | CITI_REG_EMP.rem      | remessa\ |  - |
+      | ITAU_REG_BCO.rem      | remessa\ |  - |
+      | ITAU_REG_EMP.rem      | remessa\ |  - |
+      | SAFRA_REG_BCO.rem     | remessa\ |  - |
+      | SAFRA_REG_EMP.rem     | remessa\ |  - |
+      | SANTANDER_REG_EMP.rem | remessa\ |  - |
+      | abc.ret               | retorno\ |  - |
+      | BB.ret                | retorno\ |  - |
+      | BRADESCO.ret          | retorno\ |  - |
+      | CITIBANK.ret          | retorno\ |  - |
+      | ITAU.ret              | retorno\ |  - |
+      | SANTANDER.ret         | retorno\ |  - |
+
+### Folha de Pagamento
+   - Arquivos CNAB SISPAG para folha de pagamento.
+      | Arquivo        | Diretorio | Descricao |
+      |----------------|-----------|-----------|
+      | FOLHA_ITAU.pag          | - | - |
+      | FOLHA_ITAU.rem          | - |  - |
+
 ## mvc    
    - Exemplo utilizando a chamada staticCall           - ztpfuna,prw / ztpfunb.prw
    - Exemplo utilizando nickname no indice             - zindpos.prw

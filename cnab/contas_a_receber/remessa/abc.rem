@@ -1,0 +1,57 @@
+Ident Registro 001001 0                                                           
+Ident Arq Remes002002 1                                                           
+Literal Remessa003009 "REMESSA"                                                   
+Codigo Servico 010011 "01"                                                        
+Literal Servico012026 "COBRANCA"                                                  
+Codigo Empresa 027046 "00019070003041953000"                                      
+Nome Empresa   047076 UPPER(SUBS(SM0->M0_NOMECOM,1,30))                           
+N. Bradesco    077079 "246"                                                       
+Nome Banco Ext 080094 "BANCO ABC BRASIL S/A"                                      
+Data Grav Arq  095100 GravaData(dDatabase,.F.)                                    
+Branco         101394 SPACE(294)                                                  
+N. Seq Reg 1/1 395400 "000001"                                                    
+Ident Registro 001001 1                                                           
+Ident Tipo Insc002003 IF(Right(SM0->M0_CGC,2)=" ","01","02")                      
+CNPJ da Empresa004017 Substr(SM0->M0_CGC,1,14)                                    
+Codigo Empresa 018037 "00019070003041953000"                                      
+N. Contr Partic038047 SE1->E1_PREFIXO+SE1->E1_NUM+SE1->E1_PARCELA                 
+N. Contr.Partic048049 Tabela("17",SE1->E1_TIPO,1,2)                               
+N. Contr.Partic050062 SPACE(13)                                                   
+Nosso Numero   063070 "00000000"                                                  
+Nosso Num Ocor 071083 SPACE(13)                                                   
+Carteira Corres084086 SPACE(03)                                                   
+Uso do Banco   087107 SPACE(21)                                                   
+Codigo Carteira108108 "1"                                                         
+Codigo Ocorrenc109110 Iif(Empty(SE1->E1_INSTR1),"01",SE1->E1_INSTR1)              
+N. Documento   111120 SE1->E1_PREFIXO+SE1->E1_NUM+SE1->E1_PARCELA                 
+Data Venc Titul121126 GravaData(SE1->E1_VENCTO,.F.)                               
+Valor Titulo   1271392ExecBlock("ValtiTr",.F.,.F.)                                
+Bco Encarr Cobr140142 "246"                                                       
+Agencia Deposit143147 "00000"                                                     
+Especie Titulo 148149 Tabela("17",SE1->E1_TIPO,1,2)                               
+Identificacao  150150 "N"                                                         
+Data Emiss Titu151156 GravaData(SE1->E1_EMISSAO,.F.)                              
+1 Instrucao    157158 "94"                                                        
+2 Instrucao    159160 IIF(SE1->E1_INSTR2=="  ",SEE->EE_INSTSEC,SE1->E1_INSTR2)    
+Valor dia Atras1611732STRZERO(SE1->E1_VALJUR*100,13)                              
+Data Limite Des174179 "000000"                                                    
+Valor Desconto 1801922REPLICATE("0",13)                                           
+Valor IOF      1932052REPLICATE("0",13)                                           
+Valor Abatim   2062182REPLICATE("0",13)                                           
+Ident Tipo Insc219220 IF(Right(SA1->A1_CGC,2)=" ","01","02")                      
+N. Inscr Sacado221234 SA1->A1_CGC                                                 
+Nome Sacado    235264 Substr(SA1->A1_NOME,1,30)                                   
+Complemento Reg265274 Space(10)                                                   
+Endereco Comple275314 SA1->A1_ENDCOB                                              
+Bairro Sacado  315326 SA1->A1_BAIRROC                                             
+CEP Sacado     327334 SA1->A1_CEPC                                                
+Cidade         335349 SA1->A1_MUNC                                                
+Estado Sacado  350351 SA1->A1_ESTC                                                
+Sacador/Avalist352381 "Apos venc. 2% multa e 1% mora"                             
+Brancos        382391 "pro rata"                                                  
+Qtde Dias Prot 392393 "00"                                                        
+Moeda          394394 "1"                                                         
+N. Seq Registro395400 Incrementa()                                                
+Tipo Registro  001001 9                                                           
+Branco         002394 REPLICATE(" ",393)                                          
+N. Seq Registro395400 Incrementa()                                                

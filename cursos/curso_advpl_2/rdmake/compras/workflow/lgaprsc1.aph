@@ -1,0 +1,38 @@
+#INCLUDE "TBICONN.CH"
+<%
+	PREPARE ENVIRONMENT EMPRESA "02" FILIAL "02" TABLES "SC1"
+	_cServer 	:= getMV("MV_WFBRWSR")
+%>
+<html>
+<head>
+<meta http-equiv="Content-Language" content="pt-br">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>Usuário</title>
+</head>
+<body>
+<table border="0" width="100%">
+	<tr bgcolor="lightblue"><td width="100%"><img src="/solic_compra/logobgh.jpg"></td></tr>
+</table>
+<form method="POST" action="http://<%=_cServer%>/H_APRSC1.apl">
+	<br><br>
+	<center>
+	<b><font size=4 face="Arial">Aprova&ccedil;&atilde;o de Solicita&ccedil;&otilde;es de Compra</font> </b>
+	<hr>
+	</center>
+	<br>
+	<table align="center" border="0">
+		<tr>
+			<td><font  face="Arial">Usu&aacute;rio: </td>
+			<td><input type="text" name="usuario" size="15"></td>
+		</tr>
+		<tr>
+			<td><font  face="Arial">Senha: </td>
+			<td><input type="password" name="senha" size="6"></td>
+		</tr>
+	</table>
+	<br>
+	<center><input type="submit" value="Entrar"></center>
+</form>
+</body>
+</html>
+<%RESET ENVIRONMENT%>

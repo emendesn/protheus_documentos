@@ -1,0 +1,181 @@
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------+
+|Programa: xGper043                                                                                                                                       |
+|Autor:                                                                                                                                                   |
+|Data Aplicação: 26/01/2012                                                                                                                               |
+|Descrição: relatório ABONO SINDICATO                                                                                                                     |
+|Resposável: Maintech Information & Solution                                                                                                              |
+|Validado por: Luciana Benicio de Souza                                                                                                                   |
++---------------------------------------------------------------------------------------------------------------------------------------------------------+
+|Data Alteração:                                                                                                                                          |
+|Motivo:                                                                                                                                                  |
+|Resposável: Maintech Information & Solution                                                                                                              |
+|Validado por: Luciana Benicio de Souza                                                                                                                   |
++--------------------------------------------------------------------------------------------------------------------------------------------------------*/
+#Include "PROTHEUS.CH"
+#INCLUDE "topconn.ch" 
+//------------------------------------------------------------------------------------------------------------------------------------------------------------
+User Function xGpeR043()    // Relatorios\Customizados\Abono Sindicato
+PRIVATE cPerg := "xGpeR043"
+ValidPerg(cPerg)
+
+If ! Pergunte(cPerg,.T.)
+ Return()
+Endif
+
+Processa( { || MyRel() } ) 
+Return .t.                     
+//------------------------------------------------------------------------------------------------------------------------------------------------------------
+Static Function MyRel()                 
+Local cCrLf    :=Chr(13)+Chr(10)
+Local aTotMAT  := {}	
+Local _csrvapl := ALLTRIM(GetMV("MV_SERVAPL"))
+Local _cArqTmp := lower(AllTrim(__RELDIR)+"ABONO SINDICATO.csv")
+Local cArea    := ''
+
+Private dPerIni    := CTOD("")
+Private dPerFim    := CTOD("")
+Private aMarcFun   := {}
+Private nMax       := 0
+Private ZZ         := 0
+
+u_GerA0003(ProcName())
+
+nHandle := MsfCreate(_cArqTmp,0)
+
+cLinha := "ABONO SINDICATO. PERÍODO DE " + StrZero(Day(MV_PAR01),2) + "/" + StrZero(Month(MV_PAR01),2) + "/" + StrZero(Year(MV_PAR01),4) + " A " + StrZero(Day(MV_PAR02),2) + "/" + StrZero(Month(MV_PAR02),2) + "/" + StrZero(Year(MV_PAR02),4)
+fWrite(nHandle, cLinha  + cCrLf)
+cLinha := ' '                   
+fWrite(nHandle, cLinha  + cCrLf)
+
+IF Select("QRY1") <> 0 
+	DbSelectArea("QRY1")
+	DbCloseArea()
+Endif   
+
+cQuery := "SELECT PC_MAT AS MATRICULA, PC_DATA AS DATA, PC_PD AS EVENTO, PC_QUANTC AS HORAS, PC_TURNO AS TURNO, PC_CC AS CCUSTO FROM SPC020 "
+cQuery += "WHERE D_E_L_E_T_ = '' "
+cQuery += "AND PC_ABONO = '025' "
+cQuery += "AND PC_DATA BETWEEN '"+DTOS(MV_PAR01)+"' AND '"+DTOS(MV_PAR02)+"' "
+cQuery += "AND PC_CC BETWEEN '"+MV_PAR03+"' AND '"+MV_PAR04+"' "
+cQuery += "AND PC_MAT BETWEEN '"+MV_PAR05+"' AND '"+MV_PAR06+"' "
+cQuery += "UNION ALL "
+cQuery += "SELECT PH_MAT AS MATRICULA, PH_DATA AS DATA, PH_PD AS EVENTO, PH_QUANTC AS HORAS, PH_TURNO AS TURNO, PH_CC AS CCUSTO FROM SPH020 "
+cQuery += "WHERE D_E_L_E_T_ = '' "
+cQuery += "AND PH_ABONO = '025' "
+cQuery += "AND PH_DATA BETWEEN '"+DTOS(MV_PAR01)+"' AND '"+DTOS(MV_PAR02)+"' "
+cQuery += "AND PH_CC BETWEEN '"+MV_PAR03+"' AND '"+MV_PAR04+"' "
+cQuery += "AND PH_MAT BETWEEN '"+MV_PAR05+"' AND '"+MV_PAR06+"' "
+cQuery += "ORDER BY MATRICULA, DATA, EVENTO "
+
+MEMOWRITE("C:\TESTE.txt",cQuery)
+		
+TCQUERY cQuery NEW ALIAS "QRY1"
+
+ASORT(aTotMAT,,, { |x, y| x[1] < y[1] })
+zz := 0
+nMax := Len(aTotMAT)
+ProcRegua(nMax)
+
+clinha = 	"CENTRO DE CUSTO"	+';'+ ;
+			"DESCRIÇÃO" 		+';'+ ;
+			"AREA" 				+';'+ ;
+			"DESCRIÇÃO" 		+';'+ ;
+			"MATRICULA" 		+';'+ ;
+			"NOME" 				+';'+ ;
+			"TURNO"				+';'+ ;
+			"DATA" 				+';'+ ;
+			"EVENTO" 			+';'+ ;
+			"HORAS"
+fWrite(nHandle, cLinha  + cCrLf)
+
+DBSELECTAREA("QRY1")     
+procregua(reccount())
+QRY1->(DBGOTOP())   
+DO WHILE !QRY1->(EOF())
+
+	cLinha := QRY1->CCUSTO + ';'  // CENTRO DE CUSTO
+	cLinha = clinha + posicione("CTT",1,xfilial("CTT")+QRY1->CCUSTO,"CTT_DESC01") + ';'  // DESCRIÇÃO CENTRO DE CUSTO
+	cArea := posicione("SRA",1,xfilial("SRA")+QRY1->MATRICULA,"RA__DEPTO")
+	cLinha = clinha + cArea + ';'  // AREA
+	cLinha = clinha + posicione("SQB",1,xfilial("SQB")+cArea,"QB_DESCRIC") + ';'  // DESCRIÇÃO ÁREA
+	cLinha = clinha + QRY1->MATRICULA + ';'  // MATRICULA
+	cLinha = clinha + posicione("SRA",1,xfilial("SRA")+QRY1->MATRICULA,"RA_NOME") + ';'  // NOME
+	cLinha = clinha + QRY1->TURNO + ';'  // TURNO
+	cLinha = clinha + StrZero(DAY(STOD(QRY1->DATA)),2)+ "/" + StrZero(Month(STOD(QRY1->DATA)),2) + "/" + RIGHT(Str(Year(STOD(QRY1->DATA)),4),2) + ";"  // DATA
+	cLinha = clinha + QRY1->EVENTO + ';'  // EVENTO
+	cLinha = clinha + Left(cValToChar(StrZero(QRY1->HORAS,5,2)),2) + ":" + Right(cValToChar(StrZero(QRY1->HORAS,5,2)),2) + ';'  // HORAS
+	fWrite(nHandle, cLinha  + cCrLf)
+
+	DbSelectArea("QRY1")
+	QRY1->(DbSkip())
+	Incproc()
+
+EndDo
+fClose(nHandle)
+
+If ! ApOleClient( 'MsExcel' )
+	MsgAlert( 'MsExcel nao instalado')
+	Return
+	Else
+ 	ShellExecute( "Open" , "\\"+_csrvapl+_cArqTmp ,"", "" , 3 )           
+EndIf
+
+Return .T.                                                    
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+Static Function fChkSX1( dPerIni , dPerFim , cPerg )
+
+Local aAreaSX1	:= SX1->( GetArea() )
+Local dVar      := Ctod("//")
+
+SX1->(dbSetOrder(1))
+
+IF SX1->(dbSeek(cPerg+"14",.F.))
+	dVar := Ctod(SX1->X1_CNT01,'ddmmyy')
+	IF dVar < dPerIni .or. dVar > dPerFim
+		RecLock("SX1")
+		SX1->X1_CNT01 := Dtoc(dPerIni)
+		SX1->( MsUnlock() )
+	EndIF
+	SX1->( dbSkip() )
+	IF SX1->( X1_GRUPO + X1_ORDEM ) == cPerg+"15"
+		dVar := Ctod(SX1->X1_CNT01,'ddmmyy')
+		IF dVar < dPerIni .Or. dVar > dPerFim
+			RecLock("SX1")
+			SX1->X1_CNT01 := Dtoc(dPerFim)
+			SX1->( MsUnlock() )
+		EndIF
+	EndIF
+EndIF
+
+RestArea( aAreaSX1 )
+
+Return( NIL )
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+Static Function ValidPerg() //CRIACAO DA PERGUNTA
+Local _sAlias := Alias()
+Local aRegs := {}
+Local i,j
+
+dbSelectArea("SX1")
+dbSetOrder(1)
+	AAdd(aRegs,{cPerg,"01","Data de:"		,"Data de:"			,"Data de:"			,"mv_ch1","D",08,0,0,"G","","mv_par01","","","","","","","","","","","","","","","","","","","","","","","","","",""})
+	AAdd(aRegs,{cPerg,"02","Data ate:"		,"Data ate:"		,"Data ate:"		,"mv_ch2","D",08,0,0,"G","","mv_par02","","","","","","","","","","","","","","","","","","","","","","","","","",""})
+	AAdd(aRegs,{cPerg,"03","C.Custo de?"	,"C.Custo de?"		,"C.Custo de?"		,"mv_ch3","C",09,0,0,"G","","mv_par03","","","","","","","","","","","","","","","","","","","","","","","","","CTT",""})
+	AAdd(aRegs,{cPerg,"04","C.Custo ate?"	,"C.Custo ate?"		,"C.Custo ate?"		,"mv_ch4","C",09,0,0,"G","","mv_par04","","","","","","","","","","","","","","","","","","","","","","","","","CTT",""})
+	AAdd(aRegs,{cPerg,"05","Matricula De?"	,"Matricula De?"	,"Matricula De?"	,"mv_ch5","C",06,0,0,"G","","mv_par05","","","","","","","","","","","","","","","","","","","","","","","","","SRA",""})
+	AAdd(aRegs,{cPerg,"06","Matricula Ate?"	,"Matricula Ate?"	,"Matricula Ate?"	,"mv_ch6","C",06,0,0,"G","","mv_par06","","","","","","","","","","","","","","","","","","","","","","","","","SRA",""})
+
+For i:=1 to Len(aRegs)
+	If !dbSeek(cPerg+space(len(SX1->X1_GRUPO)-LEN(cPerg))+aRegs[i,2])
+		RecLock("SX1",.T.)
+		For j:=1 to FCount()
+			If j <= Len(aRegs[i])
+				FieldPut(j,aRegs[i,j])
+			Endif
+		Next
+		MsUnlock()
+	Endif
+Next
+Return 
+//------------------------------------------------------------------------------------------------------------------------------------------------------------

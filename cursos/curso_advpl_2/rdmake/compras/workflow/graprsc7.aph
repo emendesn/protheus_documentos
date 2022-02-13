@@ -1,0 +1,350 @@
+#INCLUDE "RWMAKE.CH"
+#INCLUDE "TOPCONN.CH"
+#INCLUDE "TBICONN.CH"
+#INCLUDE "TBICODE.CH"
+<html>
+<head>
+<title>Aprovação de Pedido de Compra</title>
+</head>
+<%
+  PREPARE ENVIRONMENT EMPRESA "02" FILIAL __aPostParms[6,2]
+/*
+	for x=1 to len(__aPostParms) %>
+		<%= __aPostParms[x,1]   %>
+		--
+		<%= __aPostParms[x,2]   %>
+		<br>
+<%
+	next	
+*/
+cNumero		:= __aPostParms[1,2]
+ca097User	:= __aPostParms[2,2]
+RBAPROVA	:= __aPostParms[3,2]
+lbmotivo	:= __aPostParms[4,2]
+_cNivel		:= __aPostParms[5,2] 
+_xFilial	:= __aPostParms[6,2]
+
+ca097User	:= Right(ca097User,6)                                                      
+_cServer	:= getMV("MV_WFBRWSR")
+lProcessa	:= .F.
+lMail		:= .F.
+lAprovGer	:= .F.
+lAprovDir2	:= .F.
+lRejeitado	:= .F.
+Path		:= ""
+lContinua	:= .F.
+
+_Query :=	"SELECT COUNT(*) AS TOT1 FROM SCR020 WHERE CR_USER = '" + ca097User + "' AND CR_NUM = '" + cNumero + "' AND CR_STATUS = '02' AND D_E_L_E_T_ <> '*' "
+//_Query :=	"SELECT COUNT(*) AS TOT1 FROM SCR020 WHERE CR_USER = '" + ca097User + "' AND CR_NUM = '" + cNumero + "' AND D_E_L_E_T_ <> '*' "
+
+TCQUERY _Query NEW ALIAS "TRBGRP1"  
+
+If TRBGRP1->TOT1 > 0
+	If RBAPROVA == 'Sim'
+		_Query :=	"SELECT AK_LIMMAX FROM SAK020 WHERE AK_USER = '" + ca097User + "' AND D_E_L_E_T_ <> '*' "
+		TCQUERY _Query NEW ALIAS "TRBLIMITE"
+		dbSelectArea("SC7")
+		dbSetOrder(1)
+		If dbSeek(xFilial("SC7")+cNumero)
+//				If TRBLIMITE->AK_LIMMAX >= SC7->C7_TOTAL            // verificando LIMITES
+			lContinua := .T.
+//				EndIf
+		EndIf
+		dbSelectArea("SCR")                   // Posiciona a Liberacao
+		dbSetorder(2)
+		If dbSeek(xFilial("SCR")+"PC"+PADR(cNumero, 50, Space(1))+ca097User)
+			RecLock("SCR",.F.)
+			 SCR->CR_DATALIB	:= dDataBase
+			 SCR->CR_STATUS		:= "03"  //Liberado
+			 SCR->CR_OBS		:= Upper(lbmotivo)
+			 SCR->CR_USERLIB	:= ca097User
+			 SCR->CR_LIBAPRO	:= SCR->CR_USER
+			MsUnLock()
+		EndIf
+		cQuery := "SELECT * FROM SCR020 WHERE CR_NUM =  '"+PADR(cNumero, 50, Space(1)) + "' AND CR_USERLIB = '' AND D_E_L_E_T_ = '' ORDER BY CR_NIVEL "
+		TCQUERY cQuery NEW ALIAS "VALSCR"
+		dbSelectArea("VALSCR")
+		VALSCR->(dbGoTop())
+		_cNivel	:= VALSCR->CR_NIVEL
+		Do While ! VALSCR->(Eof())
+			lContinua := .F.
+			lMail := .T.
+			If _cNivel == VALSCR->CR_NIVEL
+				cQuery  := "UPDATE SCR020 SET CR_STATUS = '02' WHERE CR_NUM =  '"+PADR(cNumero, 50, Space(1)) + "' AND CR_USERLIB = '' AND CR_NIVEL = '" + _cNivel + "' AND D_E_L_E_T_ = '' "
+				TcSqlExec(cQuery)
+				exit
+			EndIf
+			VALSCR->(dbSkip())
+		EndDo
+		
+		  _emailDiretor := {}
+		  
+		  _cQuery := "SELECT CR_USER FROM SCR020 WHERE CR_NUM = '" + cNumero + "' AND CR_STATUS = '02' AND D_E_L_E_T_ <> '*' "
+		  TCQUERY _cQuery NEW ALIAS "USERSGRP2"  
+
+		  dbSelectArea("USERSGRP2")				  
+		  USERSGRP2->(dbGoTop())                                                  
+		  
+		  while ! USERSGRP2->(EOF())
+			 lAprovGer := .T.
+		  	 PswOrder(1)
+			 If PswSeek(USERSGRP2->CR_USER, .T.)
+				aRet := PswRet()
+	            aadd(_emailDiretor, aRet[1][14])
+			 EndIf	  
+			 USERSGRP2->(dbSkip())
+		  EndDo
+	ELSE
+		 dbSelectArea("SCR")                   // Posiciona a Liberacao
+		 DBSetorder(2)
+		 If DBSeek(xFilial("SCR")+"PC"+PADR(cNumero, 50, Space(1))+ca097User)  
+		      RecLock("SCR",.f.)
+		      SCR->CR_DataLib := dDataBase
+		      SCR->CR_STATUS  := "04"  //Bloqueado
+		      SCR->CR_OBS 	:=lbmotivo
+		      MsUnLock()
+		 EndIf
+		 lRejeitado := .T.
+	 EndIf
+EndIf
+
+If lMail    // envia email para os diretores
+	conout ("sera enviado email para os diretores ...")
+	for xzx :=1 to len(_emailDiretor)
+	
+			_cLink := "http://"+_cServer+"/H_LGAPRSC1.apl"          
+			
+			cMensagem := "<html> "
+			cMensagem += "<head>"
+			cMensagem += "<title>Aprovação de Pedido</title>"
+			cMensagem += "<meta http-equiv='Content-Type' content='text/html; charset=iso-8859-1'>"
+			cMensagem += "</head>"
+			cMensagem += "<body bgcolor='#FFFFFF' bgproperties='fixed'>"
+			cMensagem += "<body>"
+			cMensagem += "  <p style='font-family: Arial;' align='justify'>Favor copiar o link <font color='blue'>" + _cLink + "</font> na barra de seu navegador para visualização e aprovação do pedido.<br></p>"
+			cMensagem += "</body>"
+			cMensagem += "</html> "
+			
+			cTitemail := "APROVACAO DO PEDIDO No " + cNumero
+			
+			conout("enviando email para diretores ...")			
+			U_ENVIAEMAIL(cTitemail,_emailDiretor[xzx],"",cMensagem,Path)
+			conout("enviado ...")			
+	next
+EndIf          
+
+If lContinua
+	 conout ("liberando pedido ...")
+	 dbSelectArea("SCR")                   // Posiciona a Liberacao
+	 DBSetorder(2) 
+	 ConOut("PC"+PADR(cNumero, 50, Space(1))+ca097User)
+	 If DBSeek(xFilial("SCR")+"PC"+PADR(cNumero, 50, Space(1))+ca097User)  
+	      RecLock("SCR",.f.)
+	      SCR->CR_DataLib 	:= dDataBase
+	      SCR->CR_STATUS  	:= "03"  //Liberado
+	      SCR->CR_OBS 		:=lbmotivo
+	      SCR->CR_USERLIB 	:= ca097User
+	      SCR->CR_LIBAPRO	:= ca097User
+	      MsUnLock()
+	 EndIf
+	 
+	dbSelectArea('SW2')
+	dbSetOrder(1)
+	If SW2->(MsSeek(xFilial("SW2")+SC7->C7_PO_EIC)) .AND. SW2->(FieldPos("W2_CONAPRO"))<>0 .AND. !Empty(SW2->W2_CONAPRO)
+		Reclock("SW2",.F.)
+		SW2->W2_CONAPRO := "L"
+		MsUnlock()
+	EndIf
+
+	dbSelectArea('SC7')
+	dbSetOrder(1)
+	dbSeek(xFilial('SC7')+cNumero)
+	_ANumsc := {}   	
+	do while SC7->C7_NUM = cNumero 
+		Reclock("SC7",.F.)			
+		SC7->C7_CONAPRO	:= "L"
+	 	MsUnLock()			          
+
+		If len(alltrim(SC7->C7_NUMSC)) > 0
+			_loc := ascan(_ANumsc, {|x| x == SC7->C7_NUMSC})
+			If _loc == 0  
+				aadd(_ANumsc, cValToChar(SC7->C7_NUMSC))							
+			EndIf	 	
+		EndIf
+	 	SC7->(dbSkip())  
+	EndDo
+   	for xzz:=1 to len(_ANumsc)
+		conout ("sera enviando email para o solicitante ...")
+		conout(cValToChar(_ANumsc[xzz]))
+		cMensagem := "<html> "
+		cMensagem += "<head>"
+		cMensagem += "<title>Aprovação de Pedido</title>"
+		cMensagem += "<meta http-equiv='Content-Type' content='text/html; charset=iso-8859-1'>"
+		cMensagem += "</head>"
+		cMensagem += "<body bgcolor='#FFFFFF' bgproperties='fixed'>"
+		cMensagem += "<body>"
+		cMensagem += "  <p style='font-family: Arial;' align='justify'>A Solicitação de Compra No. <b>" + _ANumsc[xzz] + "</b> teve seu Pedido Aprovado !!!.<br></p>"
+		cMensagem += "</body>"
+		cMensagem += "</html> "
+		cTitemail := "APROVACAO DA SOLICITAÇÃO DE COMPRA No " + _ANumsc[xzz]
+		_SQL:= "SELECT  C1_USER "
+		_SQL+= "FROM " + retsqlname("SC1") + " AS SC1 "
+		_SQL+= "WHERE  SC1.D_E_L_E_T_ <> '*' "
+		_SQL+= " AND C1_NUM = '" + _ANumsc[xzz] + "' "      
+		_SQL+= " AND C1_FILIAL = '" + xFilial("SC1") + "' "      
+	    TCQUERY _SQL NEW ALIAS "TRBSC1"
+		lAprovGer := .F.
+		_email := ""
+		PswOrder(1)
+		If PswSeek(TRBSC1->C1_USER, .T.)
+			aRet := PswRet()
+            _email := aRet[1][14]
+		EndIf	  
+		TRBSC1->(dbCloseArea())
+		If len(alltrim(_email)) > 0
+			conout("enviando email para o solicitante ...")			
+			U_ENVIAEMAIL(cTitemail,_email,"",cMensagem,Path)
+			conout("enviado ...")			
+		EndIf
+		If Select("TRBSC1") <> 0 
+			dbSelectArea("TRBSC1")
+			dbCloseArea()
+		EndIf
+//		Também será enviado e-mail ao comprador que esta atuando no processo de compra. GLPI 15648
+		_SQL := " SELECT TOP 1"
+		_SQL += "  rtrim(ltrim(Z99_EMAIL)) as Z99_EMAIL"
+		_SQL += " FROM SC7020 as SC7(NOLOCK)"
+		_SQL += " left join Z99020 as Z99(NOLOCK) ON Z99.D_E_L_E_T_ = ''"
+		_SQL += "  AND Z99_FILIAL = '"+xFilial("Z99")+"'"
+		_SQL += "  AND Z99_USERID = C7_USER"
+		_SQL += " WHERE SC7.D_E_L_E_T_ = ''"
+		_SQL += "  AND C7_FILIAL = '"+xFilial("SC7")+"'"
+		_SQL += "  AND C7_NUM = '"+cNumero+"'"
+	    TCQUERY _SQL NEW ALIAS "TRBSC1"
+		If Len(AllTrim(TRBSC1->Z99_EMAIL)) > 0
+			conout("enviando email para o comprador ...")			
+			U_ENVIAEMAIL(cTitemail,TRBSC1->Z99_EMAIL,"",cMensagem,Path)
+			conout("enviado ...")
+		EndIf
+//		Adicionado envio de e-mail ao grupo de compras GLPI 17315
+		conout("enviando email para grupo de Compras ...")
+		U_ENVIAEMAIL(cTitemail,"compras@bgh.com.br","",cMensagem,Path)
+		conout("enviado ...")
+
+		If Select("TRBSC1") <> 0 
+			dbSelectArea("TRBSC1")
+			dbCloseArea()
+		EndIf
+	Next
+	lAprovDir2 := .T.
+EndIf
+_u1	:= substr(ca097User,1,1)
+_u2	:= substr(ca097User,2,1)
+_u3	:= substr(ca097User,3,1)
+_u4	:= substr(ca097User,4,1)
+_u5	:= substr(ca097User,5,1)
+_u6	:= substr(ca097User,6,1)
+_lgn 	:= _u1+"lgn"+_u2+"lgn"+_u3+"lgn"+_u4+"lgn"+_u5+"lgn"+_u6      
+If 	lRejeitado    
+	_SQL:= "SELECT  C7_NUMSC "
+	_SQL+= "FROM " + retsqlname("SC7") + " AS SC7 "
+	_SQL+= "WHERE  SC7.D_E_L_E_T_ <> '*' "
+	_SQL+= " AND C7_NUM = '" + cNumero + "' "      
+	_SQL+= " AND C7_FILIAL = '" + xFilial("SC7") + "' "
+    TCQUERY _SQL NEW ALIAS "TRBSC7" 
+    _ANumsc := {}
+    TRBSC7->(dbGoTop())
+    while ! TRBSC7->(eof())
+		If len(alltrim(TRBSC7->C7_NUMSC)) > 0
+			_loc := ascan(_ANumsc, {|x| x == TRBSC7->C7_NUMSC})
+			If _loc == 0
+				aadd(_ANumsc, SC7->C7_NUMSC)							
+			EndIf		
+		EndIf
+		TRBSC7->(dbSkip())
+	EndDo
+	For xzz:=1 to len(_ANumsc)
+		cMensagem := "<html> "
+		cMensagem += "<head>"
+		cMensagem += "<title>Aprovação de Pedido - Pedido não Aprovado </title>"
+		cMensagem += "<meta http-equiv='Content-Type' content='text/html; charset=iso-8859-1'>"
+		cMensagem += "</head>"
+		cMensagem += "<body bgcolor='#FFFFFF' bgproperties='fixed'>"
+		cMensagem += "<body>"
+		cMensagem += "  <p style='font-family: Arial;' align='justify'>A Solicitação de Compra No. <b>" + _ANumsc[xzz] + "</b> teve seu Pedido Aprovado !!!.<br></p>"
+		cMensagem += "  <p style='font-family: Arial;' align='justify'>Motivo : " + lbmotivo + " </p>"
+		cMensagem += "</body>"
+		cMensagem += "</html> "
+		cTitemail := "APROVACAO DA SOLICITAÇÃO DE COMPRA No " + _ANumsc[xzz] + " - NÃO APROVADO"
+		_SQL:= "SELECT  C1_USER "
+		_SQL+= "FROM " + retsqlname("SC1") + " AS SC1 "
+		_SQL+= "WHERE  SC1.D_E_L_E_T_ <> '*' "
+		_SQL+= " AND C1_NUM = '" + _ANumsc[xzz] + "' "
+		_SQL+= " AND C1_FILIAL = '" + xFilial("SC1") + "' "
+		TCQUERY _SQL NEW ALIAS "TRBSC1"
+		lAprovGer := .F.
+		_email := ""
+		PswOrder(1)
+		If PswSeek(TRBSC1->C1_USER, .T.)
+			aRet := PswRet()
+            _email := aRet[1][14]
+		EndIf
+		TRBSC1->(dbCloseArea())
+		If len(alltrim(_email)) > 0
+			U_ENVIAEMAIL(cTitemail,_email,"",cMensagem,Path)
+		EndIf
+		If Select("TRBSC1") <> 0
+			dbSelectArea("TRBSC1")
+			dbCloseArea()
+		EndIf
+//		Também será enviado e-mail ao comprador que esta atuando no processo de compra. GLPI 15648
+		_SQL := " SELECT TOP 1"
+		_SQL += "  rtrim(ltrim(Z99_EMAIL)) as Z99_EMAIL"
+		_SQL += " FROM SC7020 as SC7(NOLOCK)"
+		_SQL += " left join Z99020 as Z99(NOLOCK) ON Z99.D_E_L_E_T_ = ''"
+		_SQL += "  AND Z99_FILIAL = '"+xFilial("Z99")+"'"
+		_SQL += "  AND Z99_USERID = C7_USER"
+		_SQL += " WHERE SC7.D_E_L_E_T_ = ''"
+		_SQL += "  AND C7_FILIAL = '"+xFilial("SC7")+"'"
+		_SQL += "  AND C7_NUM = '"+cNumero+"'"
+	    TCQUERY _SQL NEW ALIAS "TRBSC1"
+		If Len(AllTrim(TRBSC1->Z99_EMAIL)) > 0
+			conout("enviando email para o comprador ...")			
+			U_ENVIAEMAIL(cTitemail,TRBSC1Z99_EMAIL,"",cMensagem,Path)
+			conout("enviado ...")
+		EndIf
+		If Select("TRBSC1") <> 0 
+			dbSelectArea("TRBSC1")
+			dbCloseArea()
+		EndIf
+	Next	
+%>
+	<script> 
+		alert ("Pedido não Aprovado !!!"); 
+		window.location='http://<%=_cServer%>/h_APRSC1.APL?lgn=<%=_lgn%>';
+	</script>
+<%
+EndIf
+
+If lAprovDir2
+%>
+	<script> 
+		alert ("Pedido Liberado com Sucesso !!!"); 
+		window.location='http://<%=_cServer%>/h_APRSC1.APL?lgn=<%=_lgn%>';
+	</script>
+<%
+EndIf
+
+
+If lAprovGer
+%>
+	<script> 
+		alert ("Aprovação nesse nível efetuada. Aguardando outras aprovações !!!"); 
+		window.location='http://<%=_cServer%>/h_APRSC1.APL?lgn=<%=_lgn%>';
+	</script>
+<%
+EndIf
+
+%>
+</html>
+<%RESET ENVIRONMENT %>

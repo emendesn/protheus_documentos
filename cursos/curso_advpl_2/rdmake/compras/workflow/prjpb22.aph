@@ -1,0 +1,99 @@
+#include "rwmake.ch"    
+#include "TOPCONN.ch"
+#include "Ap5Mail.ch"   
+#include "TbiConn.ch"
+#include "TbiCoDE.ch"
+
+<center>
+<b><font size=4>Track da O.F.</font> </b>
+<hr>
+</center>
+
+<%
+  PREPARE ENVIRONMENT EMPRESA "01" FILIAL "01" TABLES "PB2", "SC5", "PB1"
+ 
+
+  _cUser   := __aPostParms[1,2] 
+  _cpass   := __aPostParms[2,2]  
+
+  _cUser   := _cUser   + space(15-len(Alltrim(_cUser)))
+  _cpass   := _cpass   + space(6-len(Alltrim(_cpass)))
+
+  if u_w_ValUsuario( _cUser, _cpass) = .t.  
+    _CIdusu := PswRet(1)[1][1]   /*Retorna o ID do Usuário*/
+    cNome  := PswRet(1)[1][4]   /*Retorna nome completo do usuário*/
+    cCargo := PswRet(1)[1][13]  /*Retorna Cargo*/
+    cDepto := PswRet(1)[1][12]  /*Retorna Departamento*/
+ 
+    // -------->
+    _SQL := "	SELECT  	C1_NUM,"
+    _SQL+= " 					C1_ITEM, "
+    _SQL+= " 					C1_DESCR, "
+    _SQL+= "					C1_PRODUTO "
+    _SQL+= "					C1_QUANT "
+    _SQL+= "					C1_EMISSAO "
+    _SQL+= "					C1_SOLICIT "
+	_SQL+= "	FROM " + retsqlname("SC1") + " AS SC1 "
+    _SQL+= " WHERE  D_E_L_E_T_ <> '*' "
+    _SQL+= " 		 AND C1_APROV = '' "
+    
+    TCQUERY _SQL NEW ALIAS "TRBY"   
+    _nCtdPed := 0
+    // <--------    
+%>
+ 
+    <hr>
+    <b>Pedidos de Compra aguardando aprovação.</b>
+
+	<table border="1" cellpadding="2" cellspacing="2">
+		<tr>
+			<td><font size = "2">Num. Pedido </font> </td>
+			<td><font size = "2">Ítem   </font> </td>
+			<td><font size = "2">Produto  </font> </td>
+			<td><font size = "2">Descrição    </font> </td>
+			<td><font size = "2">Quantidade </font> </td>
+			<td><font size = "2">Emissão </font> </td>
+			<td><font size = "2">Solicitante  </font> </td>
+		</tr>
+<%
+    dbselectarea("TRBY")
+    do while !eof()     
+%>
+		<tr>
+			<td align="left" valign="top"><font size = "2">&nbsp;<%=TRBY->C1_NUM%> </font></td>    
+			<td align="left" valign="top"><font size = "2">&nbsp;<%=TRBY->C1_ITEM%></font></td>
+			<td align="left" valign="top"><font size = "2">&nbsp;<%=TRBY->C1_PRODUTO%> </font></td>
+			<td align="left" valign="top"><font size = "2">&nbsp;<%=TRBY->C1_DESCR%>  </font></td>
+			<td align="left" valign="top"><font size = "2">&nbsp;<%=TRBY->C1_QUANT%>  </font></td>
+			<td align="left" valign="top"><font size = "2">&nbsp;<%=TRBY->C1_EMISSAO%>  </font></td>
+			<td align="left" valign="top"><font size = "2">&nbsp;<%=TRBY->C1_SOLICIT%>  </font></td>
+		<tr> 
+      	<%DBSKIP() 
+	enddo%>           
+
+	</table>   
+
+    if empty(_nCtdPed) %>
+       <br><center><b><font size=8 color=green></font></b><font size='7' color='green'><%=dtoc(Date()) + " - " + time()%><br>...Não existem pendencias para o usuário <%=_cUser%> !!</font></center><hr>
+    <%endif%>
+
+<%else
+   // ==============================================================================
+   // USUARIO OU SENHA ERRADA
+   // ==============================================================================
+   %>
+   <script>alert('Usuário inválido, favor usar os mesmo do Protheus');history.back();</script>
+<%Endif%>  
+  
+<%/*=====================================================
+    FUNCOES QUE SERÃO USADAS DO DECORRER DO PROCESSO
+=======================================================*/%>
+<%/*VALIDACAO DE USUARIO*/
+User Function w_ValUsuario( wUsuario, wSenha )
+    Local lOk
+    PswOrder(2)
+    If PswSeek( wUsuario )
+      lOk := PSWNAME( wSenha )
+    EndIf
+Return lOk%> 
+<%RESET ENVIRONMENT %>  

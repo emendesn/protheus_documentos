@@ -1,0 +1,736 @@
+#include "rwmake.ch"       
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³ OrcFat   ³ Autor ³ Claudia Cabral        ³ Data ³ 06/10/09 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Impressao do  Orcamento de Vendas                          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Especifico BGH do Brasil                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+User Function ORCFAT()        
+Private lObs := .f.
+Private aArea := GetArea()
+Private aAreaTMP1 := GetArea()
+Private cArqSCL	:= ""
+Private cArqSCK	:= ""
+Private oGetDb
+Private aPosObj   := {}
+Private aObjects  := {}
+Private aSize     := {}
+Private aPosGet   := {}
+Private aInfo     := {}
+Private nGetLin   := 0
+Private aTmp		:= {}
+Private aTela[0][0]
+Private aGets[0]
+Private bCampo := { |nField| Field(nField) }
+Private aHeader 	:= {}
+Private aHeaderSCL:= {}
+Private aHeaderSCK:= {}
+SetPrvt("CBTXT,CBCONT,NORDEM,TAMANHO,LIMITE,CIMPRI")
+SetPrvt("NTOTAL,TITULO,CDESC1,CDESC2,CDESC3,ARETURN,NTOTREA,NDESCPIS,NDESCCOF,NDESCSUF")
+SetPrvt("NOMEPROG,CPERG,NLASTKEY,LCONTINUA,NLIN,WNREL")
+SetPrvt("CSTRING,NQTD,")
+
+
+u_GerA0003(ProcName())
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis Ambientais                                  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cbTxt		:= ""
+cbCont	:= ""
+nOrdem 	:= 0
+Tamanho	:= "G" 
+Limite	:= 220
+cImpri   := ""
+nTotal   := 0
+nTotREA   := 0
+Titulo := PadC("Orcamento de Venda",74)
+cDesc1 := PadC("Impressao dos orcamentos de vendas",74)
+cDesc2 := PadC(OemToAnsi(""),74)
+cDesc3 := PadC(OemToAnsi(""),74)
+
+aReturn	:= { "Zebrado", 1,"Administracao", 1, 2, 1,"",1 }
+NomeProg	:= "ORCFAT" 
+cPerg		:= ""
+nLastKey	:= 0 
+lContinua:= .T.
+nLin 		:= 99
+wnrel 	:= "ORCFAT"
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica as perguntas selecionadas, busca o padrao da Nfiscal           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+//Pergunte(cPerg,.F.)
+cString:="SCK"
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Envia controle para a funcao SETPRINT                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+wnrel:=SetPrint(cString,wnrel,cPerg,Titulo,cDesc1,cDesc2,cDesc3,.F.,,,,,.F.)
+If ( nLastKey == 27 .Or. LastKey() == 27 )
+   Return(.F.)
+Endif
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica Posicao do Formulario na Impressora                 ³          
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+SetDefault(aReturn,cString)
+If ( nLastKey == 27 .Or. LastKey() == 27 )
+   Return(.F.)
+Endif
+
+RptStatus({|| RptDetail()})// Substituido por el asistente de conversión del AP6 IDE en 31/07/02 ==> RptStatus({|| Execute(RptDetail())})
+
+
+// Substituido por el asistente de conversión del AP6 IDE en 31/07/02 ==> Static Function RptDetail
+Static Function RptDetail()
+Local nItem := 0
+Local dDataCnd  := SCJ->CJ_EMISSAO
+Local lCondVenda := .F.  
+Local nAcerto := 0
+Local aImpostos := {} 
+Local aImp      := {}
+Local aImpGer   := {}
+
+dbSelectArea("SCJ")
+dbSetOrder(1)
+
+dbSelectArea("SA1")
+dbSetOrder(1)
+dbSeek(xFilial()+SCJ->CJ_CLIENTE+SCJ->CJ_LOJA)
+
+dbSelectArea("SA3")
+dbSetOrder(1)
+dbSeek(xFilial()+SA1->A1_VEND)
+
+dbSelectArea("SA4")
+dbSetOrder(1)
+dbSeek(xFilial()+SCJ->CJ_XTRANS)
+
+dbSelectArea("SE4")
+dbSetOrder(1)
+dbSeek(xFilial()+SCJ->CJ_CONDPAG)
+
+dbSelectArea("SCK")
+dbSetOrder(1)
+dbSeek(xFilial("SCK")+SCJ->CJ_NUM,.T.)
+
+
+/*--------*/
+If A415Monta(@cArqSCK,@cArqSCL,.F.)
+	aHeader := aHeaderSCK	
+	MaFisSave()
+	MaFisEnd()
+	MaFisIni(Iif(Empty(SCJ->CJ_CLIENT),SCJ->CJ_CLIENTE,SCJ->CJ_CLIENT),;// 1-Codigo Cliente/Fornecedor
+		SCJ->CJ_LOJAENT,;		// 2-Loja do Cliente/Fornecedor
+		"C",;				// 3-C:Cliente , F:Fornecedor
+		"N",;				// 4-Tipo da NF
+		SA1->A1_TIPO,;		// 5-Tipo do Cliente/Fornecedor
+		Nil,;
+		Nil,;
+		Nil,;
+		Nil,;
+		"MATA461")
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Agrega os itens para a funcao fiscal         ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbSelectArea("TMP1")
+	dbGotop()
+	While ( !Eof() )
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Verifica se a linha foi deletada                     ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If ( !TMP1->CK_FLAG .And. !Empty(TMP1->CK_PRODUTO) )
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Posiciona Registros                          ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ			
+			SB1->(dbSetOrder(1))
+			If SB1->(MsSeek(xFilial("SB1")+TMP1->CK_PRODUTO))
+				nQtdPeso := TMP1->CK_QTDVEN*SB1->B1_PESO
+			EndIf
+		    SB2->(dbSetOrder(1))
+		    SB2->(MsSeek(xFilial("SB2")+TMP1->CK_PRODUTO+TMP1->CK_LOCAL))
+		    SF4->(dbSetOrder(1))
+		    SF4->(MsSeek(xFilial("SF4")+TMP1->CK_TES))
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Calcula o preco de lista                     ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			nValMerc  := TMP1->CK_VALOR
+			nPrcLista := TMP1->CK_PRUNIT
+			nQtdPeso  := 0
+			nItem++
+			If ( nPrcLista == 0 )
+				nPrcLista := A410Arred(nValMerc/TMP1->CK_QTDVEN,"CK_PRCVEN")
+			EndIf
+			nAcresFin := A410Arred(TMP1->CK_PRCVEN*SE4->E4_ACRSFIN/100,"D2_PRCVEN")
+			nValMerc  += A410Arred(nAcresFin*TMP1->CK_QTDVEN,"D2_TOTAL")
+			nDesconto := A410Arred(nPrcLista*TMP1->CK_QTDVEN,"D2_DESCON")-nValMerc
+			nDesconto := IIf(nDesconto==0,TMP1->CK_VALDESC,nDesconto)
+			nDesconto := Max(0,nDesconto)
+			nPrcLista += nAcresFin
+			nValMerc  += nDesconto
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Verifica a data de entrega para as duplicatas³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If ( TMP1->(FieldPos("CK_ENTREG"))>0 )
+				If ( dDataCnd > TMP1->CK_ENTREG .And. !Empty(TMP1->CK_ENTREG) )
+					dDataCnd := TMP1->CK_ENTREG
+				EndIf
+			Else
+				dDataCnd  := M->CJ_EMISSAO
+			EndIf
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Agrega os itens para a funcao fiscal         ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			MaFisAdd(TMP1->CK_PRODUTO,;   	// 1-Codigo do Produto ( Obrigatorio )
+				TMP1->CK_TES,;	   	// 2-Codigo do TES ( Opcional )
+				TMP1->CK_QTDVEN,;  	// 3-Quantidade ( Obrigatorio )
+				nPrcLista,;		  	// 4-Preco Unitario ( Obrigatorio )
+				nDesconto,; 	// 5-Valor do Desconto ( Opcional )
+				"",;	   			// 6-Numero da NF Original ( Devolucao/Benef )
+				"",;				// 7-Serie da NF Original ( Devolucao/Benef )
+				0,;					// 8-RecNo da NF Original no arq SD1/SD2
+				0,;					// 9-Valor do Frete do Item ( Opcional )
+				0,;					// 10-Valor da Despesa do item ( Opcional )
+				0,;					// 11-Valor do Seguro do item ( Opcional )
+				0,;					// 12-Valor do Frete Autonomo ( Opcional )
+				nValMerc,;			// 13-Valor da Mercadoria ( Obrigatorio )
+				0)					// 14-Valor da Embalagem ( Opiconal )
+		
+			SB1->(dbSetOrder(1))
+			If SB1->(MsSeek(xFilial("SB1")+TMP1->CK_PRODUTO))
+				nQtdPeso := TMP1->CK_QTDVEN*SB1->B1_PESO
+			Endif	
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Altera peso para calcular frete              ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			MaFisAlt("IT_PESO",nQtdPeso,nItem)
+			MaFisAlt("IT_PRCUNI",nPrcLista,nItem)
+			MaFisAlt("IT_VALMERC",nValMerc,nItem)
+		
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Analise da Rentabilidade                     ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			/*
+			If SF4->F4_DUPLIC=="S"
+				nY := aScan(aRentab,{|x| x[1] == TMP1->CK_PRODUTO})
+				If nY == 0
+					aadd(aRenTab,{TMP1->CK_PRODUTO,0,0,0,0,0})
+					nY := Len(aRenTab)
+				EndIf
+				aRentab[nY][2] += (nValMerc - nDesconto)
+				aRentab[nY][3] += TMP1->CK_QTDVEN*SB2->B2_CM1	
+			EndIf
+			*/
+		EndIf	
+		dbSelectArea("TMP1")
+		dbSkip()
+	EndDo
+	aImp:=MafisRet(,"NF_IMPOSTOS")  
+	For nZ:=1  To Len (aImp)     
+		If aImp[nZ,1] <> "..."                                                  
+			//aImp[nZ,1]-Sigla do Imposto         /aImp[nZ,2]-Descricao  do Imposto aImp[nZ,3]=Base de calculo
+			//aImp[nZ,4]=Aliquota                 aImp[nZ,5]=Valor do Imposto
+		   //	aadd(aImpGer,{aImp[nZ,1],aImp[nZ][3],aImp[nZ][4],aImp[nZ][5]})    
+	   		aadd(aImpGer,{aImp[nZ,2],aImp[nZ,3],aImp[nZ,4],aImp[nZ][5]})    
+		EndIf	
+	Next
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Indica os valores do cabecalho               ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	MaFisAlt("NF_FRETE",SCJ->CJ_FRETE)
+	MaFisAlt("NF_SEGURO",SCJ->CJ_SEGURO)
+	MaFisAlt("NF_AUTONOMO",SCJ->CJ_FRETAUT)
+	MaFisAlt("NF_DESPESA",SCJ->CJ_DESPESA)
+	MaFisAlt("NF_DESCONTO",MaFisRet(,"NF_DESCONTO")+MaFisRet(,"NF_VALMERC")*SCJ->CJ_PDESCAB/100)
+	MaFisAlt("NF_DESCONTO",MaFisRet(,"NF_DESCONTO")+SCJ->CJ_DESCONT)
+	MaFisWrite(1)
+	//
+	// Template GEM - Gestao de Empreendimentos Imobiliarios
+	//
+	// Verifica se a condicao de pagamento tem vinculacao com uma condicao de venda
+	//
+	If ExistTemplate("GMCondPagto")
+		lCondVenda := ExecTemplate("GMCondPagto",.F.,.F.,{SCJ->CJ_CONDPAG,} )
+		If ValType("lCondVenda") # "L"
+			lCondVenda := .f.
+		EndIf
+	EndIf
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Calcula os venctos conforme a condicao de pagto  ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbSelectarea("SE4")
+	dbSetOrder(1)
+	MsSeek(xFilial("SE4")+SCJ->CJ_CONDPAG)
+	If ((SE4->E4_TIPO=="9".AND.!(INCLUI.OR.ALTERA)).OR.SE4->E4_TIPO<>"9")
+		If SE4->E4_TIPO=="9"
+			cParc := "1"
+			For nX := 1 To SuperGetMv("MV_NUMPARC")
+				If SCJ->(FieldPos("CJ_DATA"+cParc))<> 0 .And. SCJ->(FieldPos("CJ_PARC"+cParc))<> 0 .And. !Empty(SCJ->(FieldGet(FieldPos("CJ_PARC"+cParc))))
+					aadd(aDupl,{SCJ->(FieldGet(FieldPos("CJ_DATA"+cParc))),SCJ->(FieldGet(FieldPos("CJ_PARC"+cParc)))})
+				EndIf
+				cParc := Soma1(cParc)
+			Next nX
+		Else
+			aDupl := Condicao(MaFisRet(,"NF_BASEDUP"),SCJ->CJ_CONDPAG,MaFisRet(,"NF_VALIPI"),dDataCnd,MaFisRet(,"NF_VALSOL"),,,nAcresFin)
+		EndIf
+		If Empty(aDupl)
+			aDupl := {{Ctod(""),0}}
+		EndIf
+		If ! lCondVenda
+			For nX := 1 To Len(aDupl)
+				nAcerto += aDupl[nX][2]
+			Next nX
+			aDupl[Len(aDupl)][2] += MaFisRet(,"NF_BASEDUP") - nAcerto
+		EndIf	
+		aVencto := aClone(aDupl)
+		For nX := 1 To Len(aDupl)
+			aDupl[nX][2] := TransForm(aDupl[nX][2],PesqPict("SE1","E1_VALOR"))
+		Next nX
+	Else
+		aDupl   := {{Ctod(""),TransForm(MaFisRet(,"NF_BASEDUP"),PesqPict("SE1","E1_VALOR"))}}
+		aVencto := {{dDataBase,MaFisRet(,"NF_BASEDUP")}}
+	EndIf
+	
+	//
+	// Template GEM - Gestao de empreendimentos Imobiliarios
+	// Gera os vencimentos e valores das parcelas conforme a condicao de venda
+	//
+	If lCondVenda .AND. ExistTemplate("GMMA415Dupl")
+		aVencto := ExecTemplate("GMMA415Dupl",.F.,.F.,{SCJ->CJ_NUM ,SCJ->CJ_CONDPAG,dDataCnd,,MaFisRet(,"NF_BASEDUP") ,aVencto}) 
+		aDupl := {}
+		aEval(aVencto ,{|aTitulo| aAdd( aDupl ,{transform(aTitulo[1],x3Picture("E1_VENCTO")) ,transform(aTitulo[2],x3Picture("E1_VALOR"))}) })
+		If Len(aDupl) == 0
+			aDupl := {{Ctod(""),TransForm(MaFisRet(,"NF_BASEDUP"),PesqPict("SE1","E1_VALOR"))}}
+			aVencto := {{dDataBase,MaFisRet(,"NF_BASEDUP")}}
+		EndIf
+	EndIf
+	
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Monta a tela de exibicao dos valores fiscais ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	//DEFINE MSDIALOG oDlg TITLE OemToAnsi(STR0042) FROM 09,00 TO 28,80 //"Planilha Financeira"
+	//oFolder := TFolder():New(001,001,aTitles,{"HEADER"},oDlg,,,, .T., .F.,315,140)
+	MaFisRodape(1,'',,{005,001,310,60},Nil,.T.)
+	
+    nLin := 0
+	@ nLin,000 PSAY Repl("*",Limite)
+	nLin := nLin + 1
+	@ nLin,000 PSAY "*"+PadC("",Limite-2)+"*"
+	nLin := nLin + 1
+	@ nLin,000 PSAY "*"+PadC("Orcamento de Venda N. "+SCJ->CJ_NUM + SPACE(20)+ " EMISSAO: " + DTOC(SCJ->CJ_EMISSAO),Limite-2)+"*"
+	//@ nLin,000 PSAY " "+PadC("Orcamento de Venda N. "+SCJ->CJ_NUM + SPACE(20)+ " EMISSAO: " + DTOC(SCJ->CJ_EMISSAO),Limite-2)+" "
+	nLin := nLin + 1
+	@ nLin,000 PSAY "*"+PadC("",Limite-2)+"*"
+	nLin := nLin + 1
+	@ nLin,000 PSAY Repl("*",Limite)
+	nLin := nLin + 1
+	@ nLin,000 PSAY "*"+PadC("",Limite-2)+"*"
+	nLin := nLin + 1
+	cImpri := " CLIENTE : "+SA1->A1_COD+"/"+SA1->A1_LOJA+" - "+SA1->A1_NOME
+	@ nLin,000 PSAY "*"+PadR(cImpri,Limite-2)+"*"
+	nLin := nLin + 1
+	cImpri := " CNPJ : "+SA1->A1_CGC + space(15) +  "I.E.:  " +SA1->A1_INSCR+"     CONTATO : "+SA1->A1_CONTATO + "         E-MAIL : " + SA1->A1_EMAIL
+	@ nLin,000 PSAY "*"+PadR(cImpri,Limite-2)+"*"
+	nLin := nLin + 1
+	cImpri := " END. : "+SA1->A1_END +  "BAIRRO.:  " +SA1->A1_BAIRRO+"    UF : "+SA1->A1_EST + "   CEP : " + SA1->A1_CEP
+	@ nLin,000 PSAY "*"+PadR(cImpri,Limite-2)+"*"
+	nLin := nLin + 1
+	@ nLin,000 PSAY "*"+PadC("",Limite-2)+"*"
+	nLin := nLin + 1
+	cImpri := " COND.PAG.: "+SCJ->CJ_CONDPAG+" - "+SE4->E4_DESCRI  
+	@ nLin,000 PSAY "*"+PadR(cImpri,Limite-2)+"*"
+	nLin := nLin + 1                                                 
+	@ nLin,000 PSAY "*"+PadC("",Limite-2)+"*"
+	nLin := nLin + 1        
+	cImpri :=  ''
+	@ nLin,000 PSAY "*"+PadR(cImpri,Limite-2)+"*"
+	nLin := nLin + 1	                     
+	cImpri := " TIPO DE FRETE: " + IIF(SCJ->CJ_TPFRETE='F','FOB','CIF') + SPACE(40)+ "  TRANSPORTADORA: " + SA4->A4_NOME
+	@ nLin,000 PSAY "*"+PadR(cImpri,Limite-2)+"*"
+	nLin := nLin + 1
+	cImpri :=  ''
+	@ nLin,000 PSAY "*"+PadR(cImpri,Limite-2)+"*"
+	nLin := nLin + 1	                     	
+	cImpri := " VENDEDOR: " + SA3->A3_NOME + SPACE(60) + " TAXA PTAX: " + TRANSFORM(SCJ->CJ_TXMOEDA,"@E 9999.9999")
+	@ nLin,000 PSAY "*"+PadR(cImpri,Limite-2)+"*"
+	nLin := nLin + 1
+	@ nLin,000 PSAY "*"+PadC("",Limite-2)+"*"
+	nLin := nLin + 1
+	//         1         2         3         4         5         6         7         8         9        10        11          12        13        14        15        16        17        18
+	//1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890
+	//* xxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                  999,999,999.99 999,999,999.99 999,999,999,999.99 *
+	//                  xxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                    9,999,999.99   9,999,999.99   9,999,999,999.99    9,999,999.99    9,999,999,999.99    99/99/99*
+	//* Produto         Descricao                                                           Quantidade    Preco Venda              Total     Preco Venda R$            Total R$ Dt. Entrega Aliq. IPI*
+	//*                 Componente      Descricao do Componente                                                                           *                   
+	@ nLin,000 PSAY Repl("*",Limite)
+	nLin := nLin + 1
+	@ nLin,000 PSAY "* Produto         Descricao                                                           Quantidade    Preco Venda              Total     Preco Venda R$            Total R$ Dt. Entrega Aliq. IPI"
+	@ nLin,219 PSAY "*"
+	nLin := nLin + 1
+	@ nLin,000 PSAY "*                 Componente      Descricao do Componente                                                                          "                   
+	@ nLin,219 PSAY "*"
+	nLin := nLin + 1
+	@ nLin,000 PSAY Repl("*",Limite)
+	
+	dbSelectArea("SCK")
+	dbSetOrder(1)
+	dbSeek(xFilial("SCK")+SCJ->CJ_NUM,.T.)
+
+	While ( !Eof() .And. SCK->CK_FILIAL == xFilial("SCK") .And. ;
+				SCK->CK_NUM == SCJ->CJ_NUM )
+		If ( nLin > 30 )
+			nLin := 0
+			@ nLin,000 PSAY Repl("*",Limite)
+			nLin := nLin + 1
+			@ nLin,000 PSAY "*"+PadC("Orcamento de Venda",Limite-2)+"*"
+			nLin := nLin + 1
+			@ nLin,000 PSAY Repl("*",Limite)
+			nLin := nLin + 1
+			@ nLin,000 PSAY "* Produto         Descricao                                                           Quantidade    Preco Venda              Total     Preco Venda R$            Total R$ Dt. Entrega Aliq. IPI"
+			@ nLin,219 PSAY "*"
+			nLin := nLin + 1
+			@ nLin,000 PSAY "*                 Componente      Descricao do Componente                                                                          "                   
+			@ nLin,219 PSAY "*"
+			nLin := nLin + 1
+			@ nLin,000 PSAY Repl("*",Limite)
+			nLin := nLin + 1
+	   EndIf
+		nLin := nLin + 1                                     
+		SB1->(MsSeek(xFilial("SB1")+SCK->CK_PRODUTO))
+		@ nLin,000 PSAY "* "+SCK->CK_PRODUTO
+		@ nLin,019 PSAY SubStr(SCK->CK_DESCRI,1,30)
+		@ nLin,082 PSAY SCK->CK_QTDVEN          PICTURE TM(SCK->CK_QTDVEN,14,2)
+		@ nLin,097 PSAY SCK->CK_PRCVEN          PICTURE TM(SCK->CK_PRCVEN,14,2)
+		@ nLin,112 PSAY SCK->CK_VALOR           PICTURE TM(SCK->CK_VALOR ,18,2)
+		@ nLin,135 PSAY SCK->CK_XUNIREA         PICTURE TM(SCK->CK_PRCVEN,14,2)
+		@ nLin,151 PSAY SCK->CK_XTOTREA         PICTURE TM(SCK->CK_VALOR ,18,2)
+		@ nLin,171 PSAY DTOC(SCK->CK_ENTREG) 
+		@ nLin,183 PSAY SB1->B1_IPI 		    PICTURE TM(SB1->B1_IPI ,5,2)
+		@ nLin,219 PSAY "*"
+		nTotal := nTotal + SCK->CK_VALOR
+		nTotREA := nTotrea + SCK->CK_XTOTREA	
+		dbSelectArea("SCL")
+		dbSetOrder(1)
+		dbSeek(xFilial("SCL")+SCK->CK_NUM+SCK->CK_ITEM,.T.)
+	
+		While  ( !Eof() .And. xFilial("SCL") == SCL->CL_FILIAL .And. ;
+						SCL->CL_NUM == SCK->CK_NUM .And.;
+						SCL->CL_ITEMORC == SCK->CK_ITEM )
+			If ( nLin > 50 )
+				nLin := 0
+				@ 000,000 PSAY "*"+PadC("Orcamento de Venda",Limite-2)+"*"
+				nLin := nLin + 1			
+				@ nLin,000 PSAY Repl("*",Limite)
+				nLin := nLin + 1			
+				@ nLin,000 PSAY "* Produto         Descricao                                                           Quantidade    Preco Venda              Total     Preco Venda R$            Total R$ Dt. Entrega Aliq. IPI"
+				nLin := nLin + 1
+				@ nLin,000 PSAY "*                 Componente      Descricao do Componente                                                                          "                   
+				@ nLin,219 PSAY "*"
+				nLin := nLin + 1
+				@ nLin,000 PSAY Repl("*",Limite)
+				nLin := nLin + 1			
+			EndIf
+			nLin := nLin + 1			
+			@ nLin,000 PSAY "* ----->"
+			@ nLin,019 PSAY SCL->CL_PRODUTO
+			@ nLin,035 PSAY SubStr(SCL->CL_DESCRI,1,30)
+			dbSelectArea("SB1")
+			dbSetOrder(1)
+			dbSeek(xFilial("SB1")+SCL->CL_PRODUTO)
+			dbSelectArea("SF4")
+			dbSetOrder(1)
+			dbSeek(xFilial("SF4")+SCK->CK_TES)
+			nQtd := SCL->CL_QUANT*SCK->CK_QTDVEN
+			@ nLin,084 PSAY nQtd              PICTURE TM(nQtd,12,2)
+			@ nLin,219 PSAY "*"
+	
+			dbSelectArea("SCL")
+			dbSkip()
+		EndDo
+		nLin := nLin + 1
+		@ nLin,000 PSAY "*"+PadC("",Limite-2)+"*"
+		
+		dbSelectArea("SCK")
+		dbSkip()	
+	EndDo			
+	nLin := nLin + 1	
+	@ nLin,000 PSAY Repl("*",Limite)
+	nLin := nLin + 1
+	@ nLin,000 PSAY "* Total das Mercadorias ----->"
+	@ nLin,112 PSAY nTotal PICTURE TM(nTotal,18,2)
+	@ nLin,151 PSAY nTOTREA PICTURE TM(SCK->CK_VALOR ,18,2)
+	@ nLin,219 PSAY "*"
+	nLin := nLin + 1
+	@ nLin,000 PSAY Repl("*",Limite)            
+	nLin := nLin + 1	
+	/*
+	If SCJ->CJ_DESC1 > 0 .or. SCJ->CJ_DESC2 > 0 .or. SCJ->CJ_DESC3 > 0  .or. SCJ->CJ_DESC4 > 0 
+		cImpri := " DESCONTO: "+AllTrim(TransForm(SCJ->CJ_DESC1,X3Picture("CJ_DESC1")))+" + "+;
+								AllTrim(TransForm(SCJ->CJ_DESC2,X3Picture("CJ_DESC2")))+" + "+;
+								AllTrim(TransForm(SCJ->CJ_DESC3,X3Picture("CJ_DESC3")))+" + "+;
+								AllTrim(TransForm(SCJ->CJ_DESC4,X3Picture("CJ_DESC4")))
+	Else 
+		cImprim := ''
+	EndIf							
+	@ nLin,000 PSAY "*"+PadC("",Limite-2)+"*"
+	nLin := nLin + 1	                     	
+	*/
+	If MaFisRet(,"NF_FRETE") > 0
+		cImpri := ' ' + RetTitle("F2_FRETE")   + ' ' +  ALLTRIM(TRANSFORM(MaFisRet(,"NF_FRETE") ,PesqPict("SF2","F2_FRETE",16,2) ))
+		@ nLin,000 PSAY "*"+PadR(cImpri,Limite-2)+"*"                         
+		nLin := nLin + 1	
+		@ nLin,000 PSAY "*"+PadC("",Limite-2)+"*"
+		nLin := nLin + 1                         
+	Endif	
+	If MaFisRet(,"NF_SEGURO") > 0
+		cImpri := ' ' + RetTitle("F2_SEGURO")   + ' ' +  ALLTRIM(TRANSFORM(MaFisRet(,"NF_SEGURO") * SCJ->CJ_TXMOEDA ,PesqPict("SF2","F2_SEGURO",16,2) ))
+		@ nLin,000 PSAY "*"+PadR(cImpri,Limite-2)+"*"                         
+		nLin := nLin + 1	                     
+		@ nLin,000 PSAY "*"+PadC("",Limite-2)+"*"
+		nLin := nLin + 1                         
+	Endif	
+    if MaFisRet(,"NF_DESCONTO") > 0
+	    cImpri := ' ' + RetTitle("F2_DESCONT")   + ' ' +  ALLTRIM(TRANSFORM(MaFisRet(,"NF_DESCONTO") * SCJ->CJ_TXMOEDA  ,PesqPict("SF2","F2_DESCONTO",16,2) ))
+	    @ nLin,000 PSAY "*"+PadR(cImpri,Limite-2)+"*"                         
+ 	 	nLin := nLin + 1	                     
+ 		@ nLin,000 PSAY "*"+PadC("",Limite-2)+"*"
+		nLin := nLin + 1                         
+	Endif
+	If 	MaFisRet(,"NF_AUTONOMO") > 0
+		cImpri := ' ' + RetTitle("F2_FRETAUT")   + ' ' +  ALLTRIM(TRANSFORM(MaFisRet(,"NF_AUTONOMO") * SCJ->CJ_TXMOEDA ,PesqPict("SF2","F2_FRETAUT",16,2) ))
+		@ nLin,000 PSAY "*"+PadR(cImpri,Limite-2)+"*"                         
+		nLin := nLin + 1	                     
+		@ nLin,000 PSAY "*"+PadC("",Limite-2)+"*"
+		nLin := nLin + 1                         
+	Endif
+	If MaFisRet(,"NF_DESPESA") > 0 	
+		cImpri := ' ' + RetTitle("F2_DESPESA")   + ' ' +  ALLTRIM(TRANSFORM(MaFisRet(,"NF_DESPESA") * SCJ->CJ_TXMOEDA ,PesqPict("SF2","F2_DESPESA",16,2) ))
+		@ nLin,000 PSAY "*"+PadR(cImpri,Limite-2)+"*"                         
+		nLin := nLin + 1	
+		cimpri := ''
+		@ nLin,000 PSAY "*"+PadR(cImpri,Limite-2)+"*"                         
+		nLin := nLin + 1	
+	endif
+        
+    For nZ:=1  To Len (aImpGer) // Impressao dos Impostos gerados
+		
+		   cImpri :=  ' ' + aImpGer[nZ,1] + ' - Base de Calculo -  ' +  ALLTRIM(TRANSFORM(aImpGer[nZ,2] * SCJ->CJ_TXMOEDA ,PesqPict("SF2","F2_BASIMP5",16,2) )) + ' - ' + ALLTRIM(TRANSFORM(aImpGer[nZ,3] ,"@E 99.99" )) +   '% - Valor ' +  ALLTRIM(TRANSFORM(aImpGer[nZ,4] * SCJ->CJ_TXMOEDA ,PesqPict("SF2","F2_BASIMP5",16,2) ))
+		   IF 'RETIDO' $ UPPER(aImpGer[nZ,1])
+	   	   		lObs := .t.
+		   ENDIF
+		   @ nLin,000 PSAY "*"+PadR(cImpri,Limite-2)+"*"                         
+		   nLin := nLin + 1	
+		   cimpri := ''
+		   @ nLin,000 PSAY "*"+PadR(cImpri,Limite-2)+"*"                         
+		   nLin := nLin + 1	
+		
+	Next        
+	cImpri := ''
+	if lObs 
+		cImpri := ' Valor da Substituição Tributaria será agregado conforme Portaria CAT em vigência para este.'	
+		@ nLin,000 PSAY "*"+PadR(cImpri,Limite-2)+"*"                         
+		nLin := nLin + 1	         
+		cImpri := ''   
+		@ nLin,000 PSAY "*"+PadR(cImpri,Limite-2)+"*"                         
+	  	nLin := nLin + 1	 
+	  	cimpri := ''
+		lObs := .F.
+	EndIF                                           
+	If MafisRet(,"NF_SUFRAMA") .and. MafisRet(,"NF_DESCZF") > 0 // calculo do suframa    
+		nDescPis := nTOTREA * 0.0165    
+		nDescCof := nTOTREA * 0.076 
+		nDescSuf := nDescPis + NDescCof
+		cImpri := ' Valor da Mercadoria R$: ' + alltrim(Transform(nTOTREA,"@E 999,999,999,999,999.99"))
+		@ nLin,000 PSAY "*"+PadR(cImpri,Limite-2)+"*"                         
+		nLin := nLin + 1	                                                        
+		cImpri := ' Desconto de PIS (aliq. 1,65%) R$: ' + alltrim(Transform(nDescPis ,"@E 999,999,999,999,999.99"))
+		@ nLin,000 PSAY "*"+PadR(cImpri,Limite-2)+"*"                         
+		nLin := nLin + 1	         
+		cImpri := ' Desconto de COFINS (aliq. 7,60%) R$: ' + alltrim(Transform(nDescCof,"@E 999,999,999,999,999.99"))
+		@ nLin,000 PSAY "*"+PadR(cImpri,Limite-2)+"*"                         
+		nLin := nLin + 1	         
+		cImpri := ' Total R$: ' + alltrim(Transform(nDescSuf,"@E 999,999,999,999,999.99"))
+		@ nLin,000 PSAY "*"+PadR(cImpri,Limite-2)+"*"                         
+		nLin := nLin + 1	         		
+		cImpri := ''   
+		@ nLin,000 PSAY "*"+PadR(cImpri,Limite-2)+"*"                         
+	  	nLin := nLin + 1	 
+	  	cimpri := ''	
+	Endif
+	@ nLin,000 PSAY "*"+PadR(cImpri,Limite-2)+"*"                         
+	nLin := nLin + 1	                     
+	cImpri := ' Total do Orcamento R$ : ' + ALLTRIM(TRANSFORM(MaFisRet(,"NF_TOTAL") * SCJ->CJ_TXMOEDA ,PesqPict("SF2","F2_VALBRUT",16,2) ))  + '     ' + RetTitle("F2_VALFAT")   + ' ' +  ALLTRIM(TRANSFORM(MaFisRet(,"NF_BASEDUP") * SCJ->CJ_TXMOEDA ,PesqPict("SF2","F2_VALFAT",16,2) ))
+	@ nLin,000 PSAY "*"+PadR(cImpri,Limite-2)+"*"                         
+	nLin := nLin + 1	                     
+	@ nLin,000 PSAY Repl("*",Limite)
+	@ nLin,000 PSAY "*"+PadC("",Limite-2)+"*"
+	nLin := nLin + 1
+	@ nLin,000 PSAY ""
+	Set Device to Screen
+	Set Printer To
+	dbCommitAll()
+	DbSelectArea("SCJ")
+	DbSetOrder(1)
+	DbSelectArea("SCK")
+	DbSetOrder(1)
+	DbSelectArea("SCL")
+	DbSetOrder(1)
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Se impressao em Disco, chama Spool.                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If aReturn[5] == 1
+		ourspool(wnrel)
+	Endif
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Libera relatorio para Spool da Rede.                             ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	MS_FLUSH()
+	A415DesMonta(@cArqSCK,@cArqSCL)
+	MsUnLockAll()  
+	MaFisEnd()
+	MaFisRestore()
+
+	RestArea(aAreaTMP1)
+	RestArea(aArea)
+ENDIF
+Return(.T.)          
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³MaFisRodape³ Autor ³ Claudia Cabral       ³ Data ³16/11/2009³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Atualiza o Array de Resumos da NF.                          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ Nenhum                                                     ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function MaFisRodape(nTipo,;		// Quebra : 1 Imposto+Aliquota,  2-Imposto
+	cJanela,;		// enviar branco
+	aImpostos,;	// Relacao de Impostos que deverao aparecer ( Codigo )
+	aPos,;			// Array contendo Posicao e Tamanho
+	bValidPrg,;	// Validacao executada na Edicao dop Campo
+	lVisual,; // sempre .t.
+	cFornIss,; //Fornecedor do ISS
+	cLojaIss,; //Loja do Fornecedor do ISS
+	aRecSE2,;
+	cDirf,;
+	cCodRet,;
+	oCodRet,;	
+	dVencIss,; 	//Vencimento ISS
+	aCodR,;
+	cRecIss)	//Informa se recolhe o ISS ou nao
+
+
+Local aTemp                                              
+Local aOpcoes := {"Sim","Nao"}
+Local oFornIss
+Local oLojaIss                     
+Local oVencIss
+Local oDescri 
+                                                                  
+Local cDescri  := ""
+Local aAreaSE2 := {}
+Local aAreaSA2 := {}
+Local lFornIss     := .F.
+Local nPosDum	:=	0
+Local aAUTOISS	:= &(GetNewPar("MV_AUTOISS",'{"","","",""}'))
+Local aMaPCCI  := {}
+Local nI        := 0
+Local nPosCodR  := 0
+Local aNfCab := {}
+//Local aOpcIss	:=	{"1="+STR0024,"2="+STR0025}
+
+
+//DEFAULT dVencIss := CtoD("")
+//DEFAULT aCodR	:=	{}
+
+//DEFAULT cRecIss := "1"
+
+If nTipo == 1
+	If Empty(aNfCab) .OR. Empty(aNfCab[NF_IMPOSTOS])
+		aTemp	:= {{"","",0,0,0}}
+	Else
+		aTemp	:= aNFCab[NF_IMPOSTOS]
+	EndIf
+Else
+	If Empty(aNfCab) .OR. Empty(aNfCab[NF_IMPOSTOS2])
+		aTemp	:= {{"","",0,0}}
+
+	Else
+		aTemp	:= aNFCab[NF_IMPOSTOS2]
+	EndIf
+EndIf
+
+If SE2->(FieldPos("E2_FORNISS")) > 0 .AND. SE2->(FieldPos("E2_LOJAISS")) > 0 
+	If cFornIss <> NIL .AND. cLojaIss <> NIL
+
+		lFornIss := .T.
+			
+		aPos[2] := 85 
+		aPos[3] -= 80
+		cImpri := " Dados de cobranca do ISS: " 
+		@ nLin,000 PSAY "*"+PadR(cImpri,Limite-2)+"*"
+		nLin := nLin + 1                             
+		cImpri := RetTitle("E2_FORNISS")
+		@ nLin,000 PSAY "*"+PadR(cImpri,Limite-2)+"*"
+		nLin := nLin + 1
+			If Len(aRecSE2) > 0
+		    	aAreaSE2 := SE2->(GetArea())
+			    aAreaSA2 := SA2->(GetArea())
+			    SE2->(dbGoTo(aRecSE2[1]))
+			    cFornIss := SE2->E2_FORNISS 
+		    	cLojaIss := SE2->E2_LOJAISS
+			    If SA2->(MsSeek(xFilial("SA2")+cFornIss+cLojaIss))
+					cDescri := SA2->A2_NREDUZ
+				Endif	
+				If SE2->(FieldPos("E2_VENCISS")) > 0
+			    	dVencIss := SE2->E2_VENCISS
+			 	EndIf
+			 	
+			 	aMaPCCI	:=	MaPCCI()
+			 	For nI := 1 To Len( aTemp )
+				 	If (nTipo==1)
+						If (nPosCodR := aScan(aMaPCCI, {|aX|aX[1]==aTemp[nI][6]}))>0
+							aAdd( aCodR, {nI, aMaPCCI[nPosCodR][2], 1, aTemp[nI][6]} )
+						EndIf
+					Else
+						If (nPosCodR := aScan(aMaPCCI, {|aX|aX[1]==aTemp[nI][5]}))>0
+							aAdd( aCodR, {nI, aMaPCCI[nPosCodR][2], 1, aTemp[nI][5]} )
+						EndIf
+					EndIf
+				Next
+				
+				RestArea(aAreaSE2)
+				RestArea(aAreaSA2)
+		    Endif
+			
+			cImpri :=  cFornIss + ' ' + cLojaIss + ' ' + cDescri
+			@ nLin,000 PSAY "*"+PadR(cImpri,Limite-2)+"*"                         
+            nLin := nLin + 1
+		
+			If SE2->(FieldPos("E2_VENCISS")) > 0         
+				cImpri := RetTitle("E2_FORNISS")                                  
+				@ nLin,000 PSAY "*"+PadR(cImpri,Limite-2)+"*"                         
+				nLin := nLin + 1                             
+			EndIf
+		
+			If SE2->(FieldPos("E2_VENCISS")) > 0                                      
+				cImpri :=  Dtoc(dVencIss)
+				@ nLin,000 PSAY "*"+PadR(cImpri,Limite-2)+"*"                         
+	            nLin := nLin + 1
+			EndIf
+	Endif
+Endif
+Return aTemp

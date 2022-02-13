@@ -1,0 +1,563 @@
+#INCLUDE "PROTHEUS.CH"
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³xMATR255   ³ Autor ³Claudia Cabral        ³ Data ³ 28/12/09 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Posi‡„o Detalhada do Estoque por Endereco.                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³Nenhum                                                      ³±±
+±±³          ³                                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß           
+*/
+User Function xMATR255()
+Local oReport
+
+u_GerA0003(ProcName())
+
+U_MATR255R3()
+
+
+Return Nil
+
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³ MATR255  ³ Autor ³ Claudia Cabral        ³ Data ³ 28/12/09 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Posi‡„o Detalhada do Estoque por Saldo Inicial Endereco    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Revis„o  ³ Alex Egydio                              ³ Data ³ 24.11.97 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³         ATUALIZACOES SOFRIDAS DESDE A CONSTRU€AO INICIAL.             ³±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+User FUNCTION MATR255R3()
+
+LOCAL Tamanho  := "G"
+LOCAL titulo   := " Estoque por Saldo Inicial de Endereco - Dt. Fechamento " 
+LOCAL cDesc1   := "Neste relat¢rio ‚ possivel obter uma posi‡„o de quantidade por       "
+LOCAL cDesc2   := "produto/lote/endereco/status, o que permite o mapeamento perfeito "
+LOCAL cDesc3   := "de cada saldo inicial Endereco."
+LOCAL cString  := "SB2"
+LOCAL aOrd     := {"Armazem + Grupo + Produto ","Produto + Armazem "}	
+LOCAL wnrel    := "XMATR255"
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis tipo Private padrao de todos os relatorios         ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+PRIVATE aReturn    := {"Zebrado",1,"Adminstracao", 2, 2, 1, "",1 }	
+PRIVATE nLastKey   := 0 ,cPerg := "XTR255"
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica as perguntas selecionadas                           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para parametros                         ³
+//³ mv_par01     // Produto 	de                                 ³
+//³ mv_par02     // Produto 	ate                                ³
+//³ mv_par03     // Situacao 	de                                 ³
+//³ mv_par04     // Situacao	ate                                ³
+//³ mv_par05     // Imprimir  Normal/Ambos                       ³
+//³ mv_par06     // Do Armazem                                   ³
+//³ mv_par07     // Ate o Armazem                                ³
+//³ mv_par08     // Da Localizacao                               ³
+//³ mv_par09     // Ate a Localizacao                            ³
+// mv_par10      // Dt. de fechamento                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+Pergunte(cPerg,.F.)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Envia controle para a funcao SETPRINT                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+wnrel := SetPrint(cString,wnrel,cPerg,@titulo,cDesc1,cDesc2,cDesc3,.F.,aOrd,,Tamanho)
+
+If nLastKey == 27
+	Set Filter to
+	Return
+Endif
+
+SetDefault(aReturn,cString)
+
+If nLastKey == 27
+	Set Filter to
+	Return
+Endif
+
+RptStatus({|lEnd| R255IMP(aOrd,@lEnd,wnRel,titulo,Tamanho)},titulo)
+
+RETURN NIL
+
+/* IMPRESSAO DO RELATORIO  */ 
+Static Function R255IMP(aOrd,lEnd,WnRel,titulo,Tamanho)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis Especificas deste relatorio                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+LOCAL cAlmox     := " "
+LOCAL cGrupo     := " "
+LOCAL cProduto   := " "
+LOCAL nTotProd   := 0 
+LOCAL nTotEmp    := 0
+LOCAL nTotProdBl := 0
+LOCAL nTotGrup   := 0
+LOCAL nTotGrupBl := 0
+LOCAL cCodBloq   := ""
+LOCAL cDescBloq  := ""
+LOCAL cIndexDD   := ""
+LOCAL cArqTmpDD  := ""
+LOCAL aTam       := {}
+LOCAL lImpTot    := .f.
+Local l300SalNeg := GetMv('MV_MT300NG', .F., .F.) // Indica se permite saldo negativo (DEFAULT = .F.)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis                                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+LOCAL nTipo      := If(aReturn[4]==1,15,18)
+LOCAL NomeProg   := "MATR255"
+LOCAL Cbtxt      := Space( 10 )
+LOCAL cChave     := ""
+LOCAL cChaveB8   := ""
+LOCAL cChaveB2   := ""
+LOCAL cChaveBF   := ""
+LOCAL lImpBlock  := (mv_par05==2)
+LOCAL lImpNorm   := .T.
+LOCAL cLoteCtlAnt
+LOCAL bCompara
+LOCAL nQuantBloq
+LOCAL cTipoLote  := ''
+LOCAL lAdiciona  := .T.
+LOCAL dDtValid   := CtoD('  /  /  ')
+LOCAL lEmpPrev   := If(SuperGetMV("MV_QTDPREV")== "S",.T.,.F.)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Prepara Arquivo de Trabalho p/Impressao                      ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+LOCAL cFileTRB   := ""
+LOCAL aCampos    := {}
+LOCAL cIndex     := " "
+LOCAL nIndex     := 0
+LOCAL cArqTmp    := " "
+LOCAL nTBloq     := 0
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis Locais utilizadas na montagem das Querys           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+LOCAL cQuery     := ''
+LOCAL lQueryTOP  := .F.
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis Private utilizadas na montagem das Querys          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+PRIVATE cAliasTOP  := ''
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Contadores de linha e pagina                                 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+PRIVATE li         := 80
+PRIVATE m_pag      := 1
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Cria Arquivo de Trabalho                                     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Aadd( aCampos, {"TR_LOCAL"  ,"C",02,0} ) // Almoxarifado B2_LOCAL
+Aadd( aCampos, {"TR_GRUPO"  ,"C",04,0} ) // Grupo        B1_GRUPO
+Aadd( aCampos, {"TR_NGRUPO" ,"C",55,0} ) // Desc.Grupo
+Aadd( aCampos, {"TR_COD"    ,"C",15,0} ) // Produto      B2_COD
+Aadd( aCampos, {"TR_DESC"   ,"C",30,0} ) // Descricao    B1_DESC
+Aadd( aCampos, {"TR_LOTECTL","C",10,0} ) // Lote         B8_LOTECTL
+Aadd( aCampos, {"TR_NUMLOTE","C",06,0} ) // SubLote      B8_NUMLOTE
+Aadd( aCampos, {"TR_DATA"   ,"D",08,0} ) // Validade     B8_DTVALID
+Aadd( aCampos, {"TR_LOCALIZ","C",15,0} ) // Localizacao  BF_LOCALIZ
+Aadd( aCampos, {"TR_NUMSERI","C",20,0} ) // Numero Serie BF_NUMSERI
+Aadd( aCampos, {"TR_SITUA"  ,"C",02,0} ) // Codigo da Situacao. Tabela de Situacao SX5
+Aadd( aCampos, {"TR_SITDESC","C",55,0} ) // Descricao da Situacao SX5
+Aadd( aCampos, {"TR_UM"     ,"C",02,0} ) // UN           B1_UM
+
+aTam:=TamSX3("BF_QUANT")
+Aadd( aCampos, {"TR_QUANT"  ,"N",aTam[1]+1,aTam[2]} ) // Quantidade   BF_QUANT
+
+//aTam:=TamSX3("BF_EMPENHO")
+//Aadd( aCampos, {"TR_EMPENHO","N",aTam[1]+1,aTam[2]} ) // Quantidade   Empenhada
+
+//aTam:=TamSX3("BF_EMPENHO")
+//Aadd( aCampos, {"TR_BLOQ","N",aTam[1]+1,aTam[2]} ) // Quantidade   BLOQUEADA
+
+Aadd( aCampos, {"TR_OBSERVA","C",30,0} ) // Observacao   BLOQ
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Cria Indice de Trabalho e muda o titulo conforme a ordem selecionada³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If	(aReturn[ 8 ]==1)
+	titulo := Alltrim(Titulo+" ("+Alltrim(aOrd[1])+")")  + " DATA DE FECHAMENTO: "  + dtoc(MV_PAR10)
+	cIndex := "TR_LOCAL + TR_GRUPO + TR_COD"
+Else
+	titulo := Alltrim(Titulo+" ("+Alltrim(aOrd[2])+")")  + " DATA DE FECHAMENTO: " + dtoc(MV_PAR10)
+	cIndex := "TR_COD + TR_LOCAL"
+Endif
+cIndex += "+ TR_LOTECTL + TR_NUMLOTE + TR_SITUA"
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Se a chave for por produto, realiza quebra por grupo ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+lQueGrup := (aReturn[8]==1)
+cFileTRB := CriaTrab(aCampos,.T.)
+dbUseArea(.T.,,cFileTRB,"TRB",.T.,.F.)
+IndRegua( "TRB", cFileTRB, cIndex,,,"Criando Indice... ")	
+
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Cria Query para o SBK e SB1                                  ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	lQueryTOP := .T.
+	cAliasTOP := CriaTrab(Nil, .F.)
+	cQuery := "SELECT SBK.BK_FILIAL TP_FILIAL, SBK.BK_LOCAL TP_LOCAL, SBK.BK_COD TP_COD, SB1.B1_DESC TP_DESC, SB1.B1_GRUPO TP_GRUPO, SBK.BK_LOCALIZ TP_LOCALIZ, SB1.B1_UM TP_UM, SUM(SBK.BK_QINI) TP_BFQUANT, BK_LOTECTL TP_LOTECTL , BK_NUMLOTE TP_NUMLOTE "
+	cQuery += "FROM "+RetSqlName('SBK')+" SBK, "+RetSqlName('SB1')+" SB1 "
+	cQuery += "WHERE SBK.BK_FILIAL='"+xFilial('SBK')+"' AND "
+	cQuery += "SBK.BK_COD>='"+mv_par01+"' AND SBK.BK_COD<='"+mv_par02+"' AND "
+	cQuery += "SBK.BK_LOCAL>='"+mv_par06+"' AND SBK.BK_LOCAL<='"+mv_par07+"' AND "
+	cQuery += "SBK.BK_LOCALIZ>='"+mv_par08+"' AND SBK.BK_LOCALIZ<='"+mv_par09+"' AND "
+	/*
+	If l300SalNeg //-- Considera registros no SBK com saldo negativo
+		cQuery += "SBK.BK_QINI<>0 AND "
+	Else //-- Considera somente registros no SBK que possuirem quantidade maior que zero
+		cQuery += "SBK.BK_QINI>0 AND "
+	EndIf	
+	*/
+	cQuery += " SBK.BK_DATA = '" + DTOS(MV_PAR10) + "' AND "
+	cQuery += If(!Empty(xFilial("SB1")), "SB1.B1_FILIAL=SBK.BK_FILIAL AND ", "") + "SB1.B1_COD=SBK.BK_COD AND "
+	cQuery += "SBK.D_E_L_E_T_=' ' AND SB1.D_E_L_E_T_=' ' "
+	cQuery += "GROUP BY SBK.BK_FILIAL, SBK.BK_LOCAL, SBK.BK_COD, SB1.B1_DESC, SB1.B1_GRUPO, SBK.BK_LOCALIZ ,  SBK.BK_LOTECTL , SBK.BK_NUMLOTE, SB1.B1_UM "
+	cQuery += "ORDER BY 1,2,3,4,5,6,7,8,9,10 "
+	cQuery := ChangeQuery(cQuery)
+	MsAguarde({|| dbUseArea(.T.,'TOPCONN', TCGenQry(,,cQuery), cAliasTOP,.F.,.T.)}, "Selecionando Registros ... ")
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Cria Indice de trabalho para o SDD                           ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbSelectArea('SDD')
+	dbSetOrder(1)
+	cIndexDD  := 'DD_FILIAL + DD_LOCAL + DD_PRODUTO + DD_LOTECTL + DD_NUMLOTE + DD_LOCALIZ + DD_NUMSERI'
+	cArqTmpDD := CriaTrab(NIL,.F.)
+	IndRegua('SDD', cArqTmpDD, cIndexDD,,, "Selecionando Registros ... ")
+	nIndexDD  := RetIndex('SDD')
+	dbSetOrder(nIndexDD+1)
+
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Percorre o arquivo montado para TOP                          ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbSelectArea('SB2')
+	dbSetOrder(1)
+	dbSelectArea(cAliasTOP)
+	SetRegua(SBK->(RecCount())) //-- em bases TOP Utilizar o arquivo de Saldos por Endereco na Regua
+	Do While !(cAliasTOP)->(Eof())
+		IncRegua()
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Validacao do filtro do usuario (SB2)	                                 ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ		
+		If ! SB2->(dbSeek(xFilial('SB2')+(cAliasTOP)->TP_COD+(cAliasTOP)->TP_LOCAL,.F.));
+			.Or. If( Empty( aReturn[7]),.F., ! SB2->( &(aReturn[7]) ) )
+			dbSkip()
+			Loop
+		EndIf
+		
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Procura a descricao do Grupo                                 ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		dbSelectArea('SBM')
+		dbSetOrder(1)
+		cGrupo := If(dbSeek(xFilial('SBM')+(cAliasTOP)->TP_GRUPO, .F.), BM_DESC, Space(Len(BM_DESC)))
+		
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Procura por Saldos Bloqueados por Endereco                   ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		nTBloq   := 0
+		dDtValid := CtoD('  /  /  ')
+		If lImpBlock
+			dbSelectArea('SDD')
+			If dbSeek(cSeekSDD:=xFilial('SDD')+(cAliasTOP)->TP_LOCAL+(cAliasTOP)->TP_COD+(cAliasTOP)->TP_LOTECTL+(cAliasTOP)->TP_NUMLOTE+(cAliasTOP)->TP_LOCALIZ, .F.)
+				Do While !SDD->(Eof()) .And. cSeekSDD == SDD->DD_FILIAL+SDD->DD_LOCAL+SDD->DD_PRODUTO+SDD->DD_LOTECTL+SDD->DD_NUMLOTE+SDD->DD_LOCALIZ+SDD->DD_NUMSERI
+					If SDD->DD_MOTIVO<mv_par03 .Or. SDD->DD_MOTIVO>mv_par04
+						dbSelectArea('SDD')
+						dbSkip()
+						Loop
+					EndIf
+					cCodBloq  := SDD->DD_MOTIVO
+					cDescBloq := ''
+					cObserva  := SDD->DD_OBSERVA
+					dDtValid  := SDD->DD_DTVALID
+					dbSelectArea('SX5')
+					dbSetOrder(1)
+					If dbSeek(xFilial('SX5')+'E1'+SDD->DD_MOTIVO, .F.)
+						cDescBloq := X5Descri()
+					EndIf
+					dbSelectArea('SDC')
+					dbSetOrder(1) //-- DC_FILIAL+DC_PRODUTO+DC_LOCAL+DC_ORIGEM+DC_PEDIDO+DC_ITEM+DC_SEQ+DC_LOTECTL+DC_NUMLOTE+DC_LOCALIZ+DC_NUMSERI
+					If dbSeek(cSeekSDC:=xFilial('SDC')+SDD->DD_PRODUTO+SDD->DD_LOCAL+'SDD'+SDD->DD_DOC+'    '+SDD->DD_LOTECTL+SDD->DD_NUMLOTE+SDD->DD_LOCALIZ+SDD->DD_NUMSERI, .F.)
+						Do While !SDC->(Eof()) .And. cSeekSDC == DC_FILIAL+DC_PRODUTO+DC_LOCAL+DC_ORIGEM+DC_PEDIDO+DC_ITEM+DC_SEQ+DC_LOTECTL+DC_NUMLOTE+DC_LOCALIZ+DC_NUMSERI
+							RecLock('TRB', .T.)
+							Replace TR_LOCAL   With (cAliasTOP)->TP_LOCAL
+							Replace TR_GRUPO   With (cAliasTOP)->TP_GRUPO
+							Replace TR_NGRUPO  With cGrupo
+							Replace TR_COD     With (cAliasTOP)->TP_COD
+							Replace TR_DESC    With (cAliasTOP)->TP_DESC
+							Replace TR_LOTECTL With (cAliasTOP)->TP_LOTECTL
+							Replace TR_NUMLOTE With (cAliasTOP)->TP_NUMLOTE
+							Replace TR_DATA    With SDD->DD_DTVALID
+							Replace TR_LOCALIZ With (cAliasTOP)->TP_LOCALIZ
+//							Replace TR_NUMSERI With (cAliasTOP)->TP_NUMSERI
+							Replace TR_SITUA   With cCodBloq
+							Replace TR_SITDESC With cDescBloq
+							Replace TR_OBSERVA With cObserva
+							Replace TR_UM      With (cAliasTOP)->TP_UM
+							Replace TR_BLOQ    With SDC->DC_QUANT
+							MsUnlock()
+							nTBloq += SDC->DC_QUANT
+							dbSelectArea('SDC')
+							dbSkip()
+						EndDo
+					EndIf
+					dbSelectArea('SDD')
+					dbSkip()
+				EndDo
+			EndIf
+		EndIf
+		
+		If Empty(dDtValid) .And. !Empty((cAliasTOP)->TP_LOTECTL+(cAliasTOP)->TP_NUMLOTE)
+			SB8->(dbSetOrder(3)) //-- B8_FILIAL+B8_PRODUTO+B8_LOCAL+B8_LOTECTL+B8_NUMLOTE+DTOS(B8_DTVALID)
+			If SB8->(dbSeek(xFilial('SB8')+(cAliasTOP)->TP_COD+(cAliasTOP)->TP_LOCAL+(cAliasTOP)->TP_LOTECTL+If(Rastro((cAliasTOP)->TP_COD, 'S'),(cAliasTOP)->TP_NUMLOTE,''), .F.))
+				dDtValid := SB8->B8_DTVALID
+			EndIf
+		EndIf
+		
+		RecLock('TRB', .T.)
+		Replace TR_LOCAL    With (cAliasTOP)->TP_LOCAL
+		Replace TR_GRUPO    With (cAliasTOP)->TP_GRUPO
+		Replace TR_NGRUPO   With cGrupo
+		Replace TR_COD      With (cAliasTOP)->TP_COD
+		Replace TR_DESC     With (cAliasTOP)->TP_DESC
+		Replace TR_LOTECTL  With (cAliasTOP)->TP_LOTECTL
+		Replace TR_NUMLOTE  With (cAliasTOP)->TP_NUMLOTE
+		Replace TR_DATA     With dDtValid
+		Replace TR_LOCALIZ  With (cAliasTOP)->TP_LOCALIZ
+//		Replace TR_NUMSERI  With (cAliasTOP)->TP_NUMSERI
+		Replace TR_UM       With (cAliasTOP)->TP_UM
+		Replace TR_QUANT    With (cAliasTOP)->TP_BFQUANT
+//		Replace TR_EMPENHO  With (cAliasTOP)->TP_BFEMPENHO - nTBloq
+//		Replace TR_BLOQ 	  With nTBloq
+		MsUnlock()
+		
+		dbSelectArea(cAliasTOP)
+		dbSkip()
+	EndDo
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para impressao do cabecalho e rodape    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Cabec1 := "                          DATA DA                                                   SITUACAO " 
+If !lQueGrup
+	Cabec2 := "LOTE        SUB-LOTE    EXPIRACAO   LOCALIZACAO      NUMERO DE SERIE       DA    LOCALIZACAO          OBSERVACAO                     UM      QUANTIDADE                                      DISPONIVEL    LC  GRUPO"
+Else
+	Cabec2 := "LOTE        SUB-LOTE    EXPIRACAO   LOCALIZACAO      NUMERO DE SERIE       DA    LOCALIZACAO          OBSERVACAO                     UM      QUANTIDADE                                      DISPONIVEL    LC"
+EndIf
+//                        1234567890  1234567890  12/12/1234  123456789012345  12345678901234567890  12 -  1234567890123456789  123456789012345678901234567890  12  12345678901234  12345678901234  12345678901234  12345678901234   12  1234
+//                                  1         2         3         4         5         6         7         8         9        10        11        12        13        14        15        16        17        18        19        20        21        22
+//                        0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
+
+cbCont      := 0
+Limite      := 132
+lAbortPrint := .F.
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Inicio da impressao do arquivo temporario                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea('TRB')
+dbSetOrder(1)
+dbGoTop()
+SetRegua(RecCount())
+
+cGrupAnt := "*"
+cLocAnt  := "*"
+cProdAnt := "*"
+cLoteAnt := "*"
+
+Do While !TRB->(Eof()) .And. !lAbortPrint
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Verifica se o usuario interrompeu o relatorio                ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If lAbortPrint
+		@ Prow()+1, 001 PSAY  "CANCELADO PELO OPERADOR"
+		Exit
+	Endif
+	
+	If	li > 55
+		Cabec(Titulo,Cabec1,Cabec2,Nomeprog,Tamanho,nTipo)
+	EndIf
+	
+	If !(cAlmox==TRB->TR_LOCAL) .Or. If(lQueGrup,!(cGrupAnt==TRB->TR_GRUPO), .F. )
+		cLocAnt  := cAlmox
+		cAlmox   := TRB->TR_LOCAL
+		cGrupAnt := TRB->TR_GRUPO
+		If !(cLocAnt==TRB->TR_LOCAL) .Or. !(cGrupAnt==TRB->TR_GRUPO)
+			nTotProd   := 0
+			nTotEmp    := 0
+			nTotProdBl := 0
+		EndIf
+		
+		If lQueGrup
+			@ li,00 PSay "ALMOXARIFADO:"
+			@ li,14 PSay TRB->TR_LOCAL+" - "
+			@ li,19 PSay If(Empty(TRB->TR_GRUPO), "Nao Classificados", AllTrim(TRB->TR_GRUPO) + " - " + TRB->TR_NGRUPO) // "Nao classificados"
+			li++
+		EndIf
+		
+	Endif
+
+	If	cProdAnt = TRB->TR_COD
+		If cAlmox # TRB->TR_LOCAL .Or. If(lQueGrup,cGrupAnt # TRB->TR_GRUPO, .F. )
+			li++
+			@ li,00 Psay "Produto:"
+			@ li,10 PSay TRB->TR_COD
+			@ li,30 PSay "Descricao:"
+			@ li,42 PSay TRB->TR_DESC
+			li += 2
+		EndIf
+	Else
+		li++
+		@ li,00 Psay "Produto:"
+		@ li,10 PSay TRB->TR_COD
+		@ li,30 PSay "Descricao:"
+		@ li,42 PSay TRB->TR_DESC
+		nTotProd   := 0 
+		nTotEmp    := 0
+		nTotProdBl := 0
+		li += 2
+	Endif
+	
+	@ li, 000 PSay If(Empty(TRB->TR_SITUA),TRB->TR_LOTECTL," ")
+	@ li, 012 PSay If(Empty(TRB->TR_SITUA),If(Rastro(TRB->TR_COD, "S"), TRB->TR_NUMLOTE, " ")," ")      // Não trocar por ""
+	If !Empty(TRB->TR_DATA)
+		@ li, 024 PSay TRB->TR_DATA
+	EndIf	
+	@ li, 036 PSay Left(TRB->TR_LOCALIZ,15)
+//	@ li, 051 PSay TRB->TR_NUMSERI
+	@ li, 075 PSay TRB->TR_SITUA
+	@ li, 079 pSay If(!Empty(TRB->TR_SITUA),'-',Space(1))
+	@ li, 081 PSay Left(TRB->TR_SITDESC,16)
+	@ li, 102 PSay TRB->TR_OBSERVA
+	@ li, 134 PSay TRB->TR_UM
+	If !(TRB->TR_QUANT==0)
+		@ li, 137 PSay TRB->TR_QUANT   Picture PesqPict("SBK","BK_QINI",14)
+	EndIf
+//	If !(TRB->TR_EMPENHO==0)
+//		@ li, 153 PSay TRB->TR_EMPENHO Picture PesqPict("SBK","BK_QINI",14)
+//	EndIf	
+/*	If !(TRB->TR_BLOQ==0)
+		@ li, 169 PSay TRB->TR_BLOQ    Picture PesqPict("SBK","BK_QINI",14)
+	EndIf	
+	*/
+	If !(TRB->TR_QUANT==0)
+		@ li, 185 PSay TRB->TR_QUANT  Picture PesqPict("SBK","BK_QINI",14) //DISPONIVEL
+	EndIf
+	
+	If !lQueGrup
+		If !(cLocAnt=TRB->TR_LOCAL)
+			@ li, 203 PSay TRB->TR_LOCAL
+			cLocAnt := TRB->TR_LOCAL
+		EndIf
+		If !(cProdAnt==TRB->TR_COD)
+			@ li, 207 PSay TRB->TR_GRUPO
+		EndIf
+	EndIf
+	li ++
+	
+	nTotProd   += TRB->TR_QUANT
+	nTotEmp    +=  0 //TRB->TR_EMPENHO
+	cProdAnt   := TRB->TR_COD
+ 	cLoteAnt   := TRB->TR_LOTECTL+TRB->TR_NUMLOTE
+    
+    If Empty(TRB->TR_SITUA)
+//    	nTotProdBl += TRB->TR_BLOQ
+    	lImpTot := .T.
+    EndIf
+	
+	dbSelectArea('TRB')
+	IncRegua()
+	dbSkip()
+	
+    If lImpTot .And. !Empty(TRB->TR_SITUA) .And. !Empty(TRB->TR_LOTECTL)
+		@ li, 00 PSay __PrtThinLine()
+		li ++	        
+        @ li, 00 PSay "Lotes Bloqueados "
+    	lImpTot := .F.
+    EndIf
+
+ 	If !(cLoteAnt==TRB->TR_LOTECTL+TRB->TR_NUMLOTE) .And. cProdAnt == TRB->TR_COD .And. mv_par05 == 2
+ 	   li ++
+	EndIf                              
+	
+	If	!(cProdAnt==TRB->TR_COD) .Or. !(cAlmox==TRB->TR_LOCAL) .Or. !(cGrupAnt==TRB->TR_GRUPO)
+		@ li,118 PSay "TOTAL DO PRODUTO : "
+		@ li,137 PSay nTotProd   Picture PesqPict("SBK","BK_QINI",14)
+		@ li,153 PSay nTotEmp    Picture PesqPict("SBK","BK_QINI",14)
+		@ li,169 PSay nTotProdBl Picture PesqPict("SBK","BK_QINI",14)
+		@ li,185 PSay IF(nTotProd>0,nTotProd-nTotEmp-nTotProdBl,0) Picture PesqPict("SBK","BK_QINI",14)
+		li ++
+	Endif
+	
+EndDo
+
+If	!(li==80)
+	Roda(cbcont,cbtxt,Tamanho)
+Endif
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Apaga arquivo de trabalho                                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea('TRB')
+dbCloseArea()
+Ferase( cFileTRB+GetDBExtension() )
+Ferase( cFileTRB+OrdBagExt() )
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Apaga indice de trabalho SBK                                 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If lQueryTOP
+	dbSelectArea(cAliasTOP)	
+	dbCloseArea()
+Else
+	dbSelectArea('SBK')
+	RetIndex('SBK')
+	Set Filter To
+	fErase(cArqTmp+OrdBagExt())
+EndIf	
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Apaga indice de trabalho SDD                                 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea('SDD')
+RetIndex('SDD')
+Set Filter To
+fErase(cArqTmpDD+OrdBagExt())
+
+If aReturn[5] == 1
+	Set Printer TO
+	dbcommitAll()
+	ourspool(wnRel)
+Endif
+
+MS_FLUSH()
+
+Return Nil

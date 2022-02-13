@@ -1,0 +1,207 @@
+#line 1 "W:\INCLUDE\rwmake.ch"
+#line 1 "W:\INCLUDE\stdwin.ch"
+#line 14 "rwmake.ch"
+#line 2 "m:\protheus_devel\rdmake\field_service\relatorios\formpec.prw"
+#line 1 "W:\INCLUDE\TopConn.ch"
+#line 3 "m:\protheus_devel\rdmake\field_service\relatorios\formpec.prw"
+#line 1 "W:\INCLUDE\Totvs.ch"
+#line 1 "W:\INCLUDE\protheus.ch"
+#line 1 "W:\INCLUDE\Dialog.ch"
+#line 28 "protheus.ch"
+#line 1 "W:\INCLUDE\Font.ch"
+#line 29 "protheus.ch"
+#line 1 "W:\INCLUDE\PTMenu.ch"
+#line 31 "protheus.ch"
+#line 1 "W:\INCLUDE\Print.ch"
+#line 33 "protheus.ch"
+#line 1 "W:\INCLUDE\Colors.ch"
+#line 35 "protheus.ch"
+#line 1 "W:\INCLUDE\Folder.ch"
+#line 37 "protheus.ch"
+#line 1 "W:\INCLUDE\msobject.ch"
+#line 38 "protheus.ch"
+#line 1 "W:\INCLUDE\VKey.ch"
+#line 42 "protheus.ch"
+#line 1 "W:\INCLUDE\WinApi.ch"
+#line 44 "protheus.ch"
+#line 1 "W:\INCLUDE\FWCommand.ch"
+#line 48 "protheus.ch"
+#line 21 "m:\protheus_devel\rdmake\field_service\relatorios\formpec.prw"
+Function U_FormPec()
+	Local cPerg		 	:= "MTR777"
+
+	Private waNfori  	:= {}
+	Private waNfdev		:= {}
+	Private waCodpro	:= {}
+	Private waDescpro	:= {}
+	Private waQtdpro	:= {}
+	Private nTotal		:= 0
+   	Private cAlias	 	:= GetNextAlias()
+
+u_GerA0003(ProcName())
+
+		ValidPerg(cPerg)
+		Pergunte(cPerg, .T. )
+		Processa({|| LoadQuery()},"Carregando dados....")
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function LoadQuery()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+__execSql(cAlias," SELECT C6_NFORI, C6_NOTA, C6_PRODUTO, B1_DESC, C6_QTDVEN, C6_VALOR FROM  "+RetSqlName('SC6')+" C6 (NoLock) INNER JOIN  "+RetSqlName('SB1')+" B1(NoLock) ON B1_COD = C6_PRODUTO AND B1.D_E_L_E_T_= ' ' WHERE C6.D_E_L_E_T_= ' ' AND C6_FILIAL=  '" +xFilial('SC6')+"'  AND C6_NUM BETWEEN  "+___SQLGetValue(MV_PAR01)+" AND  "+___SQLGetValue(MV_PAR02),{},.F.)
+
+
+
+
+
+		while !(cAlias)->(EoF())
+			ProcRegua(RecCount())
+		   	aAdd(waNfori, 	(cAlias)->C6_NFORI)
+	    	aAdd(waNfdev, 	(cAlias)->C6_NOTA)
+			aAdd(waCodpro, 	(cAlias)->C6_PRODUTO)
+			aAdd(waDescpro,	(cAlias)->B1_DESC)
+			aAdd(waQtdpro, 	(cAlias)->C6_QTDVEN)
+
+	    	nTotal 	+= (cAlias)->C6_VALOR
+
+
+			(cAlias)->(DbSkip())
+	   	EndDo
+
+	   	If nTotal > 0
+		    PrintWord(@nTotal)
+		Else
+			MsgAlert("Nao existe Registro para estes parametros!")
+		EndIf
+		(cAlias)->(dbCloseArea())
+
+Return
+
+
+
+
+
+
+
+
+Static Function PrintWord(nTotal)
+	Local cPathDot	:= AllTrim(GetMv("MV_SC6FORM"))
+	Local hWord
+    Local nK
+    Local cNFPecas 	:= ""
+    Local nValDesc 	:= 0
+    Local nTotGeral	:= 0
+    Local nContGar	:= 0
+    Local nContFGar	:= 0
+
+    hWord	:= OLE_CreateLink()
+	OLE_NewFile(hWord, cPathDot )
+
+
+
+
+
+
+
+
+	For nK := 1 to Len(waNfori)
+		OLE_SetDocumentVar(hWord,"w_nfpos"    +AllTrim(Str(nK)),waNfori[nK])
+		OLE_SetDocumentVar(hWord,"w_nfdev"    +AllTrim(Str(nK)),waNfdev[nK])
+		OLE_SetDocumentVar(hWord,"w_codpro"   +AllTrim(Str(nK)),waCodpro[nK])
+		OLE_SetDocumentVar(hWord,"w_despro"   +AllTrim(Str(nK)),waDescpro[nK])
+		OLE_SetDocumentVar(hWord,"w_qtdpro"   +AllTrim(Str(nK)),waQtdpro[nK])
+		nContGar ++
+	next
+
+	OLE_SetDocumentVar(hWord, "w_nroitens"	,nContGar)
+	OLE_ExecuteMacro(hWord,"itensform")
+
+	OLE_SetDocumentVar(hWord, "w_vlrtot"	 , AllTrim(Transform(nTotal,"@E 999,999,999.99")))
+
+	OLE_UpdateFields(hWord)
+
+    If MsgYesNo("Imprime o Documento ?")
+	 	Ole_PrintFile(hWord,"ALL",,,1)
+   	EndIf
+
+    If MsgYesNo("Fechar Documento ?")
+	   	OLE_CloseLink( hWord )
+		OLE_CloseFile( hWord )
+	EndIf
+
+
+waNfori  	:= {}
+waNfdev		:= {}
+waCodpro	:= {}
+waDescpro	:= {}
+waQtdpro	:= {}
+nTotal		:= 0
+
+
+Return
+
+
+
+
+
+
+
+
+Static Function ValidPerg(cPerg)
+	Local lRetorno := .T. 
+	PutSx1(cPerg,"01","De pedido ?  "	, "De pedido ?  "	, "Cliente ?"	, "mv_ch1","C",09,0,0,"G","",""   ,"","","mv_par01")
+	PutSx1(cPerg,"02","Ate pedido ? "	, "Ate pedido ? "	, "Nota ?   "	, "mv_ch2","C",09,0,0,"G","","SF2","","","mv_par02")
+Return lRetorno

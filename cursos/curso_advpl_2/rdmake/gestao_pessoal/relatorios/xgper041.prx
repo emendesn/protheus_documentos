@@ -1,0 +1,885 @@
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|Programa: xGper041                                                                                                                                                                     |
+|Autor:                                                                                                                                                                                 |
+|Data Aplicação:                                                                                                                                                                        |
+|Descrição: relatório RESUMO ARGENTINA DIÁRIO                                                                                                                                           |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|Data Alteração: 16/09/2011                                                                                                                                                             |
+|Motivo: HORAS FALTAS/ATRASOS DESCONTADO: Horas ausentes descontadas (evento 009,014,019,408,463), sem código de abono ou diferente de 015 e 016)                                       |
+|Resposável: Maintech Information & Solution                                                                                                                                            |
+|Validado por: Luciana Benicio de Souza                                                                                                                                                 |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|Data Alteração: 28/03/2012                                                                                                                                                             |
+|Motivo: Inclusão do filtro CELULA e correção campo HORAS PREVISTAS para admitido/demitido no período                                                                                   |
+|Resposável: Maintech Information & Solution                                                                                                                                            |
+|Validado por: Luciana Souza                                                                                                                                                            |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|Data Alteração: 09/04/2012                                                                                                                                                             |
+|Motivo: Correção campos MOTIVOS DE AUSENCIA e HORAS FALTAS/ATRASOS DESCONTADO                                                                                                          |
+|Resposável: Maintech Information & Solution                                                                                                                                            |
+|Validado por: Luciana Souza                                                                                                                                                            |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|Data Alteração: 16/04/2012                                                                                                                                                             |
+|Motivo: Inclusão do campo CELULA e Correção do campo HORAS FALTAS/ATRASOS DESCONTADOS para DEMITIDO no Período                                                                         |
+|Resposável: Maintech Information & Solution                                                                                                                                            |
+|Validado por: Luciana Souza                                                                                                                                                            |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|Data Alteração: 12/11/2012                                                                                                                                                             |
+|Motivo: Inclusão CELULA B, CELULA C, CELULA D e CELULA E                                                                                                                               |
+|Resposável: Anadi                                                                                                                                                                      |
+|Validado por: Luciana Souza                                                                                                                                                            |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|Data Alteração: 12/01/2013                                                                                                                                                             |
+|Motivo: Unificar Filiais                                                                                                                                                               |
+|Resposável: Anadi                                                                                                                                                                      |
+|Validado por: Luciana Souza                                                                                                                                                            |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|Data Alteração: 01/07/2013                                                                                                                                                             |
+|Motivo: Readequação das Celulas                                                                                                                                                        |
+|Resposável: Anadi                                                                                                                                                                      |
+|Validado por: Luciana Souza                                                                                                                                                            |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|Data Alteração: 15/07/2013                                                                                                                                                             |
+|Motivo: Incluir campo SALDO BANCO DE HORAS e excluir campos HORAS FALTAS/ATRASOS DESCONTADO e HORAS FALTAS/ATRASOS ABONADO                                                             |
+|Resposável: Anadi                                                                                                                                                                      |
+|Validado por: Luciana Souza                                                                                                                                                            |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+#Include "PROTHEUS.CH"
+#INCLUDE "topconn.ch" 
+//------------------------------------------------------------------------------------------------------------------------------------------------------------
+User Function xGpeR041()    //Relatorios\Mensais\Resumo Argentina Diario
+PRIVATE cPerg := "xGpeR041"
+ValidPerg(cPerg) 
+
+If ! Pergunte(cPerg,.T.)
+ Return()
+Endif
+
+Processa( { || MyRel() } ) 
+Return .t.                     
+//------------------------------------------------------------------------------------------------------------------------------------------------------------
+Static Function MyRel()                 
+	Local cQry1 :=""
+	Local cCrLf:=Chr(13)+Chr(10)
+	Local dInicio := mv_par01
+	Local dFim := mv_par02
+//	Local aTotCC  := {}
+	Local aTotMAT := {}	
+	Local yy := 0
+	Local cTipAfas    := " "
+	Local aXAfast := {}
+	Local nTur
+	Local nAfasta := nFerias := 0
+	//
+//	Local cArquivo := CriaTrab(,.F.)
+	Local _csrvapl := ALLTRIM(GetMV("MV_SERVAPL"))
+	Local _cArqTmp := lower(AllTrim(__RELDIR)+"resumo argentina diario.csv")  //Local _cArqTmp := lower(AllTrim(__RELDIR)+alltrim(cArquivo)+".csv")
+	
+	Private dPerIni := CTOD("")
+	Private dPerFim := CTOD("")
+	Private aMarcFun   := {}
+	Private aTabPadrao := {}
+	Private aTabCalend := {}
+	Private aMarcacoes := {}
+	Private nPosMarc   := 0 
+	Private nLenMarc   := 0
+	Private nMax       := 0
+	Private Nachou     := 0
+	Private ZZ         := 0
+	Private aHorasP    := {}
+	Private xExtra     := 0                  
+	Private axFalta    :={}
+
+//	dDataRef           := mv_par01      
+//	Local cMesAnoRef
+//	cMesAnoRef         := StrZero(Month(dDataRef),2) + StrZero(Year(dDataRef),4)
+//	Private cAnoMesRef := Right(cMesAnoRef,4) + Left(cMesAnoRef,2)
+//	Local dDtPesqAf
+//	dDtPesqAf          := CTOD("01/" + Right(cAnoMesRef,2) + "/" + Left(cAnoMesRef,4),"DDMMYY")
+	
+	nHandle := MsfCreate(_cArqTmp,0)
+	
+	cLinha := "TOTAL DE HORAS TRABALHADAS. PERÍODO DE " + StrZero(Day(MV_PAR01),2) + "/" + StrZero(Month(MV_PAR01),2) + "/" + StrZero(Year(MV_PAR01),4) + " A " + StrZero(Day(MV_PAR02),2) + "/" + StrZero(Month(MV_PAR02),2) + "/" + StrZero(Year(MV_PAR02),4)
+	fWrite(nHandle, cLinha  + cCrLf)
+	cLinha := ' '                   
+	fWrite(nHandle, cLinha  + cCrLf)
+	
+	DbSelectArea("SP3") //FERIADOS
+	DbSetOrder(1)
+
+	IF Select("QRY1") <> 0 
+		DbSelectArea("QRY1")
+		DbCloseArea()
+	Endif   
+	cQuery := " SELECT RA_FILIAL, RA_MAT, RA_CC, RA__DEPTO, RA_NOME, RA_DEMISSA, RA_TPCONTR, RA_ADMISSA, RA_TNOTRAB, RA__CELULA, RA_SEQTURN, RA_AFASFGT FROM SRA020 SRA "
+	cQuery += " WHERE SRA.D_E_L_E_T_ = '' "
+	cQuery += "	AND NOT SRA.RA_CATFUNC in ('A','P') " //'M' "
+	cQuery += "	AND NOT SRA.RA_AFASFGT = '5' "
+	cQuery += "	AND SRA.RA_FILIAL = '" + xFilial("SRA") + "' "
+	cQuery += "	AND SRA.RA_ADMISSA <= '" + DTOS(MV_PAR02) + "' " 
+	cQuery += "	AND (SRA.RA_DEMISSA = '' OR SRA.RA_DEMISSA >= '" + DTOS(MV_PAR01) + "') "
+	cQuery += "	AND SRA.RA_CC BETWEEN '"+MV_PAR03+"' AND '"+MV_PAR04+"' "		
+	cQuery += "	AND RA__CELULA BETWEEN '"+MV_PAR05+"' AND '"+MV_PAR06+"' "
+//	cQuery += "	AND RA_MAT = '000491' "
+	cQuery += " ORDER BY RA_FILIAL,RA_CC,RA_NOME"
+	MEMOWRITE("C:\TESTE.txt",cQuery)
+	TCQUERY cQuery NEW ALIAS "QRY1"
+
+	IF Select("TMPHR") <> 0 
+		DbSelectArea("TMPHR")
+		DbCloseArea()
+	Endif   
+
+	TCqUERY "SELECT PJ_TURNO , (PJ_HRSTRAB+PJ_HRSTRA2) AS HORAS FROM SPJ020 WHERE D_E_L_E_T_= '' AND PJ_DIA = 2 AND PJ_SEMANA = '01' ORDER BY PJ_TURNO" NEW ALIAS "TMPHR"
+
+DBSELECTAREA("QRY1")     
+procregua(reccount())
+QRY1->(DBGOTOP())   
+DO WHILE !QRY1->(EOF())
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Nao considera funcionarios admitidos apos o periodo do movimento ³
+	//³ e nem os demitidos anterior ao periodo.						     ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If STOD(QRY1->RA_ADMISSA) <= MV_PAR02 .AND. (Empty(QRY1->RA_DEMISSA) .OR. STOD(QRY1->RA_DEMISSA) >= MV_PAR01)
+		yy := Ascan(aTotMAT , {|x| x[2] =  QRY1->RA_MAT})
+		If yy = 0                                       
+			SI3->(MsSeek(Xfilial("SI3") + QRY1->RA_CC))
+			SQB->(MsSeek(Xfilial("SQB") + QRY1->RA__DEPTO))
+			SZK->(MsSeek(xFilial("SZK") + QRY1->RA__CELULA))
+			aadd (aTotMAT,;		
+			{QRY1->RA_CC,;		
+			QRY1->RA_MAT,;		
+			0,;					//03 FUNCIONARIO AFASTADO
+			0,;					//04 HORAS PREVISTAS
+			0,;					//05 FUNCIONARIO EM FERIAS 
+			0,;					//06 HORAS EXTRAS
+			0,;					//07 HORAS FALTAS/ATRASOS TOTAL
+			0,;					//08 HORAS EM TREINAMENTO
+			0,;					//09 TOTAL DE FUNCIONÁRIOS MÊS ANTERIOR
+			0,;					//10 ADMITIDO
+			0,;					//11 DEMITIDO
+			0,;					//12 HORAS EM FERIAS
+			SI3->I3_DESC,;		//13 CENTRO DE CUSTO
+			0,;					//14 HORAS AFAST./INSS
+			0,;					//15 HORAS FALTAS/ATRASOS DESCONTADO
+			0,;					//16 HORAS FALTAS/ATRASOS ABONADO
+			0,;					//17 HORAS EFETIVAS
+			QRY1->RA_NOME,;		//18 NOME
+			QRY1->RA_ADMISSA,;	//19 DATA ADMISSÃO
+			QRY1->RA_TNOTRAB,;	//20 MTURNO DE TRABALHO DO CADASTRO
+			SQB->QB_DESCRIC,;	//21 ÁREA
+			"",;				//22 MOTIVOS DE AUSENCIA
+			SZK->ZK_DESCRIC,;	//23 CELULA
+			0})					//24 SALDO BANCO DE HORAS
+		Endif                                            
+		yy := Ascan(aTotMAT , {|x| x[2] = QRY1->RA_MAT})
+
+        If stod(QRY1->RA_ADMISSA) >= MV_PAR01 .AND. stod(QRY1->RA_ADMISSA) <= MV_PAR02 //If mesano(stod(QRY1->RA_ADMISSA)) == MesAno(dDtPesqAf)
+        	aTotMAT[yy,10] += 1 //ADMITIDO
+        Endif
+        
+ 		If (stod(QRY1->RA_DEMISSA)) >= MV_PAR01 .And. (stod(QRY1->RA_DEMISSA)) <= MV_PAR02 //MesAno(stod(QRY1->RA_DEMISSA)) = MesAno(dDtPesqAf)) //demitidos
+			cTipAfas := "D"
+			aTotMAT[yy,11] += 1 //DEMITIDO
+		EndIf
+        
+			DbSelectArea("SR8")
+
+			If SR8->(DbSeek(Xfilial("SR8") + QRY1->RA_MAT ))			
+			aTotMAT[yy,22] := ""
+
+				While !Eof() .And. QRY1->RA_FILIAL + QRY1->RA_MAT == SR8->R8_FILIAL + SR8->R8_MAT  
+						dinifer := mv_par01 //FIRSTDAY(mv_par02 + 30)
+						dfimfer := mv_par02 //LASTDAY(mv_par02 + 30)                                                
+							
+						If SR8->R8_TIPO $ 'O/P/Q' .and. SR8->R8_DATAFIM >= dinifer .and. SR8->R8_DATAINI <= dfimfer
+							nAfasta := 0
+							If SR8->R8_TIPO $ 'O/P' .and. (SR8->R8_DATAFIM - SR8->R8_DATAINI) >= 15 
+									If SR8->R8_DATAINI+15 <= dinifer .and. SR8->R8_DATAFIM >= dinifer	.and. SR8->R8_DATAFIM <= dfimfer//afastamento comecou antes do mes de calculo e acabou no mes de calculo
+											nAfasta += xafasta(dInifer,SR8->R8_DATAFIM)
+									   		cTipAfas := "A"
+										Elseif SR8->R8_DATAINI+15 <= dinifer .and. SR8->R8_DATAFIM >= dfimfer	//afastamento comecou antes do mes de calculo e acabou depois do mes de calculo
+											nAfasta += xafasta(dInifer,dfimfer)
+											cTipAfas := "A"
+			            				ElseIf SR8->R8_DATAINI+15 >= dinifer .and.  SR8->R8_DATAFIM <= dfimfer  //afastamento está no mes de calculo
+											nAfasta += xafasta(SR8->R8_DATAINI+15,SR8->R8_DATAFIM)
+											cTipAfas := "A"
+										ElseIf SR8->R8_DATAINI+15 >= dinifer .and. SR8->R8_DATAINI+14 <= dfimfer .and. SR8->R8_DATAFIM >= dfimfer //afastamento comecou no mes de calculo e acabou depois
+											nAfasta += xafasta(SR8->R8_DATAINI+15,dfimfer)
+											cTipAfas := "A"
+									EndIf
+								ElseIf SR8->R8_TIPO $ 'Q'
+									If SR8->R8_DATAINI <= dinifer .and. SR8->R8_DATAFIM >= dinifer	.and. SR8->R8_DATAFIM <= dfimfer//afastamento comecou antes do mes de calculo e acabaram no mes de calculo											
+									   		nAfasta += xafasta(dInifer,SR8->R8_DATAFIM)
+									   		cTipAfas := "A"
+										Elseif SR8->R8_DATAINI <= dinifer .and. SR8->R8_DATAFIM >= dfimfer//afastamento comecou antes do mes de calculo e acabaram depois do mes de calculo											
+											nAfasta += xafasta(dInifer,dfimfer)
+											cTipAfas := "A"
+			            				ElseIf SR8->R8_DATAINI >= dinifer .and.  SR8->R8_DATAFIM <= dfimfer  //afastamento estao no mes de calculo
+											nAfasta += xafasta(SR8->R8_DATAINI,SR8->R8_DATAFIM)
+											cTipAfas := "A"
+										ElseIf SR8->R8_DATAINI >= dinifer .and. SR8->R8_DATAINI <= dfimfer .and. SR8->R8_DATAFIM >= dfimfer //afastamento comecou no mes de calculo e acabaram depois
+											nAfasta += xafasta(SR8->R8_DATAINI,dfimfer)
+											cTipAfas := "A"
+									EndIf
+							EndIf
+							If cTipAfas == 'A'
+								aTotMAT[yy,3]  += 1 //FUNCIONARIO AFASTADO
+								aTotMAT[yy,14] := SomaHoras(aTotMAT[yy,14],ConvHr(nAfasta,TMPHR->HORAS)) //HORAS AFAST./INSS
+							EndIf
+							aTotMAT[yy,22] += IIf (!Empty(Posicione("TMR",1,xfilial("TMR")+SR8->R8_CID,"TMR_DOENCA")),AllTrim(Posicione("TMR",1,xfilial("TMR")+SR8->R8_CID,"TMR_DOENCA") )+ ", ","") //MOTIVOS DE AUSENCIA TMR_CID TMR_DOENCA
+						EndIf
+	
+						If SR8->R8_TIPO $ 'F'
+							nFerias := 0
+							if SR8->R8_DATAINI <= dinifer .and. SR8->R8_DATAFIM >= dinifer	.and. SR8->R8_DATAFIM <= dfimfer//as ferias comecaram antes do mes de calculo e acabaram no mes de calculo											
+							   		nFerias += xafasta(dInifer,SR8->R8_DATAFIM)
+							   		cTipAfas := "F"
+								Elseif SR8->R8_DATAINI <= dinifer .and. SR8->R8_DATAFIM >= dfimfer//as ferias comecaram antes do mes de calculo e acabaram depois do mes de calculo											
+								   		nFerias += xafasta(dInifer,dfimfer)
+								   		cTipAfas := "F"
+	            				ElseIf SR8->R8_DATAINI >= dinifer .and.  SR8->R8_DATAFIM <= dfimfer  //as ferias estao no mes de calculo
+									nFerias += xafasta(SR8->R8_DATAINI,SR8->R8_DATAFIM)               //29                               
+									cTipAfas := "F"
+								ElseIf SR8->R8_DATAINI >= dinifer .and. SR8->R8_DATAINI <= dfimfer .and. SR8->R8_DATAFIM >= dfimfer //as ferias comecaram no mes de calcule e acabaram depois do mes de calculo
+										nFerias += xafasta(SR8->R8_DATAINI,dfimfer)
+										cTipAfas := "F"
+								Else //as ferias estao fora do periodo de calculo		
+									nFerias += 0       
+								cTipAfas := " "
+							EndIf
+
+							If cTipAfas == 'F'
+								aTotMAT[yy,5]  += 1 //FUNCIONARIO EM FERIAS
+								aTotMAT[yy,12] := SomaHoras(aTotMAT[yy,11],ConvHr(nFerias,TMPHR->HORAS)) //HORAS EM FERIAS
+							EndIf
+						EndIf
+				    	
+						DbSelectArea("SR8")
+						DbSkip()
+				Enddo
+		DbSelectArea("QRY1")
+        
+		Else
+		  	dbSelectArea( "QRY1" )
+		Endif
+//		testa eventos abonados do ponto eletronico - FALTAS, ATRASOS ETC
+		aMarcacoes	:= {}
+		aTabCalend	:= {}	
+		axFalta     := {}
+		//adet:= TestaPonto()
+		aTotMAT[yy,9]  += 1  //TOTAL DE FUNCIONÁRIOS MÊS ANTERIOR
+		aTotMAT[yy,4]  := SomaHoras(aTotMAT[yy,4],HrUtil(mv_par01,mv_par02))    //HORAS PREVISTAS
+		aTotMAT[yy,15] := SomaHoras(aTotMAT[yy,15],getFaltas(QRY1->RA_MAT,.F.)) //HORAS FALTAS/ATRASOS DESCONTADO
+		aTotMAT[yy,16] := SomaHoras(aTotMAT[yy,16],getFaltas(QRY1->RA_MAT,.T.)) //HORAS FALTAS/ATRASOS ABONADO
+		aTotMAT[yy,8]  := SomaHoras(aTotMAT[yy,8],getTreina(QRY1->RA_MAT))      //HORAS EM TREINAMENTO
+		aTotMAT[yy,24] := SomaHoras(aTotMAT[yy,24],getBanco(QRY1->RA_MAT))      //SALDO BANCO DE HORAS
+		aTotMAT[yy,6]  := SomaHoras(aTotMAT[yy,6],getHe(QRY1->RA_MAT))          //HORAS EXTRAS
+        
+		_nTotBanco := getBancoHoras(QRY1->RA_MAT) //BANCO DE HORAS       
+		aTotMAT[yy,15] := SubHoras(aTotMAT[yy,15],_nTotBanco) //HORAS FALTAS/ATRASOS DESCONTADO
+
+
+/* ---------------------------- fim do ponto eletronico*/
+	ENDIF
+
+	QRY1->(DbSkip())
+	Incproc()
+EndDo
+ASORT(aTotMAT,,, { |x, y| x[1] < y[1] })
+zz := 0
+nMax := Len(aTotMAT)
+ProcRegua(nMax)
+
+clinha = 	"ÁREA" 								+';'+ ;
+			"CENTRO DE CUSTO" 					+';'+ ;
+			"NOME" 								+';'+ ;
+			"DATA ADMISSÃO" 					+';'+ ;
+			"ADMITIDO" 							+';'+ ;
+			"DEMITIDO"							+';'+ ;
+			"FUNCIONARIO EM FERIAS"				+';'+ ; 
+			"FUNCIONARIO AFASTADO"				+';'+ ;
+			"HORAS PREVISTAS"					+';'+ ;
+			"TURNO"								+';'+ ;
+		 	"CELULA"							+';'+ ;
+			"HORAS EM FERIAS"					+';'+ ;
+			"HORAS DISPONIVEIS"					+';'+ ;
+			"HORAS EXTRAS"						+';'+ ;
+			"HORAS FALTAS/ATRASOS TOTAL"		+';'+ ;
+			"SALDO POSITIVO BANCO DE HORAS"		+';'+ ;
+			"SALDO NEGATIVO BANCO DE HORAS"		+';'+ ;
+			"MOTIVOS DE AUSENCIA"				+';'+ ;
+			"HORAS EM TREINAMENTO"				+';'+ ;
+			"HORAS AFAST./INSS"					+';'+ ;
+			"HORAS EFETIVAS"					+';'+ ;
+			"HORAS PAGAS"
+
+fWrite(nHandle, cLinha  + cCrLf)
+For zz = 1 to nMax       
+	cLinha := AllTrim(aTotMAT[zz,21]) + ';'                                          												//ÁREA
+	cLinha = clinha + AllTrim(aTotMAT[zz,13]) + ';' + AllTrim(aTotMAT[zz,18]) + ';'           										//CENTRO DE CUSTO + NOME
+	cLinha = clinha + StrZero(DAY(STOD(aTotMAT[zz,19])),2)+ "/" + StrZero(Month(STOD(aTotMAT[zz,19])),2) + "/" + RIGHT(Str(Year(STOD(aTotMAT[zz,19])),4),2) + ";"	//DATA ADMISSÃO
+	clinha = clinha + If (aTotMAT[zz,10] >= 1,"SIM","") + ';'																		//ADMITIDO
+	clinha = clinha + If (aTotMAT[zz,11] >= 1,"SIM","") + ';'																		//DEMITIDO
+	clinha = clinha + If (aTotMAT[zz,5] >= 1,"SIM","") + ';'																		//FUNCIONARIO EM FERIAS 
+	clinha = clinha + If (aTotMAT[zz,3] >= 1,"SIM","") + ';'																		//FUNCIONARIO AFASTADO
+	clinha = clinha + Alltrim(Left(Transform(aTotMAT[zz,4],"@E 999999.99"),6) + ":" + Right(StrZero(aTotMAT[zz,4],10,2),2)) + ';'	//HORAS PREVISTAS
+	clinha = clinha + aTotMAT[zz,20] + ';'  							  															//TURNO DE TRABALHO DO CADASTRO
+	clinha = clinha + Alltrim(aTotMAT[zz,23]) + ";" 																				//CELULA
+	clinha = clinha + Alltrim(Left(Transform(aTotMAT[zz,12],"@E 999999.99"),6) + ":" + Right(StrZero(aTotMAT[zz,12],10,2),2)) + ';'	//HORAS EM FERIAS
+	nHDisp := SomaHoras(aTotMAT[zz,4],'-'+AllTrim(Str(aTotMAT[zz,12])))
+	clinha = clinha + Alltrim(Left(Transform(nHDisp,"@E 999999.99"),6) + ":" + Right(StrZero(nHDisp,10,2),2)) + ';'					//HORAS DISPONIVEIS
+	clinha = clinha + Alltrim(Left(Transform(aTotMAT[zz,6],"@E 999999.99"),6) + ":" + Right(StrZero(aTotMAT[zz,6],10,2),2)) + ';'	//HORAS EXTRAS
+
+	nHFalta := subHoras(SomaHoras(SomaHoras(aTotMAT[zz,16],aTotMAT[zz,15]),aTotMAT[zz,8]), aTotMAT[zz,24])
+
+	if nHFalta < 0
+		nHFalta := 0
+	endif
+
+	Iif ( nHFalta <= nHDisp , aTotMAT[zz,7] := nHFalta , aTotMAT[zz,7] := nHDisp)
+	clinha = clinha + Alltrim(Left(Transform(aTotMAT[zz,7],"@E 999999.99"),6) + ":" + Right(StrZero(aTotMAT[zz,7],10,2),2)) + ';'	//HORAS FALTAS/ATRASOS TOTAL
+    If aTotMAT[zz,24] >= 0.00
+		clinha = clinha + Alltrim(Left(Transform(aTotMAT[zz,24],"@E 999999.99"),6) + ":" + Right(StrZero(aTotMAT[zz,24],10,2),2)) + ';'	//SALDO POSITIVO BANCO DE HORAS
+		Else
+		clinha = clinha + Alltrim(Left(Transform(0.00,"@E 999999.99"),6) + ":" + Right(StrZero(0.00,10,2),2)) + ';'
+	EndIf
+    If aTotMAT[zz,24] < 0.00
+		clinha = clinha + Alltrim(Left(Transform((aTotMAT[zz,24]*-1.00),"@E 999999.99"),6) + ":" + Right(StrZero((aTotMAT[zz,24]*-1.00),10,2),2)) + ';'	//SALDO NEGATIVO BANCO DE HORAS
+		Else
+		clinha = clinha + Alltrim(Left(Transform(0.00,"@E 999999.99"),6) + ":" + Right(StrZero(0.00,10,2),2)) + ';'
+	EndIf
+//	Iif ( aTotMAT[zz,15] >= nHDisp , aTotMAT[zz,15] := nHDisp,)
+//	clinha = clinha + Alltrim(Left(Transform(aTotMAT[zz,15],"@E 999999.99"),6) + ":" + Right(StrZero(aTotMAT[zz,15],10,2),2)) + ';'	//HORAS FALTAS/ATRASOS DESCONTADO
+//	clinha = clinha + Alltrim(Left(Transform(aTotMAT[zz,16],"@E 999999.99"),6) + ":" + Right(StrZero(aTotMAT[zz,16],10,2),2)) + ';'	//HORAS FALTAS/ATRASOS ABONADO
+	clinha = clinha + aTotMAT[zz,22] + ';'  							  															//MOTIVOS DE AUSENCIA
+	clinha = clinha + Alltrim(Left(Transform(aTotMAT[zz,8],"@E 999999.99"),6) + ":" + Right(StrZero(aTotMAT[zz,8],10,2),2)) + ';'	//HORAS EM TREINAMENTO
+	clinha = clinha + Alltrim(Left(Transform(aTotMAT[zz,14],"@E 999999.99"),6) + ":" + Right(StrZero(aTotMAT[zz,14],10,2),2)) + ';'	//HORAS AFAST./INSS
+	aTotMAT[zz,17] := SomaHoras(SomaHoras(SomaHoras(aTotMAT[zz,4],'-'+AllTrim(Str(aTotMAT[zz,12]))),aTotMAT[zz,6]),'-'+AllTrim(Str(SomaHoras(aTotMAT[zz,7],aTotMAT[zz,14]) )))
+	clinha = clinha + Alltrim(Left(Transform(aTotMAT[zz,17],"@E 999999.99"),6) + ":" + Right(StrZero(aTotMAT[zz,17],10,2),2)) + ';'	//HORAS EFETIVAS
+	nHPagas := SomaHoras(aTotMAT[zz,17],aTotMAT[zz,16])
+	clinha = clinha + Alltrim(Left(Transform(nHPagas,"@E 999999.99"),6) + ":" + Right(StrZero(nHPagas,10,2),2)) + ';'				//HORAS PAGAS
+    
+	fWrite(nHandle, cLinha  + cCrLf)
+	IncProc()
+Next         
+fClose(nHandle)
+
+If ! ApOleClient( 'MsExcel' )
+	MsgAlert( 'MsExcel nao instalado')
+	Return
+Else
+    if 'C:' $ __RELDIR        // alterado por Rodrigo Salomão GLPI ID10003
+		ShellExecute( "Open" , _cArqTmp ,"", "" , 3 )
+	else
+		ShellExecute( "Open" , "\\"+_csrvapl+_cArqTmp ,"", "" , 3 )
+	endif       
+EndIf
+
+Return .T.                                                    
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+Static FuncTion DiaUtil(dDtEntr,dDtSai)
+Local nDia:=0
+Local nDat:=0
+Local nC
+Local cDt 
+Local nuteis := 0
+Local nTur
+nDat := dDtSai-dDtEntr
+
+if  dDtEntr < mv_par01 //o inicio das ferias foi anterior ao mv_par01
+	dDtEntr := mv_par01 
+Endif   
+
+if dDtSai > mv_par02 //o fim das ferias passou do mv_par02
+	dDtSai := mv_par02
+Endif   
+nDat := dDtSai-dDtEntr
+dDtEntr:= dDtEntr-1
+
+For nC := 1 To nDat
+	cDt:= RetTipoDia(dDtEntr+nC)
+	If cDt = "1" //dias trabalhados 
+		nuteis ++
+	ElseIf cDt = "3" //DSR
+		nUteis = nUteis
+	ElseIf cDt  = "2" //sabado 
+
+		SPJ->(DbSeek(Xfilial("SPJ") + QRY1->RA_TNOTRAB + QRY1->RA_SEQTURN + "7" ))
+		If SPJ->PJ_HRTOTAL > 0	
+			nUteis ++
+		EndIF	
+		SPJ->(DbSeek(Xfilial("SPJ") + QRY1->RA_TNOTRAB + QRY1->RA_SEQTURN + "2" ))	 
+	Else 
+		nUteis = nUteis								
+	EndIf
+Next nC
+
+Return(nUteis) 
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+Static Function TestaPonto()
+Local cAcessaSPC  := &("{ || " + ChkRH("PONR050","SPH","2") + "}")
+Local dInicio     := mv_par01
+Local dFim        := mv_par02
+Local aAutorizado := {}
+Local cCodNAut 	  := "007,009,011,013,017,019,021,033,035,463,461,416,415,414,408" //-- Codigos nao Autorizados
+Local cCodAut 	  := "008,010,012,014,018,020,022,032,034" //-- Codigos Autorizados
+Local cExtra      := "120,121,122,123,127,128,129,130" //horas extras
+Local cCodigos    := ""
+Local cFilCompara := SP9->P9_FILIAL       
+Local aPrevFun    :={}
+aDet              := {}
+cCodigos := cCodAut + cCodNAut
+DbSelectArea("SP9")
+DbSeek(cFilCompara)
+aAutorizado       := {}
+While ! Eof() .AND. SP9->P9_FILIAL = cFilCompara
+	If Subs(P9_IDPON,1,3) $ cCodigos
+		Aadd(aAutorizado,{Left(P9_CODIGO,3),P9_DESC})
+	Endif
+	DbSkip()
+EndDo
+xExtra :=  0
+	//-- Carrega as Marcacoes do Periodo
+	IF !GetMarcacoes( @aMarcacoes		,;	//01 -> Marcacoes dos Funcionarios
+					  @aTabCalend		,;	//02 -> Calendario de Marcacoes
+					  @aTabPadrao		,;	//03 -> Tabela Padrao
+					  NIL				,;	//04 -> Turnos de Trabalho
+					  dPerIni 			,;	//05 -> Periodo Inicial
+					  dPerFim			,;	//06 -> Periodo Final
+					  QRY1->RA_FILIAL	,;	//07 -> Filial
+					  QRY1->RA_MAT		,;	//08 -> Matricula
+					  SRA->RA_TNOTRAB	,;	//09 -> Turno
+					  QRY1->RA_SEQTURN	,;	//10 -> Sequencia de Turno
+					  QRY1->RA_CC		,;	//11 -> Centro de Custo
+					  "SP8"				,;	//12 -> Alias para Carga das Marcacoes
+					  .F.    			,;	//13 -> Se carrega Recno em aMarcacoes
+					  .T.      			,;	//14 -> Se considera Apenas Ordenadas
+					  .T.      			,;	//15 -> Se Verifica as Folgas Automaticas
+					  .F.      			,;	//16 -> Se Grava Evento de Folga Automatica Periodo Anterior
+					  NIL				,;	//17 -> Se Carrega as Marcacoes Automaticas
+					  NIL				,;	//18 -> Registros de Marcacoes Automaticas que deverao ser Desprezadas
+					  NIL				,;	//19 -> Bloco para avaliar as Marcacoes Automaticas que deverao ser Desprezadas
+					  NIL				,;	//20 -> Se Considera o Periodo de Apontamento das Marcacoes
+					  .F.				 ;	//21 -> Se Efetua o Sincronismo dos Horarios na Criacao do Calendario
+					)
+		Help(' ',1,'PONSCALEND')
+    EndIF
+	//-- Obtem Qtde de Marcacoes
+	nLenMarc:=Len(aMarcacoes)
+
+
+	aDet := {}
+
+	//1 - Data
+	//2 - Codigo do Evento
+	//3 - Descricao do Evento
+	//4 - Descricao do Abono
+	//5 - Descricao do Abono
+	//6 - Quantidade de horas Abonadas
+	//7 - Marcacoes
+
+	dbSelectArea( "SPH" ) 
+	DbSetOrder(2)
+	If DbSeek(QRY1->RA_Filial + QRY1->RA_Mat + Dtos(dInicio) )
+		While !Eof() .And. SPH->PH_Filial+SPH->PH_Mat == QRY1->RA_filial+QRY1->RA_Mat   .and. SPH->PH_DATA <= dFim
+
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Consiste controle de acessos e filiais validas               ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If !Eval(cAcessaSPC)
+				SPH->(dbSkip())
+				Loop
+			EndIf
+
+			//-- Verifica o Periodo So	licitado
+			If Empty(SPH->PH_DATA) .OR. SPH->PH_DATA < dInicio .OR. SPH->PH_DATA > dFim
+				DbSkip()
+				Loop
+			Endif
+
+		           
+			//-- Utiliza o codigo informado qdo houver
+			cPD := If(Empty(SPH->PH_PDI),SPH->PH_PD,SPH->PH_PDI)
+
+			//-- Verifica se e um codigo contido na relacao de codigos 
+			//-- definidas segundo avariavel cCodigos
+			nPos := Ascan(aAutorizado,{ |x| x[1] = cPD })
+            //-- Se o Codigo do Evento apontado  eh Valido
+			If nPos > 0   
+			
+				//-- Obtem a quantidade do evento apontando
+				xQuant := If(SPH->PH_QUANTI>0,SPH->PH_QUANTI,SPH->PH_QUANTC)
+               
+				aJustifica := {}
+				
+				//-- Verifica se existe abonos e posiciona registro de abono
+				fAbonos(SPH->PH_DATA, aAutorizados[nPos,1],,@aJustifica,SPH->PH_TPMARCA,SPH->PH_CC)
+        						
+			    //-- Sintetiza por Evento
+				If (nPosDet:=Ascan(aDet,{ |x| x[1] = cPD })) > 0
+					aDet[nPosDet,3]:=SomaHoras(aDet[nPosDet,3],xQuant)
+			    Else
+					aAdd(aDet,{ aAutorizado[nPos,1], aAutorizado[nPos,2] ,	xQuant})
+				Endif	              
+				If !EMPTY(SPH->PH_ABONO) .AND. SPH->PH_QTABONO > 0 //SOMA EVENTOS ABONADOS
+					If Len(aXFalta) >  0
+						aXFalta [1,2] += xQuant	
+					Else
+						aAdd(aXFalta,{0,xQuant})
+					Endif		
+				Else       //SOMA EVENTOS NAO ABONADOS
+					If Len(aXFalta) >  0
+						aXFalta [1,1] += xQuant	
+					Else
+						aAdd(aXFalta,{xQuant,0})
+					Endif					  									  
+				EndIF
+			Else            
+				If  cPd $ cExtra
+					xExtra += If(SPH->PH_QUANTI>0,SPH->PH_QUANTI,SPH->PH_QUANTC)				
+				EndIF			
+			Endif
+			DbSkip()
+		EndDo
+	Endif
+
+Return(aDet)
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+Static Function fChkSX1( dPerIni , dPerFim , cPerg )
+
+Local aAreaSX1	:= SX1->( GetArea() )
+Local dVar      := Ctod("//")
+
+SX1->(dbSetOrder(1))
+
+IF SX1->(dbSeek(cPerg+"14",.F.))
+	dVar := Ctod(SX1->X1_CNT01,'ddmmyy')
+	IF dVar < dPerIni .or. dVar > dPerFim
+		RecLock("SX1")
+		SX1->X1_CNT01 := Dtoc(dPerIni)
+		SX1->( MsUnlock() )
+	EndIF
+	SX1->( dbSkip() )
+	IF SX1->( X1_GRUPO + X1_ORDEM ) == cPerg+"15"
+		dVar := Ctod(SX1->X1_CNT01,'ddmmyy')
+		IF dVar < dPerIni .Or. dVar > dPerFim
+			RecLock("SX1")
+			SX1->X1_CNT01 := Dtoc(dPerFim)
+			SX1->( MsUnlock() )
+		EndIF
+	EndIF
+EndIF
+
+RestArea( aAreaSX1 )
+
+Return( NIL )
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+Static FuncTion HrUtil(dDtEntr,dDtSai)
+Local nDia      := 0
+Local _nSem     := 1
+Local nDat      := 0
+Local nUteis    := 0
+Local nC
+Local cDt 
+Local ntothoras := 0
+Local _cAno     := Strzero(Year(dDtSai),4)
+Local _cMes     := Strzero(Month(dDtSai),2)
+Local _Turno	:= QRY1->RA_TNOTRAB //Posicione("SPF",1,"02" + QRY1->RA_MAT + DTOS(MV_PAR01),"PF_TURNOPA") //_dTurno,"PF_TURNOPA")
+
+If STOD(QRY1->RA_ADMISSA) > dDtEntr //admissão dentro do período selecionado
+	dDtEntr := STOD(QRY1->RA_ADMISSA)
+EndIf
+
+If !eMPTY(QRY1->RA_DEMISSA) .and. STOD(QRY1->RA_DEMISSA) < dDtSai //demissão dentro do período selecionado
+	dDtSai := STOD(QRY1->RA_DEMISSA)
+EndIf
+
+nDat := dDtSai - dDtEntr + 1
+
+If nDat == 0
+   nDat := 1
+EndIf
+
+If Posicione("RCG",1, xFilial("RCG") + StrZero(Year(MV_PAR01),4) + StrZero(Month(MV_PAR01),2) + QRY1->RA_TNOTRAB, "RCG->RCG_TNOTRAB") == QRY1->RA_TNOTRAB
+	_Turno := QRY1->RA_TNOTRAB
+Else
+	_Turno := "   "
+EndIf
+
+For nC  := 1 To nDat
+	cDt := RetTipoDia(dDtEntr + (nC-1))	
+
+			DbSelectArea("RCG")
+			DbSetOrder(2)
+			DbSeek(xFilial("RCG") + SPACE(LEN(RCG_PROCES)) + SPACE(LEN(RCG_PER)) + SPACE(LEN(RCG_SEMANA)) + SPACE(LEN(RCG_ROTEIR)) + _Turno + DTOS(dDtEntr + (nC-1)),.f.)
+
+			If RCG->RCG_TIPDIA == "1"
+				nuteis++
+			EndIf
+
+Next nC
+
+	TMPHR->(DBGOTOP())
+	WHILE !TMPHR->(eof()) .AND. TMPHR->PJ_TURNO <> QRY1->RA_TNOTRAB
+		TMPHR->(DBSKIP())
+	ENDDO
+	ntothoras := TMPHR->HORAS
+	FOR I:=1 TO NUTEIS-1
+		NTOTHORAS := SOMAHORAS(NTOTHORAS,TMPHR->HORAS)
+	NEXT
+	If nUteis < 1
+		nTotHoras := 0
+	EndIf
+Return(nTotHoras) 
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+Static Function ValidPerg() //CRIACAO DA PERGUNTA
+Local _sAlias := Alias()
+Local aRegs := {}
+Local i,j
+
+dbSelectArea("SX1")
+dbSetOrder(1)
+  AAdd(aRegs,{cPerg,"01","Data De?          ","","","mv_ch1","D",08,0,0,"G","","mv_par01","","","","","","","","","","","","","","","","","","","","","","","","","",""})
+  AAdd(aRegs,{cPerg,"02","Data Ate?         ","","","mv_ch2","D",08,0,0,"G","","mv_par02","","","","","","","","","","","","","","","","","","","","","","","","","",""})
+  AAdd(aRegs,{cPerg,"03","Centro Custo De?  ","","","mv_ch3","C",09,0,0,"G","","mv_par03","","","","","","","","","","","","","","","","","","","","","","","","","CTT",""})
+  AAdd(aRegs,{cPerg,"04","Centro Custo Ate? ","","","mv_ch4","C",09,0,0,"G","","mv_par04","","","","","","","","","","","","","","","","","","","","","","","","","CTT",""})
+  AAdd(aRegs,{cPerg,"05","Celula De?        ","","","mv_ch5","C",02,0,0,"G","","mv_par05","","","","","","","","","","","","","","","","","","","","","","","","","SZK",""})
+  AAdd(aRegs,{cPerg,"06","Celula Ate?       ","","","mv_ch6","C",02,0,0,"G","","mv_par06","","","","","","","","","","","","","","","","","","","","","","","","","SZK",""})
+
+
+For i:=1 to Len(aRegs)
+	If !dbSeek(cPerg+space(len(SX1->X1_GRUPO)-LEN(cPerg))+aRegs[i,2])
+		RecLock("SX1",.T.)
+		For j:=1 to FCount()
+			If j <= Len(aRegs[i])
+				FieldPut(j,aRegs[i,j])
+			Endif
+		Next
+		MsUnlock()
+	Endif
+Next
+Return 
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------------
+Static FuncTion xAfasta(dDtEntr,dDtSai)
+Local nDia      := 0
+Local _nSem     := 1
+Local nDat      := 0
+Local nC
+Local cDt 
+Local nafa      := 0         
+Local ntothoras := 0
+Local _cAno     := Strzero(Year(dDtSai),4)
+Local _cMes     := Strzero(Month(dDtSai),2)
+Local _Turno	:= QRY1->RA_TNOTRAB 
+Local mSQL 	    := ""
+DEFAULT dDtEntr := MV_PAR01
+DEFAULT dDtSai  := MV_PAR02
+
+nDat := dDtSai - dDtEntr + 1
+
+If Posicione("RCG",1, xFilial("RCG") + StrZero(Year(MV_PAR01),4) + StrZero(Month(MV_PAR01),2) + QRY1->RA_TNOTRAB, "RCG->RCG_TNOTRAB") == QRY1->RA_TNOTRAB
+	_Turno := QRY1->RA_TNOTRAB
+Else
+	_Turno := "   "
+EndIf
+
+For nC := 1 To nDat
+	cDt := RetTipoDia(dDtEntr + (nC-1))
+           
+			DbSelectArea("RCG")
+			DbSetOrder(2)
+			DbSeek(xFilial("RCG") + SPACE(LEN(RCG_PROCES)) + SPACE(LEN(RCG_PER)) + SPACE(LEN(RCG_SEMANA)) + SPACE(LEN(RCG_ROTEIR)) + _Turno + DTOS(dDtEntr + (nC-1)),.f.)
+            
+				If RCG->RCG_TIPDIA == "1"
+					nAfa++
+				EndIf
+
+Next nC
+
+RCG->( dbCloseArea() )
+
+Return(nAfa) 
+//------------------------------------------------------------------------------------------------------------------------------------------------------------
+Static Function ConvHr(nUteis,nHoras)
+Local NTOTHORAS := 0
+
+	TMPHR->(DBGOTOP())
+	WHILE !TMPHR->(eof()) .AND. TMPHR->PJ_TURNO <> QRY1->RA_TNOTRAB
+		TMPHR->(DBsKIP())
+	ENDDO
+	ntothoras := TMPHR->HORAS
+	FOR I:=1 TO NUTEIS-1
+		NTOTHORAS := SOMAHORAS(NTOTHORAS,TMPHR->HORAS)
+	NEXT
+	If nUteis < 1 
+		nTotHoras := 0
+	EndIf
+Return NTOTHORAS
+//------------------------------------------------------------------------------------------------------------------------------------------------------------
+Static Function getHe(cMat)
+Local cExtra := "120,121,122,123,127,128,129,130,140,141,142,143" //HORAS EXTRAS
+Local cSQL   := ""
+Local nQtd   := 0
+
+	cSQL := "SELECT PC_MAT AS MATRICULA,  PC_DATA AS DATA, PC_PD AS VERBA, PC_ABONO AS ABONO, PC_QUANTC AS HORAS FROM SPC020 AS PC3 "
+	cSQL += "WHERE PC3.D_E_L_E_T_ = ' ' "
+	cSQL += "AND PC3.PC_MAT = '"+cMat+"' "
+	cSQL += "AND PC3.PC_DATA BETWEEN '"+DtoS(MV_PAR01)+"' AND '"+DtoS(MV_PAR02)+"' "
+	cSQL += "AND PC3.PC_PD IN ("+cExtra+") "
+//	cSQL += "AND PC3.PC_FILIAL = '" + QRY1->RA_FILIAL + "' "
+	cSQL += "AND PC3.PC_ABONO NOT IN ('027') "
+	cSQL += "UNION ALL "
+	cSQL += "SELECT PH_MAT AS MATRICULA,  PH_DATA AS DATA, PH_PD AS VERBA, PH_ABONO AS ABONO, PH_QUANTC AS HORAS FROM SPH020 AS PH3 "
+	cSQL += "WHERE PH3.D_E_L_E_T_ = ' ' "
+	cSQL += "AND PH3.PH_MAT = '"+cMat+"' "
+//	cSQL += "AND PH3.PH_FILIAL = '" + QRY1->RA_FILIAL + "' "
+	cSQL += "AND PH3.PH_DATA BETWEEN '"+DtoS(MV_PAR01)+"' AND '"+DtoS(MV_PAR02)+"' "
+	cSQL += "AND PH3.PH_PD IN ("+cExtra+") "
+	cSQL += "AND PH3.PH_ABONO NOT IN ('027') "
+	
+	TcQuery cSQL NEW Alias "TMPHE"
+	DbSelectArea("TMPHE")
+	While !Eof()
+		nQtd := SomaHoras(nQtd,TMPHE->HORAS)
+		DbSkip()
+	EndDo
+	DbCloseArea("TMPHE")
+Return nQtd
+//------------------------------------------------------------------------------------------------------------------------------------------------------------
+Static Function getFaltas(cMat,lAbonada)      //.T. HORAS FALTAS/ATRASOS ABONADO , .F. HORAS FALTAS/ATRASOS DESCONTADO  
+Local cFaltas    := "009,014,019,408,463" //EVENTOS DE DESCONTO
+Local cAbona     := "001,002,003,004,005,006,007,008,009,010,011,012,013,017,018,020,021,022,023,024,025,026,028" //HORAS FALTAS/ATRASOS ABONADO
+Local cNAbona    := "001,002,003,004,005,006,007,008,009,010,011,012,013,014,015,016,017,018,019,020,021,022,023,024,025,026,028" //HORAS FALTAS/ATRASOS DESCONTADO
+Local cSQL       := ""
+Local nQtd       := 0
+DEFAULT lAbonada := .F.
+	
+	cSQL := "SELECT PC_MAT AS MATRICULA,  PC_DATA AS DATA, PC_PD AS VERBA, PC_ABONO AS ABONO, PC_QUANTC AS HORAS FROM SPC020 AS PC3 "
+	cSQL += "WHERE PC3.D_E_L_E_T_ = ' ' "
+//	cSQL += "AND PC3.PC_FILIAL = '" + QRY1->RA_FILIAL + "' "
+	cSQL += "AND PC3.PC_MAT = '"+cMat+"' "
+//	cSQL += "AND PC3.PC_DATA BETWEEN '"+DtoS(MV_PAR01)+"' AND '"+DtoS(MV_PAR02)+"' "
+	cSQL += + Iif(Empty(QRY1->RA_DEMISSA) .OR. STOD(QRY1->RA_DEMISSA) >= MV_PAR02,"AND PC3.PC_DATA BETWEEN '"+DtoS(MV_PAR01)+"' AND '"+DtoS(MV_PAR02)+"' ","AND PC3.PC_DATA BETWEEN '"+DtoS(MV_PAR01)+"' AND '"+QRY1->RA_DEMISSA+"' ")
+	cSQL += "AND PC3.PC_PD IN ("+cFaltas+")"
+	cSQL += + Iif(lAbonada, " AND PC3.PC_ABONO IN ("+cAbona+") "," AND PC3.PC_ABONO NOT IN ("+cNAbona+") ")
+	cSQL += "UNION ALL "
+	cSQL += "SELECT PH_MAT AS MATRICULA,  PH_DATA AS DATA, PH_PD AS VERBA, PH_ABONO AS ABONO, PH_QUANTC AS HORAS FROM SPH020 AS PH3 "
+	cSQL += "WHERE PH3.D_E_L_E_T_ = ' ' "
+	cSQL += "AND PH3.PH_MAT = '"+cMat+"' "
+//	cSQL += "AND PH3.PH_FILIAL = '" + QRY1->RA_FILIAL + "' "
+//	cSQL += "AND PH3.PH_DATA BETWEEN '"+DtoS(MV_PAR01)+"' AND '"+DtoS(MV_PAR02)+"' "
+	cSQL += + Iif(Empty(QRY1->RA_DEMISSA) .OR. STOD(QRY1->RA_DEMISSA) >= MV_PAR02,"AND PH3.PH_DATA BETWEEN '"+DtoS(MV_PAR01)+"' AND '"+DtoS(MV_PAR02)+"' ","AND PH3.PH_DATA BETWEEN '"+DtoS(MV_PAR01)+"' AND '"+QRY1->RA_DEMISSA+"' ")
+	cSQL += "AND PH3.PH_PD IN ("+cFaltas+")"
+	cSQL += + Iif(lAbonada, " AND PH3.PH_ABONO IN ("+cAbona+") "," AND PH3.PH_ABONO NOT IN ("+cNAbona+") ")
+	
+	TcQuery cSQL NEW Alias "TMPFL"
+	DbSelectArea("TMPFL")
+	While !Eof()
+		nQtd := SomaHoras(nQtd,TMPFL->HORAS)
+		DbSkip()
+	EndDo
+	DbCloseArea("TMPFL")
+Return nQtd
+//------------------------------------------------------------------------------------------------------------------------------------------------------------
+Static Function getTreina(cMat)
+Local cTreina  := "014" //Abono por Treinamento
+Local cSQL     := ""
+Local nQtd     := 0
+
+	cSQL := "SELECT PC_MAT AS MATRICULA,  PC_DATA AS DATA, PC_PD AS VERBA, PC_ABONO AS ABONO, PC_QUANTC AS HORAS FROM SPC020 AS PC3 "
+	cSQL += "WHERE PC3.D_E_L_E_T_ = ' ' "
+	cSQL += "AND PC3.PC_MAT = '"+cMat+"' "
+//	cSQL += "AND PC3.PC_FILIAL = '" + QRY1->RA_FILIAL + "' "
+	cSQL += "AND PC3.PC_DATA BETWEEN '"+DtoS(MV_PAR01)+"' AND '"+DtoS(MV_PAR02)+"' "
+	cSQL += "AND PC3.PC_ABONO IN ("+cTreina+") "
+	cSQL += "UNION ALL "
+	cSQL += "SELECT PH_MAT AS MATRICULA,  PH_DATA AS DATA, PH_PD AS VERBA, PH_ABONO AS ABONO, PH_QUANTC AS HORAS FROM SPH020 AS PH3 "
+	cSQL += "WHERE PH3.D_E_L_E_T_ = ' ' "
+//	cSQL += "AND PH3.PH_FILIAL = '" + QRY1->RA_FILIAL + "' "
+	cSQL += "AND PH3.PH_MAT = '"+cMat+"' "
+	cSQL += "AND PH3.PH_DATA BETWEEN '"+DtoS(MV_PAR01)+"' AND '"+DtoS(MV_PAR02)+"' "
+	cSQL += "AND PH3.PH_ABONO IN ("+cTreina+")"
+
+	TcQuery cSQL NEW Alias "TMPTR"
+	DbSelectArea("TMPTR")
+	While !Eof()
+		nQtd := SomaHoras(nQtd,TMPTR->HORAS)
+		DbSkip()
+	EndDo
+	DbCloseArea("TMPTR")
+Return nQtd
+//------------------------------------------------------------------------------------------------------------------------------------------------------------
+Static Function getBanco(cMat)  //Calcula o saldo do Banco de Horas
+Local cSQL      := ""
+Local nQtd      := 0
+nSaldo:= nSaldoAnt := nValor := 0
+dDataAux  := CTOD("  /  /  ")
+
+_cSQL := " Select PI_FILIAL,PI_MAT,PI_DATA,PI_PD,PI_STATUS,PI_QUANT,P9_TIPOCOD From " + RetSqlName("SPI") + " _PI "
+_cSQL += " Inner Join " + RetSqlName("SP9") + " _P9 on P9_FILIAL = '" + xFilial("SP9") + "' And P9_CODIGO = PI_PD And _P9.D_E_L_E_T_ = ' ' "
+_cSQL += " Where PI_MAT = '" + cMat + "' And PI_DATA <= '" + DTOS(MV_PAR02) + "' And _PI.D_E_L_E_T_ = ' ' "
+//_cSQL += "  AND PI_FILIAL = '" + QRY1->RA_FILIAL + "' "
+_cSQL += " Order By PI_FILIAL,PI_MAT,PI_DATA,PI_PD "
+
+_cSQL := ChangeQuery(_cSQL)
+	
+If Select("xPI") > 0
+	DbSelectArea("xPI")
+	DbCloseArea()
+EndIf
+
+dbUseArea( .T., "TOPCONN", TCGENQRY(,,_cSQL),"xPI", .T., .T.)
+
+DbSelectArea("xPI")
+DbGoTop()
+
+While !Eof()
+	If xPI->P9_TIPOCOD $  "1/3"
+					
+		nValor 	  := IIF(xPI->PI_STATUS == "B",0,xPI->PI_QUANT)					
+		dDataAux  := IIF(Empty(nValor), dDataAux, STOD(xPI->PI_DATA)) //Para valor nao nulo considera a Data para Referencia do Saldo
+		nSaldoAnt := __TimeSum(nSaldoAnt,nValor)  
+		
+	Else
+			
+		nValor 	  := IIF(xPI->PI_STATUS == "B",0,xPI->PI_QUANT)					
+		dDataAux  := IIF(Empty(nValor), dDataAux, STOD(xPI->PI_DATA)) //Para valor nao nulo considera a Data para Referencia do Saldo
+		nSaldoAnt := __TimeSub(nSaldoAnt,nValor)
+			
+	Endif
+	nSaldo := nSaldoAnt
+	
+	DbSelectArea("xPI")
+	DbSkip()
+						
+EndDo
+Return nSaldo                                             
+
+
+Static Function getBancoHoras(cMat)  
+	Local cBanco:= "999" //EVENTOS DE BANCO DE HORAS  
+	Local nQtd	:= 0
+	
+	cSQL := "SELECT PI_QUANT AS HORAS FROM SPI020 AS SPI "
+	cSQL += "WHERE SPI.D_E_L_E_T_ <> '*' "
+	cSQL += "AND SPI.PI_MAT = '"+cMat+"' "
+	cSQL += "AND SPI.PI_PD IN ("+cBanco+")"
+	cSQL += "AND SPI.PI_FILIAL = '"+QRY1->RA_FILIAL+"' "
+//	cSQL += "AND SPI.PI_STATUS <> 'B' "
+	cSQL += "AND SPI.PI_DATA BETWEEN '"+DtoS(MV_PAR01)+"' AND '"+DtoS(MV_PAR02)+"' "
+	
+	TcQuery cSQL NEW Alias "TMPSPI"
+	DbSelectArea("TMPSPI")
+	While !Eof()
+		nQtd := SomaHoras(nQtd,TMPSPI->HORAS)
+		DbSkip()
+	EndDo
+	DbCloseArea("TMPSPI")
+Return nQtd
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -1,0 +1,83 @@
+#INCLUDE "RWMAKE.CH"
+#INCLUDE "TOPCONN.CH"
+#INCLUDE "TBICONN.CH"
+#INCLUDE "TBICODE.CH"
+
+<%
+PREPARE ENVIRONMENT EMPRESA "02" FILIAL __aProcParms[3,2]
+_cCodProd	:= __aProcParms[1,2] 
+_lgn		:= __aProcParms[2,2] 
+_lgn		:= strToKarr(_lgn, "lgn")
+_lgn		:= _lgn[1] + _lgn[2] + _lgn[3] + _lgn[4] + _lgn[5] + _lgn[6]
+
+_SQL := " SELECT 	B1_DESC "
+_SQL += " FROM  " + RetSqlName("SB1") + " AS SB1 "
+_SQL += " WHERE  SB1.D_E_L_E_T_ = '' "
+_SQL += " AND B1_FILIAL = '" + xFilial("SB1") + "' "
+_SQL += " AND B1_COD = '" + _cCodProd + "' "
+TCQUERY _SQL NEW ALIAS "TRBP"
+_SQL := " SELECT "
+_SQL += " C1_NUM, "
+_SQL += " C1_EMISSAO, "
+_SQL += " C1_QUANT, "
+_SQL += " C1_SOLICIT, "
+_SQL += " C1_APROVA1, "
+_SQL += " C1_APROVA2 "
+_SQL += " FROM " + RetSqlName("SC1") + " AS SC1 "
+_SQL += " WHERE  SC1.D_E_L_E_T_ = '' "
+_SQL += " AND C1_FILIAL = '" + xFilial("SC1") + "' "
+_SQL += " AND C1_PRODUTO = '" + _cCodProd + "' "
+TCQUERY _SQL NEW ALIAS "TRBY"  
+TcSetField("TRBY","C1_EMISSAO" ,"D")
+%>
+<table border="0" width="100%">
+	<tr bgcolor="lightblue">
+		<td width="100%">
+			<img src="/solic_compra/logobgh.jpg">
+		</td>
+	</tr>
+</table>
+<br>
+<center>
+	<b>
+		<font size=4 face="Arial">Solicitações em aberto para o Produto <font color="red"><%= _cCodProd%> - <%=TRBP->B1_DESC%></font>
+	</b>
+</center>
+<br>
+<table align="center" border="1" cellpadding="2" cellspacing="2">
+	<tr bgcolor="F9F9DB">
+		<td width="150" align="center" valign="top"><font size = "2" face="Arial"><b>Número da Solicitação</font></td>
+		<td width="100" align="center" valign="top"><font size = "2" face="Arial"><b>Quantidade</font></td>
+		<td width="150" align="center" valign="top"><font size = "2" face="Arial"><b>Data de Emissão</font></td>
+		<td width="120" align="center" valign="top"><font size = "2" face="Arial"><b>Solicitante</font></td>
+		<td width="120" align="center" valign="top"><font size = "2" face="Arial"><b>Aprovador 1</font></td>
+		<td width="120" align="center" valign="top"><font size = "2" face="Arial"><b>Aprovador 2</font></td>
+	</tr>
+<%
+cor := ""
+dbSelectArea("TRBY")
+do While !Eof()     
+	If cor == "lightblue"
+		cor := "white"
+	Else
+		cor := "lightblue"
+	Endif
+%>
+	<tr bgcolor=<%=cor%>>
+		<td align="center" valign="top"><font size = "2" face="Arial">&nbsp;<%=TRBY->C1_NUM%> </font></td>
+		<td align="center" valign="top"><font size = "2" face="Arial">&nbsp;<%=TRBY->C1_QUANT%></font></td>
+		<td align="center" valign="top"><font size = "2" face="Arial">&nbsp;<%=TRBY->C1_EMISSAO%></font></td>
+		<td align="left" valign="top"><font size = "2" face="Arial">&nbsp;<%=TRBY->C1_SOLICIT%></font></td>
+		<td align="left" valign="top"><font size = "2" face="Arial">&nbsp;<%=TRBY->C1_APROVA1%></font></td>
+		<td align="left" valign="top"><font size = "2" face="Arial">&nbsp;<%=TRBY->C1_APROVA2%></font></td>
+	</tr>
+<%
+	dbSkip()
+EndDo
+%>
+</table>
+<br>
+<center>
+	<input type="button" value="Fechar" onclick="window.close()">
+</center>
+<%RESET ENVIRONMENT%>

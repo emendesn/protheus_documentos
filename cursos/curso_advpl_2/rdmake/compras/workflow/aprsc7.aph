@@ -1,0 +1,486 @@
+#INCLUDE "RWMAKE.CH"
+#INCLUDE "TOPCONN.CH"
+#INCLUDE "TBICONN.CH"
+#INCLUDE "TBICODE.CH"
+<html>
+<head>
+<title>Aprovação de Pedido de Compra</title>
+</head>
+<script language="JavaScript">
+function ValidaObs(AForm) {          
+	if (AForm.RBAPROVA[1].checked &&  AForm.motivo.value.length < 3) {
+		alert("Campo Observação é obrigatório, favor informar o motivo da reprovação.");
+	} else  { 
+	 	AForm.submit(); 
+	}
+}
+</script>
+<table align="center">
+	<tr><td width="800">
+		<table border="0" width="100%">
+			<tr bgcolor="lightblue"><td width="100%"><img src="/solic_compra/logobgh.jpg"></td></tr>
+		</table>
+		<br>
+<%
+PREPARE ENVIRONMENT EMPRESA "02" FILIAL __aProcParms[5,2]
+If Len(__aProcParms) > 0
+	_cOpcao := __aProcParms[1,2]
+	_cPedido := __aProcParms[2,2]
+	_cUser := __aProcParms[3,2]
+	_cNivel := __aProcParms[4,2]
+	_xFilial := __aProcParms[5,2]
+Else
+	_cOpcao := __aPostParms[1,2]
+	_cPedido := __aPostParms[2,2]
+	_cUser := __aPostParms[3,2]
+	_cNivel := __aPostParms[4,2]
+   	_xFilial := __aPostParms[5,2]
+EndIf
+_cUser := strToKarr(_cUser, "lgn")
+_cUser := _cUser[1] + _cUser[2] + _cUser[3] + _cUser[4] + _cUser[5] + _cUser[6] 	      
+_cServer := getMV("MV_WFBRWSR")   
+_lAprov := .T.
+_item := {}
+_itemA := {}
+If _cOpcao == "0"
+%>
+			<form action="http://<%=_cServer%>/H_APRSC7.APL" method="POST">
+				<input type="hidden" name="opcao" value= "1">
+				<input type="hidden" name="pedido" value= "<%=_cPedido%>">
+				<input type="hidden" name="user" value= "<%=_cUser%>">
+				<input type="hidden" name="nivel" value= "<%=_cNivel%>">
+				<input type="hidden" name="filial" value= "<%=_xFilial%>">
+				<center>
+					<h2><b>
+		    		<font color="#000080" size=4 face="Arial">Aprova&ccedil;&atilde;o do pedido de compra </font>
+					<font color="red"><%= _cPedido %> </font>
+					<font size=4 face="Arial" color="#000080">da filial </font>
+		    		<font color="red"><%= SM0->M0_FILIAL %> </font>
+		    		</b></h2>
+				</center>
+			<br>
+		<table align="center" border="0">	         
+			<tr>
+				<td><font face="Arial">Usuario </td>
+				<td><input type="text" name="usuario" size="5" value=<%=_cUser %> disabled=true></td>
+			</tr>
+			<tr>
+				<td><font  face="Arial">Senha </td>
+				<td><input type="password" name="senha" size="6"></td>
+			</tr>
+		</table>
+		<br>	
+		<center><input type="submit" value="Entrar"></center>  
+	</form>
+<%
+ElseIf _cOpcao == "1"
+	lOk := .F.
+	_cSenha := __aPostParms[5,2]
+	PswOrder(1)
+	If PswSeek(_cUser, .T.)
+		_user := PswID()
+		lOk := PSWNAME( _cSenha )
+	EndIf
+	If  lOk == .T.
+		_cOpcao := "2"
+<%
+	Else
+%>
+	<script>alert('Usuário sem permissão para acessar o módulo de Aprovação !!');history.back();</script>
+<%
+	EndIf
+EndIf
+If _cOpcao == "2"
+	nTotal := 0
+	nfrete := 0
+	nIpi   := 0
+	nValICMS := 0
+	nDespesa := 0
+	nSeguro := 0
+	nBaseIcms := 0
+	dbSelectArea("SC7")
+	dbSetOrder(1)
+	dbSeek(xFilial('SC7')+_cPedido)
+	cCotacao := SC7->C7_NUMCOT
+	cNumSC  := SC7->C7_NUMSC
+	dbSelectArea("SC1")
+	dbSetOrder(1)
+	dbSeek(xFilial("SC1")+cNumSC)
+	_dAprova1	:= SC1->C1_DTAPRV1
+	_dAprova2	:= SC1->C1_DTAPRV2
+	_dAprSupe	:= SC1->C1_DTAPSUP
+	_obsVisto	:=  SC1->C1_OBSAPR1
+	_obsCompra	:=  SC1->C1_OBSAPR2
+	_obsSuperior:=  "SC - " + dtoc(SC1->C1_DTAPSUP) + " : " + SC1->C1_OBSSUPE
+	_cAprovad1	:= {}
+	PswOrder(1)
+	If PswSeek(SC1->C1_APROVA1, .T.)
+		_cAprovad1 := PSWret(1)
+	EndIf
+	_cAprovad2	:= {}
+	PswOrder(1)
+	If PswSeek(SC1->C1_APROVA2, .T.)
+		_cAprovad2 := PSWret(1)
+	EndIf
+	_cSuperior := {}
+	PswOrder(1)
+	If PswSeek(SC1->C1_APRSUPE, .T.)
+		_cSuperior := PSWret(1)
+	EndIf
+	_cQuery := 	"SELECT CR_DATALIB, CR_OBS "
+	_cQuery +=	"FROM SCR020 "
+	_cQuery +=	"WHERE CR_NUM = '" + _cPedido + "' "
+	_cQuery	+=	"  AND CR_USER = '" + SC1->C1_APRSUPE + "' "
+	_cQuery +=	"  AND CR_STATUS = '03' "
+	_cQuery += 	"  AND D_E_L_E_T_ <> '*'"
+	TCQUERY _cQuery NEW ALIAS "TRBSCR"
+	TCSETFIELD("TRBSCR", "CR_DATALIB", "D")
+	_cQuery := 	"SELECT CR_USER, CR_DATALIB, CR_OBS "
+	_cQuery +=	"FROM SCR020 "
+	_cQuery +=	"WHERE CR_NUM = '" + _cPedido + "' "
+	_cQuery	+=	"  AND CR_USER <> '" + SC1->C1_APRSUPE + "' "
+	_cQuery	+=	"  AND CR_USER <> '" + _cUser + "' "
+	_cQuery +=	"  AND CR_STATUS = '03' "
+	_cQuery += 	"  AND D_E_L_E_T_ <> '*'"
+	TCQUERY _cQuery NEW ALIAS "TRBSCR1"
+	TCSETFIELD("TRBSCR1", "CR_DATALIB", "D")
+	If Len(alltrim(TRBSCR->CR_OBS)) > 0
+		_obsSuperior+= chr(13) + chr(13) + "PC - " + DTOC(TRBSCR->CR_DATALIB) + " : " + TRBSCR->CR_OBS
+	EndIf
+	dBSelectarea("SCR")                   // Posiciona a Liberacao
+	dBSetorder(2)
+	If dBSeek(xFilial("SCR")+"PC" +_cPedido)
+		If SCR->CR_STATUS == "04"
+			_lAprov := .F.
+%>
+				<center>
+				    <font color='red' size=4 face='Arial'><b>Pedido de Compra não Aprovado !!! </font></b></h2>
+				</center><br><br>
+<%
+			else
+
+		        _Query :=	"SELECT COUNT(*) AS TOT1 FROM SCR020 WHERE CR_USER = '" + _cUser + "' AND CR_NUM = '" + _cPedido + "' AND CR_STATUS = '02' AND D_E_L_E_T_ = '' "
+			    TCQUERY _Query NEW ALIAS "TRBGRP1"  
+
+				if TRBGRP1->TOT1 == 0  
+					_lAprov := .F.	
+%>
+					<center>
+					    <font color='red' size=4 face='Arial'><b>Você não tem Permissão para Acessar esse Módulo !!!</font></b></h2>
+					</center><br> 
+<%					
+				endif
+			endif
+		 endif
+		 		
+		dbSelectArea("SC8")
+		dbSetOrder(1)
+		dbSeek(xFilial('SC8')+cCotacao)
+		
+		dbSelectArea('SA2')
+		dbSetOrder(1)
+		dbSeek(xFilial('SA2')+SC7->C7_FORNECE) 
+		
+		dbSelectArea('SE4')
+		dbSeek(xFilial('SE4')+SC7->C7_COND)
+	
+%>           
+	<form action="http://<%=_cServer%>/H_GRAPRSC7.APL" method="POST">
+		<input type="hidden" name="pedido" value= "<%=_cPedido%>">
+		<input type="hidden" name="user" value= "<%=_cUser%>">
+		<center>
+			<font color="#000080" size=4 face="Arial"><b>Aprovação de Pedido de Compra <font color="red"><%= _cPedido %><font size=4 face="Arial" color="#000080"> da Filial  <font color="red"><%= SM0->M0_FILIAL %></font></b></h2>
+		</center>
+		<p>
+<%
+		If !Empty(cCotacao)
+%>
+			<font color="#0000FF" size=2  face="Arial"><b>Ref. a cotação de compras nº : <a href="#" onClick="window.open('http://<%=_cServer%>/H_TLACOTA.APL?cod_cotacao=<%=cCotacao%>&prod=<%=SC7->C7_PRODUTO%>')"><%= cCotacao %></b></a></font>
+			<br>
+<%
+		Else
+%>
+			<font color="#0000FF" size=2  face="Arial"><b>Sem Cotação</b></a></font>
+			<br>
+		
+<%
+		EndIf
+		If !Empty(cNumSC)
+%>
+			<font color="#0000FF" size=2  face="Arial"><b>Ref. a solicitação de compras nº : <%= cNumSC %></b></a></font>
+			<br>
+			<font color="#0000FF" size=2  face="Arial"><b>Aprovação da SC por parte do Superior do Solicitante em  </b><%= _dAprSupe %><b> Por </b><%= if(len(_cSuperior) > 0, _cSuperior[1,4], '') %></font>
+			<br>
+			<font color="#0000FF" size=2  face="Arial"><b>Visto da SC em  </b><%= _dAprova1 %><b> Por </b><%= if(len(_cAprovad1) > 0, _cAprovad1[1,4], '') %></font>
+			<br>
+			<font color="#0000FF" size=2  face="Arial"><b>Aprovação de Compras da SC em  </b><%= _dAprova2 %><b> Por </b><%= if(len(_cAprovad2) > 0, _cAprovad2[1,4], '') %></font>
+			<br>
+		</p>
+<%
+		Else
+%>
+			<font color="#0000FF" size=2  face="Arial"><b>Pedido sem solicitação de compra.</b></font>
+			<br>
+<%
+		EndIf
+%>
+	    <p><font color="#0000FF" face="Arial"><b>Cabeçalho do Pedido</b></font></p>
+	    <table border="1" width="800">
+	        <tr>
+	            <td  align="center" width="100" bgcolor="#99CCFF"><font size="2" face="Arial"><b>Emissão</b></font></td>
+	            <td  align="center" width="100" bgcolor="#99CCFF"><font size="2" face="Arial"><b>Fornecedor</b></font></td>
+	            <td  align="center" width="600" bgcolor="#99CCFF"><font size="2" face="Arial"><b>Nome</b></font></td>
+	            <td  align="center" width="280" bgcolor="#99CCFF"><font size="2" face="Arial"><b>Cond.Pagto</b></font></td>
+	        </tr>
+	        <tr>
+	            <td  align="center"><font size="2" face="Arial"><%=SC7->C7_EMISSAO%></font></td>
+	            <td  align="center"><font size="2" face="Arial"><%=SC7->C7_FORNECE%></font></td>
+	            <td><font size="2" face="Arial"><%=SA2->A2_NOME%></font></td>
+	            <td><font size="2" face="Arial"><%=SC7->C7_COND + ' - ' + alltrim(SE4->E4_DESCRI)%></font></td>
+	        </tr>
+	    </table>
+	    <p><font color="#0000FF" face="Arial"><b>Itens</b></font></p>
+	    <table border="1" width="800">
+	        <tr>
+	            <td width="50"   bgcolor="#99CCFF" align="center"><font size="2" face="Arial"><b>Item</b></font></td>
+	            <td width="300" bgcolor="#99CCFF" align="center"><font size="2" face="Arial"><b>Descrição</b></font></td>
+	            <td width="100" bgcolor="#99CCFF" align="center"><font size="2" face="Arial"><b>Quantidade</b></font></td>
+	            <td width="50" 	bgcolor="#99CCFF" align="center"><font size="2" face="Arial"><b>Unid</b></font></td>
+	            <td width="100" bgcolor="#99CCFF" align="center"><font size="2" face="Arial"><b>Preço</b></font></td>
+	            <td width="100" bgcolor="#99CCFF" align="center"><font size="2" face="Arial"><b>Total</b></font></td>
+	            <td width="70" 	bgcolor="#99CCFF" align="center"><font size="2" face="Arial"><b>Entrega</b></font></td>
+	        </tr>
+<%         
+			do while SC7->C7_NUM == _cPedido
+			    dbSelectArea('SB1')
+			    dbSetOrder(1)
+			    dbSeek(xFilial('SB1')+SC7->C7_PRODUTO)
+			    dbSelectArea('SC7')
+		                   
+				aadd(_item, {SC7->C7_ITEM, SC7->(Recno())})
+				nTotal 		+= SC7->C7_TOTAL            
+			    nfrete 		+= SC7->C7_VALFRE
+			    nIpi   		+= SC7->C7_VALIPI
+			    nValICMS 	+= SC7->C7_VALICM
+			    nDespesa 	+= SC7->C7_DESPESA
+			    nSeguro		+= SC7->C7_SEGURO
+			    nBaseIcms 	+= SC7->C7_BASEICMS	
+%>				
+		        <tr>
+		            <td align="center"><font size="2" face="Arial"><%=SC7->C7_ITEM%></font></td>
+		            <td><font size="2" face="Arial"><%=SC7->C7_PRODUTO%> - <%=SB1->B1_DESC %></font></td>
+		            <td align="right"><font size="2" face="Arial"><%=TRANSFORM(SC7->C7_QUANT,'@E 999,999.99' )%></font></td>
+		            <td><font size="2" face="Arial"><%=SB1->B1_UM%></font></td>
+		            <td align="right"><font size="2" face="Arial"><%=TRANSFORM( SC7->C7_PRECO,'@E 999,999,999.99' )%></font></td>
+		            <td align="right"><font size="2" face="Arial"><%=TRANSFORM(SC7->C7_TOTAL,'@E 999,999,999.99' )%></font></td>
+		            <td align="center"><font size="2" face="Arial"><%=DTOC(SC7->C7_DATPRF)%></font></td>
+			    </tr>
+<%			SC7->(dbSkip())
+			enddo
+%>			    
+	    </table>
+	    <br>
+	    <table border="1" width="275">
+	        <tr>
+	            <td width="155" bgcolor="#99CCFF"><font size="2"  face="Arial"><b>Valor Mercadoria</b></td>
+	            <td width="121" align='right'><font size="2"  face="Arial"><%=TRANSFORM( nTotal,  '@E 999,999,999.99' )%></td>
+	        </tr>
+	        <tr>
+	            <td width="155" bgcolor="#99CCFF"><font size="2" face="Arial"><b> Frete</b></td>
+	            <td width="121" align='right'><font size="2"  face="Arial"><%=TRANSFORM( nFrete  ,'@E 999,999,999.99' )%></td>
+	        </tr>
+	        <tr>
+	            <td width="155" bgcolor="#99CCFF"><font size="2" face="Arial"><b>Despesa</b></td>
+	            <td width="121" align='right'><font size="2"  face="Arial"><%=TRANSFORM( nDespesa,'@E 999,999,999.99' )%></td>
+	        </tr>
+	        <tr>
+	            <td width="155" bgcolor="#99CCFF"><font size="2" face="Arial"><b>Seguro</b></td>
+	            <td width="121" align='right'><font size="2"  face="Arial"><%=TRANSFORM( nSeguro ,'@E 999,999,999.99' )%></td>
+	        </tr>
+	        <tr>
+	            <td width="155" bgcolor="#99CCFF"><font size="2" face="Arial"><b>IPI</b></td>
+	            <td width="121" align='right'><font size="2"  face="Arial"><%=TRANSFORM( nIPI    ,'@E 999,999,999.99' )%></td>
+	        </tr>
+	        <tr>
+	            <td width="155" bgcolor="#99CCFF"><font size="2" face="Arial"><b>ICMS</b></td>
+	            <td width="121" align='right'><font size="2"  face="Arial"><%=TRANSFORM( nValIcms,'@E 999,999,999.99' )%></td>
+	        </tr>
+	        <tr>
+	            <td width="155" bgcolor="#99CCFF"><font size="2" face="Arial"><b>Valor Total</b></td>
+	            <td width="121" align='right'><font size="2"  face="Arial"><%=TRANSFORM( nTotal + nIpi + nvalicms + nFrete+ nDespesa + nSeguro,'@E 999,999,999.99' )%></td>
+	        </tr>
+	    </table>
+<%      
+		//SIGAEIC - Titulos Provisórios (Despesas)
+		_cQryImp := " SELECT "
+		_cQryImp += " 	DISTINCT "
+		_cQryImp += "	E2_PREFIXO,E2_NUM,E2_PARCELA,E2_TIPO,E2_FORNECE, "
+		_cQryImp += "	E2_LOJA,E2_NOMFOR,E2_EMISSAO,E2_VENCREA,E2_VALOR, "
+		_cQryImp += "	E2_HIST "
+		_cQryImp += " FROM SC7020 SC7 "
+		_cQryImp += " INNER JOIN SE2020 SE2 ON "
+		_cQryImp += "	E2_FILIAL='"+xFilial("SE2")+"' AND "
+		_cQryImp += "	RIGHT(E2_NUM,6)=C7_NUM AND "
+		_cQryImp += "	E2_PREFIXO='EIC' AND "
+		_cQryImp += "	E2_TIPO='PR' AND "
+		_cQryImp += "	E2_ORIGEM='SIGAEIC' AND "
+		_cQryImp += "	SE2.D_E_L_E_T_ = '' "
+		_cQryImp += " WHERE "
+		_cQryImp += "	C7_FILIAL='"+xFilial("SC7")+"' AND "
+		_cQryImp += "	C7_ORIGEM='EICPO400' AND "
+		_cQryImp += "	C7_NUM='" + _cPedido + "' AND "
+		_cQryImp += "	SC7.D_E_L_E_T_ = '' "
+		
+		TCQUERY _cQryImp NEW ALIAS "TRBEIC"  		
+		
+		TRBEIC->(DBGOTOP())
+		If ! TRBEIC->(EOF())
+%>	    
+				    <p><font color="#0000FF" face="Arial"><b>Previsão - Despesas Importação</b></font></p>
+				    <table border="1" width="800">
+				        <tr>
+				            <td width="300" bgcolor="#99CCFF" align="center"><font size="2" face="Arial"><b>Fornecedor</b></font></td>
+				            <td width="100" bgcolor="#99CCFF" align="center"><font size="2" face="Arial"><b>Valor</b></font></td>
+				            <td width="300" bgcolor="#99CCFF" align="center"><font size="2" face="Arial"><b>Historico</b></font></td>	            
+				        </tr>
+<%         
+			while ! TRBEIC->(EOF())
+										
+%>				
+		        <tr>
+		            <td><font size="2" face="Arial"><%=TRBEIC->E2_FORNECE%> - <%=TRBEIC->E2_NOMFOR %></font></td>
+		            <td align="right"><font size="2" face="Arial"><%=TRANSFORM(TRBEIC->E2_VALOR,'@E 999,999.99' )%></font></td>     
+		            <td><font size="2" face="Arial"><%=TRBEIC->E2_HIST%></font></td>
+		        </tr>
+      
+<%				
+				TRBEIC->(dbSkip())
+			Enddo
+ 		Endif
+ 		TRBEIC->(dbCloseArea())
+	
+ 
+  %>
+  
+		</table>
+		<br>
+<%
+/*Desabilitado - Essa melhoria pois estava causando lentidao na aprovação dos pedidos de compras 
+ 		for xx:=1 to len(_item)
+ 		    _cQuery := "SELECT max(AT_DATE + AT_TIME) AS datahora FROM AUDIT.dbo.AUDIT_TRAIL where AT_RECID = '" + str(_item[xx][2])  + "' AND AT_TABLE = 'SC7020' AND D_E_L_E_T_ <> '*'"
+			TCQUERY _cQuery NEW ALIAS "TRBAUDIT"  		
+ 		    _data := substr(TRBAUDIT->datahora,1,8)
+ 		    _hora := substr(TRBAUDIT->datahora,9)
+ 			TRBAUDIT->(dbCloseArea())
+ 		    _cQuery := "SELECT *  FROM AUDIT.dbo.AUDIT_TRAIL WHERE AT_RECID = '" + str(_item[xx][2])  + "' AND AT_TABLE = 'SC7020' AND AT_DATE = '" + _data + "' AND AT_TIME = '" + _hora + "' AND D_E_L_E_T_ <> '*'"
+			TCQUERY _cQuery NEW ALIAS "TRBAUDIT"  		
+			while ! TRBAUDIT->(EOF())
+				aadd(_itemA, { _item[xx][1],  TRBAUDIT->AT_FIELD, TRBAUDIT->AT_CONTENT, TRBAUDIT->AT_NAME  })
+				TRBAUDIT->(dbSkip())
+			enddo
+ 			TRBAUDIT->(dbCloseArea())
+ 		next
+      	if len(_itemA) > 0
+%>      	
+		    <p><h4><font color="#0000FF" face="Arial"><strong>Alterações Efetuadas </font></h4></p>
+		    <table border=1>
+		    	<tr>
+		    		<td width='50'  	bgcolor="#99CCFF" align="center"><font size="2" face="Arial"><b>Item</td>
+		    		<td width='150' 	bgcolor="#99CCFF" align="center"><font size="2" face="Arial"><b>Campo</td>
+		    		<td width='400' 	bgcolor="#99CCFF" align="center"><font size="2" face="Arial"><b>Conteúdo Anterior</td>
+		    		<td width='200' 	bgcolor="#99CCFF" align="center"><font size="2" face="Arial"><b>Alterado por</td>
+				</tr>
+<%
+			for xx:=1 to  len(_itemA)
+%>			
+		    	<tr>
+		    		<td><font size="2"  face="Arial"><%=_itemA[xx][1]%></td>
+		    		<td><font size="2"  face="Arial"><%= posicione("SX3", 2,_itemA[xx][2], 'X3_TITULO')%></td>
+		    		<td><font size="2"  face="Arial"><%=_itemA[xx][3]%></td>
+		    		<td><font size="2"  face="Arial"><%=_itemA[xx][4]%></td>
+				</tr>
+<%			
+			next      	
+
+%>
+			</table>
+
+<%
+      	endif
+*/
+            If !Empty(_cAprovad1)
+%>
+		<center>                         
+			<font size = "2" face="Arial"><b>Observações do <%= if(len(_cAprovad1) > 0, _cSuperior[1,4], '') %></b></font>
+			<br>
+			<textarea name="obsSUP" rows="3" cols="99" disabled><%= _obsSuperior %></textarea>		
+		</center>   
+		<br>
+<%
+			EndIf
+%>	
+		<center>                         
+			<font size = "2" face="Arial"><b>Observações do <%= if(len(_cAprovad1) > 0, _cAprovad1[1,4], '') %> </b></font>
+			<br>
+			<textarea name="obs" rows="3" cols="99" disabled><%= dtoc(_dAprova1) + " : " + _obsVisto %></textarea>		
+		</center>   
+		<br>
+		<center>                         
+			<font size = "2" face="Arial"><b>Observações do <%= if(len(_cAprovad2) > 0, _cAprovad2[1,4], '') %> </b></font>
+			<br>
+			<textarea name="obs" rows="3" cols="99" disabled><%= dtoc(_dAprova2) + " : " + _obsCompra %></textarea>
+		</center>   
+		<br>    
+<%		
+		do while ! TRBSCR1->(eof())
+			if len(alltrim(TRBSCR1->CR_OBS)) > 0
+			
+				_cUsr := {}
+				PswOrder(1)
+				If PswSeek(TRBSCR1->CR_USER, .T.)
+					_cUsr := PSWret(1)        
+				EndIf  
+%>			
+				<center>                         
+					<font size = "2" face="Arial"><b>Observações do <%= if(len(_cUsr) > 0, _cUsr[1,4], '') %> </b></font>
+					<br>
+					<textarea name="obs" rows="3" cols="99" disabled><%= dtoc(TRBSCR1->CR_DATALIB) + " : " + TRBSCR1->CR_OBS %></textarea>
+				</center>   
+				<br>    
+<%			
+			endif		
+			TRBSCR1->(dbSkip())
+		enddo		
+%>     
+	    <p><h4><font color="#0000FF" face="Arial"><strong>Aprovação </font></h4></p>
+	    <font size="2"  face="Arial">
+	    <p><input type="radio" checked name="RBAPROVA" value="Sim">Sim <br>
+	    <input type="radio" name="RBAPROVA" value="Nao">Não &nbsp;&nbsp; (Favor especificar motivo)<font size="2" face="Arial"><br><br>
+	    
+	    <font size="2" face="Arial">Motivo: </font></b><br>
+	    <textarea name="motivo"  rows="3" cols="99"></textarea></font><br>
+	    </p>
+<%   
+		if _lAprov
+%>		
+			<h4>
+				<input type="button" name="B1" value="Enviar"  onclick="ValidaObs(document.forms[0])">
+				<input type="reset"  name="B2" value="Limpar"><br>
+		    </h4>
+<%	
+		endif
+%>
+		<input type="hidden" name="nivel" value= "<%=_cNivel%>">
+		<input type="hidden" name="filial" value= "<%=_xFilial%>">
+	</form>
+ 	</td></tr>
+ <%
+endif	
+%>
+ 
+</table>
+</body>
+</html>
+
+<%RESET ENVIRONMENT
+%>

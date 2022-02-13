@@ -1,0 +1,287 @@
+#INCLUDE "RWMAKE.CH"
+#INCLUDE "TOPCONN.CH"
+#INCLUDE "TBICONN.CH"
+#INCLUDE "TBICODE.CH"
+<%
+PREPARE ENVIRONMENT EMPRESA "02" FILIAL __aPostParms[1,2]
+_cServer 	:= GetMV("MV_WFBRWSR")
+_validadeORI:= __aPostParms[5,2]
+_cSolicC1	:= __aPostParms[2,2]
+_lgn		:= __aPostParms[3,2]
+_obs		:= __aPostParms[4,2]
+_validade	:= CtoD(__aPostParms[5,2] )
+_pagto	 	:= __aPostParms[6,2]
+_frete 		:= __aPostParms[7,2]
+_itens		:= __aPostParms[8,2]
+For x=1 to len(__aPostParms)
+	If SubSTR(__aPostParms[x,1],1,5) == "quant" .OR. SubSTR(__aPostParms[x,1],1,5) == "neces"
+		If SubSTR(__aPostParms[x,1],1,5) == 'quant'
+			cVar := SubSTR(__aPostParms[x,1],6)
+			quant&cVar := __aPostParms[x,2]
+		ElseIf SubSTR(__aPostParms[x,1],1,5) == 'neces'
+			cVar := SubSTR(__aPostParms[x,1],6)
+			neces&cVar := __aPostParms[x,2]
+		Endif
+	Endif
+Next
+_cUser := _lgn
+_lgn := strToKarr(_lgn, "lgn")
+_lgn := _lgn[1] + _lgn[2] + _lgn[3] + _lgn[4] + _lgn[5] + _lgn[6]
+_SQL := "SELECT "
+_SQL += " C1_ITEM AS C1_ITEM "
+_SQL += "FROM " + retsqlname("SC1") + " AS SC1 "
+_SQL += "WHERE  SC1.D_E_L_E_T_ = '' "
+_SQL += " AND C1_FILIAL = '" + xFilial("SC1") + "' "
+_SQL += " AND C1_NUM = '" + _cSolicC1 + "' "
+_SQL += " AND C1_ITEM NOT IN ( " + _itens + ")"
+_SQL += " AND C1_APROVA1 <> '' "
+TCQUERY _SQL NEW ALIAS "TRBREJ"
+_SQL := "SELECT "
+_SQL += " MAX(C1_PRODUTO) AS C1_PRODUTO, "
+_SQL += " MAX(C1_ITEM) AS C1_ITEM, "
+_SQL += " MAX(C1_DESCRI) AS C1_DESCRI, "
+_SQL += " MAX(C1_QUANT) AS C1_QUANT, "
+_SQL += " MAX(A5_FORNECE) AS D1_FORNECE , "
+_SQL += " MAX(A2_NOME) AS A2_NOME ,  "
+_SQL += " MAX(A2_LOJA) AS A2_LOJA ,  "
+_SQL += " MAX(A2_CONTATO) AS A2_CONTATO ,  "
+_SQL += " MAX(A2_EMAIL) AS A2_EMAIL, "
+_SQL += " MAX(C1_NUM) AS C1_NUM "
+_SQL += "FROM " + RetSqlName("SC1") + " AS SC1 "
+_SQL += "INNER JOIN " + RetSqlName("SA5") + " AS SA5 ON SA5.D_E_L_E_T_ = '' "
+_SQL += " AND A5_FILIAL = '" + xFilial("SA5") + "' "
+_SQL += " AND A5_PRODUTO = C1_PRODUTO "
+_SQL += "INNER JOIN " + RetSqlName("SA2") + " AS SA2 ON SA2.D_E_L_E_T_ = '' "
+_SQL += " AND A2_FILIAL = '" + xFilial("SA2") + "' "
+_SQL += " AND A2_COD = A5_FORNECE "
+_SQL += " AND A2_LOJA = A5_LOJA "
+_SQL += "WHERE SC1.D_E_L_E_T_ = '' "
+_SQL += " AND C1_FILIAL = '" + xFilial("SC1") + "' "
+_SQL += " AND C1_NUM = '" + _cSolicC1 + "' "
+_SQL += " AND C1_ITEM IN ( " + _itens + ")"
+_SQL += " AND C1_APROVA1 <> '' "
+_SQL += "GROUP BY C1_FILIAL, A5_FORNECE, A5_PRODUTO "
+_SQL += "ORDER BY C1_ITEM "
+TCQUERY _SQL NEW ALIAS "TRBY"
+dbSelectArea("TRBY")
+aDBF :=  {;
+			{"C1_PRODUTO"  	, "C", 15, 0},;
+			{"C1_NUM"   	, "C", 06, 0},;
+			{"C1_ITEM"   	, "C", 04, 0},;
+			{"C1_DESCRI"   	, "C", 80, 0},;
+			{"D1_FORNECE"  	, "C", 06, 0},;
+			{"A2_NOME"    	, "C", 50, 0},;
+			{"A2_LOJA"    	, "C", 02, 0},;
+			{"A2_CONTATO"	, "C", 50, 0},;
+			{"A2_EMAIL"    	, "C", 80, 0},;
+			{"C1_DTENTRE"	, "D", 08, 0},;
+			{"C1_QUANT"  	, "N", 10, 3}}
+cARQ1 := CriaTrab(aDBF)
+USE &(cARQ1) ALIAS TRB NEW EXCLUSIVE
+INDEX ON D1_FORNECE TO &(cARQ1)
+SET INDEX TO &(cARQ1)
+dbSelectArea("TRBY")
+_ncnt := 0
+cod_pro := TRBY->C1_PRODUTO
+Do While !Eof()
+	If cod_pro <> TRBY->C1_PRODUTO .or. _ncnt == 3
+		If cod_pro == TRBY->C1_PRODUTO
+			dbSkip()
+			Loop
+		Endif
+		_ncnt := 0
+		cod_pro := TRBY->C1_PRODUTO
+	Endif
+	it = TRBY->C1_ITEM
+	qtde := &(quant&it)
+	neces := neces&it
+	RecLock("TRB",.T.)
+	 TRB->C1_PRODUTO	:= TRBY->C1_PRODUTO
+	 TRB->C1_NUM		:= TRBY->C1_NUM
+	 TRB->C1_ITEM		:= TRBY->C1_ITEM
+	 TRB->C1_DESCRI 	:= TRBY->C1_DESCRI
+	 TRB->D1_FORNECE	:= TRBY->D1_FORNECE
+	 TRB->A2_NOME  		:= TRBY->A2_NOME
+	 TRB->A2_LOJA  		:= TRBY->A2_LOJA
+	 TRB->A2_CONTATO	:= TRBY->A2_CONTATO
+	 TRB->A2_EMAIL		:= TRBY->A2_EMAIL
+	 TRB->C1_QUANT		:= qtde
+	 TRB->C1_DTENTRE	:= ctod(neces)
+	MsUnlock()
+	dbSelectArea("TRBY")
+	_ncnt++
+	dbSkip()
+EndDo
+dbSelectArea("TRBREJ")
+Do While !Eof()
+	dbSelectArea("SC1")
+	dbSetOrder(1)
+	dbSeek(xFilial()+_cSolicC1)
+	While SC1->(!Eof()) .And. (SC1->C1_NUM = _cSolicC1)
+		If SC1->C1_ITEM == TRBREJ->C1_ITEM
+			RecLock("SC1",.F.)
+			 SC1->C1_APROV		:= "R"
+			 SC1->C1_APROVA2	:= _lgn
+			MsUnlock()
+		Endif
+		SC1->(dbSkip())
+	EndDo
+	dbSelectArea("TRBREJ")
+	TRBREJ->(dbSkip())
+EndDo
+dbSelectArea("TRB")
+dbSetOrder(1)
+dbGoTop()
+_cCodFor	:= ""
+cor			:= ""
+_html		:= ""
+cC8_NUM		:=	GetSxeNum("SC8","C8_NUM")
+Do While !Eof()
+	If _cCodFor <> TRB->D1_FORNECE
+		_nContItem := 0
+		_html	+= '<table border="0" width="100%">'
+		_html	+= '		<tr bgcolor="lightblue"><td width="100%"><img src="http://www.bgh.com.br/images/logo.jpg"></td></tr>'
+		_html	+= '</table>'
+		_html	+= '<br>'
+//		_html	+= '<br><font size = "2" face="Arial" color=red><b>Responder a cotação no email compras@bgh.com.br </b></font><br><br>'
+		_html	+= '<table border="0" width="100%">'
+		_html	+= '		<tr bgcolor="lightblue"><td width="100%" align="center"><font size = "3" face="Arial"><b>Solicitação de Cotação N° ' + cC8_NUM +  '</td></tr>'
+		_html	+= '</table>'
+		_html	+= '<br>'
+		_html	+= '<b>Favor nos enviar orçamento dos seguintes ítens :  </b><br><br>'
+		_html	+= '<table align="center" border="1" cellpadding="2" cellspacing="2">'
+		_html	+= '	<tr bgcolor="F9F9DB">'
+		_html	+= '		<td width="300" align="center" valign="top"><font size = "1" face="Arial"><b>Produto</font></td>'
+		_html	+= '		<td width="200" align="center" valign="top"><font size = "1" face="Arial"><b>Quantidade</font></td>'
+		_html	+= '		<td width="200" align="center" valign="top"><font size = "1" face="Arial"><b>Necessidade Do ìtem para</font></td>'
+		_html	+= '	</tr> '
+		cor		:= ""
+		_cCodFor:= TRB->D1_FORNECE
+	Endif
+	Do While _cCodFor == TRB->D1_FORNECE
+		dbSelectArea("SC1")
+		SC1->(dbGoTop())
+		SC1->(dbSetOrder(1))
+		SC1->(dbSeek(xFilial("SC1")+_cSolicC1))
+		Do While SC1->(!Eof()) .And. (SC1->C1_NUM = _cSolicC1)
+			If SC1->C1_ITEM == TRB->C1_ITEM
+				_nContItem	++
+				it			:= SC1->C1_ITEM
+				qtde		:= &(quant&it)
+				neces		:= neces&it
+				_C1_QTDORIG	:= SC1->C1_QUANT
+				RecLock("SC1",.F.)
+				 SC1->C1_APROV	:= "L"
+				 SC1->C1_APROVA2:= _lgn
+				 SC1->C1_DTAPRV2:= Date()
+				 SC1->C1_OBSAPR2:= _obs
+				 SC1->C1_FPAGTO := _pagto
+				 SC1->C1_FRETE	:= _frete
+				 SC1->C1_DTENTRE:= ctod(neces)
+				 SC1->C1_DTVALID:=	_validade
+				If SC1->C1_QTDORIG == 0
+					SC1->C1_QTDORIG := _C1_QTDORIG
+				Endif
+				 SC1->C1_QUANT	:= qtde
+				 SC1->C1_COTACAO:= cC8_NUM
+				MsUnlock()
+			Endif
+			SC1->(dbSkip())
+		EndDo
+		If cor == "lightblue"
+			cor := "white"
+		else
+			cor := "lightblue"
+		Endif
+		_html	+= '	<tr bgcolor=' + cor + '>'
+		_html	+= '		<td align="left" valign="top"><font  face="Arial" size = "1">' + TRB->C1_PRODUTO + ' - ' + TRB->C1_DESCRI + '</font></td>'
+		_html	+= '		<td align="center" valign="top"><font  face="Arial" size = "1">' + str(TRB->C1_QUANT) + '</font></td>'
+		_html	+= '		<td align="center" valign="top"><font  face="Arial" size = "1">' + dtoc(TRB->C1_DTENTRE) + '</font></td>'
+		_html	+= '	</tr>'
+		_email	:= TRB->A2_EMAIL
+		ConOut(_email)
+//		_email		:= "luiscarlos@anadi.com.br"
+		cTitemail	:= "Solicitação de Orçamento"
+		Path		:= ""
+		dbSelectArea("TRB")
+		dbSkip()
+		If _cCodFor <> TRB->D1_FORNECE
+			_sql	:= "SELECT E4_CODIGO, E4_DESCRI FROM SE4020 WHERE D_E_L_E_T_ = '' AND  E4_CODIGO = '" + _pagto + "'"
+			TCQUERY _sql NEW ALIAS "TRBFP1"
+			_html	+= '</table>'
+			_html	+= '<br>'
+			_html	+= '<table>'
+			_html	+= '	<tr><td> Forma de Pagamento </td><td>' + TRBFP1->E4_DESCRI  + '</td></tr>'
+			_html	+= '	<tr><td> Tipo de Frete </td><td>' +  _frete + '</td></tr>'
+			_html	+= '	<tr><td> Validade da Solicitação </td><td>' + _validadeORI + '</td></tr>'
+			_html	+= '</table>'
+			dbSelectArea("TRBFP1")
+			dbCloseArea()
+			ConOut(_html)
+			U_COMPEMAIL(cTitemail,_email,'hudson.santos@bgh.com.br',_html,Path)
+			dbSelectArea("TRB")
+		Endif
+	EndDo
+	_html := ""
+EndDo
+dbSelectArea("TRB")
+dbSetOrder(0)
+dbGoTop()
+_nContItem	:= 0
+_item		:= ""
+Do While !Eof()
+	dbSelectArea("SC1")
+	dbSetOrder(1)
+	dbSeek(xFilial()+_cSolicC1)
+	If TRB->C1_ITEM <> _item
+		_nContItem ++
+		_item := TRB->C1_ITEM
+	Endif
+	While SC1->(!Eof()) .And. (SC1->C1_NUM = _cSolicC1)
+		If SC1->C1_ITEM == TRB->C1_ITEM
+			it			:= SC1->C1_ITEM
+			qtde		:= &(quant&it)
+			neces		:= neces&it
+			_C1_QTDORIG	:= SC1->C1_QUANT
+			dbSelectArea("SB1")
+			dbSetOrder(1)
+			dbSeek(xFilial()+SC1->C1_PRODUTO)
+			_cB1_IPI := SB1->B1_IPI
+			_cB1_PICM:= SB1->B1_PICM
+			dbSelectArea("SC1")
+			RecLock("SC8",.T.)
+			 SC8->C8_NUM	:= cC8_NUM
+			 SC8->C8_FILIAL	:= SC1->C1_FILIAL
+			 SC8->C8_ITEM	:= PADL(_nContItem, 4, "0")
+			 SC8->C8_NUMPRO	:= "01"    // numero da proposta - confirmar se é sempre 01
+			 SC8->C8_PRODUTO:= SC1->C1_PRODUTO
+			 SC8->C8_UM		:= SC1->C1_UM
+			 SC8->C8_QUANT	:= SC1->C1_QUANT
+			 SC8->C8_FORNECE:= TRB->D1_FORNECE
+			 SC8->C8_LOJA	:= TRB->A2_LOJA
+			 SC8->C8_CONTATO:= TRB->A2_CONTATO
+			 SC8->C8_FILENT	:= SC1->C1_FILENT
+			 SC8->C8_EMISSAO:= Date()
+			 SC8->C8_ALIIPI	:= _cB1_IPI
+			 SC8->C8_PICM	:= _cB1_PICM
+			 SC8->C8_VALIDA	:= _validade
+			 SC8->C8_NUMSC	:= SC1->C1_NUM
+			 SC8->C8_ITEMSC	:= SC1->C1_ITEM
+			 SC8->C8_DATPRF	:= ctod(neces)
+			 SC8->C8_IDENT	:= PADL(_nContItem, 4, "0")
+			 SC8->C8_COND   := _pagto
+			 SC8->C8_TPFRETE:= SubSTR(_frete,1,1)
+			MsUnlock()
+		Endif
+		SC1->(dbSkip())
+	EndDo
+	dbSelectArea("TRB")
+	dbSkip()
+EndDo
+ConfirmSX8()
+%>
+<script>
+alert('Aprovação da solicitação de compra efetuada e cotações solicitadas !!');
+window.location='http://<%=_cServer%>/h_APRSC1.APL?lgn=<%=_cUser%>';
+</script>
+<%RESET ENVIRONMENT%>

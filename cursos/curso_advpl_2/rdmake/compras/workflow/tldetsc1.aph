@@ -1,0 +1,345 @@
+#INCLUDE "RWMAKE.CH"
+#INCLUDE "TOPCONN.CH"
+#INCLUDE "TBICONN.CH"
+#INCLUDE "TBICODE.CH"
+<%
+PREPARE ENVIRONMENT EMPRESA "02" FILIAL __aProcParms[3,2] TABLES "SC1,SB1,SE4,SAJ"
+SET CENTURY ON
+_cServer  	:= getMV("MV_WFBRWSR")
+_userC		:= getMV("MV_SC1COMP")   // usuários compradores que farão a aprovação de SC
+_userS		:= getMV("MV_SC1SUPE")   // usuários supervisores que farão a aprovação de SC
+_cSolicC1 	:= __aProcParms[1,2] 
+_lgn	  	:= __aProcParms[2,2] 
+_usr 		:= strToKarr(_lgn, "lgn")
+_usr 		:= _usr[1] + _usr[2] + _usr[3] + _usr[4] + _usr[5] + _usr[6] 
+_cQuery	:= "SELECT COUNT(*) AS TOTREG "
+_cQuery += "FROM " + retSqlName("SAJ") + " AS SAJ(NOLOCK) "
+_cQuery	+= "WHERE AJ_USER = '" + _usr + "' "
+_cQuery += "  AND AJ_GRCOM <> '000001' "
+_cQuery	+= "  AND AJ_USER NOT IN  ('"+_userC+"','"+_userS+"') "
+_cQuery += "  AND AJ_COTACAO <> 'S' "
+_cQuery += "  AND SAJ.D_E_L_E_T_ = '' "
+TCQUERY _cQuery NEW ALIAS "TMPQRY" 
+_userAPS := ""
+If TMPQRY->TOTREG <> 0
+	_userAPS := _usr
+EndIf
+TMPQRY->(dbCloseArea())
+_SQL := "	SELECT     		C1_FILIAL, "
+_SQL += "					C1_NUM, "
+_SQL += " 					C1_ITEM, "
+_SQL += " 					C1_PRODUTO, "
+_SQL += " 					isnull(B1_DESC,'[PRODUTO NÃO CADASTRADO]') as B1_DESC, "
+_SQL += "					C1_OBSAPR1,"
+_SQL += "					C1_EMISSAO, "
+_SQL += "					C1_QUANT ,"
+_SQL += "					C1_DATPRF ,"
+_SQL += "					C1_FPAGTO ,"
+_SQL += "					C1_DTVALID ,"
+_SQL += "					C1_FRETE "
+_SQL += " FROM " + RetSqlName("SC1") + " as SC1(NOLOCK) "
+_SQL += " LEFT JOIN " + retsqlname("SB1") + " as SB1(NOLOCK) ON SB1.D_E_L_E_T_ = ''"
+_SQL += " AND SB1.B1_FILIAL = '"+xFilial("SB1")+"' "
+_SQL += " AND SB1.B1_COD = C1_PRODUTO "
+_SQL += " WHERE  SC1.D_E_L_E_T_ = '' "
+_SQL += " 	AND C1_APROV <> 'R' "      
+_SQL += " 	AND C1_NUM = '" + _cSolicC1 + "' "      
+_SQL += " 	AND C1_FILIAL = '" + xFilial("SC1") + "' "      
+If _usr $ _userC
+	_SQL+= "AND C1_DTAPSUP <> ''  "
+	_SQL+= "AND C1_APROVA1 = ''  "
+EndIf
+If _usr $ _userS
+	_SQL+= "AND C1_APROVA2 = ''  "
+	_SQL+= "AND C1_DTAPRV1 <> ''  "
+	_SQL+= "AND C1_APROVA1 <> ''  "
+EndIf
+If _userAPS <> ""
+	_SQL+= "AND C1_DTAPSUP = ''  "
+EndIf
+_SQL+= " ORDER BY C1_FILIAL, C1_NUM, C1_ITEM "
+TCQUERY _SQL NEW ALIAS "TRBY"  
+TcSetField("TRBY","C1_EMISSAO" ,"D")
+TcSetField("TRBY","C1_DTVALID" ,"D")
+TcSetField("TRBY","C1_DATPRF"  ,"D")
+cor := ""
+dbselectarea("TRBY")
+TRBY->(DbGoTop())             
+_obs 		:=  Posicione("SC1", 1, xFilial("SC1")+_cSolicC1, "C1_OBSAPR1")    
+_obsSuperior:=  Posicione("SC1", 1, xFilial("SC1")+_cSolicC1, "C1_OBSSUPE")    
+_entrega	:=	padl(alltrim(str(day(TRBY->C1_DATPRF))),2,"0") + "/" + padl(alltrim(str(month(TRBY->C1_DATPRF))),2,"0") + "/" + alltrim(str(year(TRBY->C1_DATPRF) ))
+_pagto		:=	TRBY->C1_FPAGTO
+_frete		:=	TRBY->C1_FRETE         
+_validade	:=	padl(alltrim(str(day(TRBY->C1_DTVALID))),2,"0") + "/" + padl(alltrim(str(month(TRBY->C1_DTVALID))),2,"0") + "/" + alltrim(str(year(TRBY->C1_DTVALID) ))
+_xFilial 	:=  TRBY->C1_FILIAL
+
+SM0->(dbSeek(cEmpAnt+TRBY->C1_FILIAL))
+
+_fretesel1	:=	iif (_frete  == "CIF", " selected",  "")	   
+_fretesel2	:=	iif (_frete  == "FOB", " selected",  "")	   
+_x	:= 0	
+%>       
+<script>
+function aprovacao(resultado)  {              
+	if (resultado== "R")  {
+		if (document.forms[0].tipotela.value == "C" || document.forms[0].tipotela.value == "SUP")  {
+			if (document.forms[0].obs.value.length < 3)  {
+				alert ("Em caso de Reprovação da Solicitação, o campo Observação deve ser preenchido !!");
+				return;
+			}
+		}  else  {
+			if (document.forms[0].obs1.value.length < 3)  {
+				alert ("Em caso de Reprovação da Solicitação, o campo Observação do Supervisor deve ser preenchido !!");
+				return;
+			}
+		}
+		document.forms[0].tipotela.value = "X"  // reprovado
+	}    else  {
+		totalAprova = 0;   					
+		var ckbox_array= document.getElementsByTagName('input');
+		for (var i=0;i<ckbox_array.length;i++){
+			if (ckbox_array[i].checked){
+				totalAprova = 1;
+			}
+		}
+		if (totalAprova == 0)  {
+			alert ("Algum ítem precisa ser selecionado como Aprovado para Continuar !!");
+			return;
+		}                    
+		aprova = 1;   					
+		var campos_array= document.getElementsByTagName('input');
+		for (var i=0;i<campos_array.length;i++){
+			if (campos_array[i].type == "text" && ! campos_array[i].disabled && campos_array[i].value == ""){
+				aprova = 0;       
+				break;
+				}
+			}                       
+			if (aprova == 0)  {
+				alert ("Todos os campos habilitados devem ser preenchidos !!");
+				return;
+			}                    
+		}
+		document.forms[0].submit();
+	}		
+	function somente_numero(campo){  
+	var digits="0123456789"  
+	var campo_temp   
+	    for (var i=0;i<campo.value.length;i++){  
+	        campo_temp=campo.value.substring(i,i+1)   
+	        if (digits.indexOf(campo_temp)==-1){  
+	            campo.value = campo.value.substring(0,i);  
+	        }  
+	    }  
+	}  			
+	function valores(campo){  
+	var digits="0123456789."  
+	var campo_temp   
+	    for (var i=0;i<campo.value.length;i++){  
+	        campo_temp=campo.value.substring(i,i+1)   
+	        if (digits.indexOf(campo_temp)==-1){  
+	            campo.value = campo.value.substring(0,i);  
+	        }  
+	    }  
+	}  			
+	function FormataData(campo)	{
+			v=campo.value;
+	        v=v.replace(/\D/g,"");                                  
+	        v=v.replace(/(\d{2})(\d)/,"$1/$2");        
+	        v=v.replace(/(\d{2})(\d)/,"$1/$2");        
+	        v=v.replace(/(\d{2})(\d{2})$/,"$1$2");
+	        campo.value = v;
+	        return v;
+	}
+	function CheckDate(campo) {
+	  campoClone = campo;
+           if (campo.value!="")   {
+                    erro=0;
+                    hoje = new Date();
+                    anoAtual = hoje.getFullYear();
+                    barras = campo.value.split("/");
+                    if (barras.length == 3)   {
+                            dia = barras[0];
+                            mes = barras[1];
+                            ano = barras[2];
+                            resultado = (!isNaN(dia) && (dia > 0) && (dia < 32)) && (!isNaN(mes) && (mes > 0) && (mes < 13)) && (!isNaN(ano) && (ano.length == 4) && (ano <= anoAtual && ano >= 1900));
+                            if (!resultado)    {
+                                 alert("Data inválida. Favor Verificar !!");
+                                    campo.value="";
+                                    campo.focus();
+                                    return false;
+                            }
+                     } 
+                     else  {
+                             alert("Data inválida. Favor Verificar !!");
+                             campo.value="";
+                             campo.focus();
+                             return false;
+                     }
+            		return true;
+            }
+    	}									
+    	function habilita(campo)  {
+               
+               	var str = campo.name;
+    		   	var	item = str.substring(6);
+	  		campoquant = "quant" + item;
+			camponeces = "neces" + item;
+    			if (campo.checked)  {
+    			document.getElementById(campoquant).disabled = false;   
+    			document.getElementById(camponeces).disabled = false;   
+			}  else  {
+    			document.getElementById(campoquant).disabled = true;
+    			document.getElementById(camponeces).disabled = true;
+			}        			
+    			return;
+    	}
+</script>
+<table border="0" width="100%">
+	<tr bgcolor="lightblue"><td width="100%"><img src="/solic_compra/logobgh.jpg"></td></tr>
+</table>
+<br>
+<center>
+<b><font size=4 face="Arial" color="black">Aprovação da Solicitação de Compra Número <font color="red"><%= _cSolicC1  %><font size=4 face="Arial" color="black"> da Filial  <font color="red"><%= SM0->M0_FILIAL  %><font size=4 face="Arial" color="black"> emitido em  <%= TRBY->C1_EMISSAO  %></font> </b>
+</center>
+<br>
+<form action="http://<%=_cServer%>/H_CFAPRSC1.apl" method="POST">  
+	<table width=80% align="center" border="1" cellpadding="2" cellspacing="2">
+		<tr bgcolor="F9F9DB">
+			<td width= "20" align="center" valign="top"><font size="2" face="Arial"><b>Filial				</b></font></td>
+			<td width= "50" align="center" valign="top"><font size="2" face="Arial"><b>Ítem					</b></font></td>
+			<td width="150" align="center" valign="top"><font size="2" face="Arial"><b>Código do Produto	</b></font></td>
+			<td width="300" align="center" valign="top"><font size="2" face="Arial"><b>Descrição do Produto	</b></font></td>
+			<td width= "60" align="center" valign="top"><font size="2" face="Arial"><b>Quantidade			</b></font></td>
+			<td width="150" align="center" valign="top"><font size="2" face="Arial"><b>Necessidade para		</b></font></td>
+			<td width="150" align="center" valign="top"><font size="2" face="Arial"><b>Aprovar				</b></font></td>
+			<td width="150" align="center" valign="top"><font size="2" face="Arial"><b>&nbsp;				</b></font></td>
+		</tr> 
+<%
+Do While !TRBY->(Eof())     
+	_x++
+	If cor == "lightblue"
+		cor := "white"
+	Else
+		cor := "lightblue"
+	Endif
+%>			    		
+		<tr bgcolor=<%=cor%>>
+			<td align="center" valign="top"><font size="2" face="Arial">&nbsp;<%=TRBY->C1_FILIAL%></font></td>
+			<td align="center" valign="top"><font size="2" face="Arial">&nbsp;<%=TRBY->C1_ITEM%></font></td>
+			<td align=  "left" valign="top"><font size="2" face="Arial">&nbsp;<%=TRBY->C1_PRODUTO%></font></td>
+			<td align=  "left" valign="top"><font size="2" face="Arial">&nbsp;<%=TRBY->B1_DESC%></font></td>
+			<td align="center" valign="top"><font size="2" face="Arial"><input type="text" disabled="true" id="quant<%=TRBY->C1_ITEM%>" value="<%=TRBY->C1_QUANT%>" name="quant<%=TRBY->C1_ITEM%>" value="<%=TRBY->C1_QUANT%>" onKeyUp="javascript:valores(this);"></font></td>
+			<td align="center" valign="top"><font size="2" face="Arial"><input type="text" disabled="true" id="neces<%=TRBY->C1_ITEM%>" name="neces<%=TRBY->C1_ITEM%>"  value="<%=TRBY->C1_DATPRF%>"  onKeyUp="javascript:FormataData(this);" onBlur="CheckDate(this)"></td>
+			<td align="center" valign="top"><input type="checkbox" id="aprova<%=TRBY->C1_ITEM%>" name="aprova<%=TRBY->C1_ITEM%>" title="Os ítens não selecionados serão cancelados" onClick="javascript:habilita(this);"></font></td>
+			<td align="center" valign="top"><font size="2" face="Arial"><a href="#" onClick="window.open('http://<%=_cServer%>/h_TLAGRSC1.APL?cod_produto=<%=TRBY->C1_PRODUTO%>&lgn=<%=_lgn%>&filial=<%=TRBY->C1_FILIAL%>')"><img src="/solic_compra/agrupa.jpg" title="Exibir outras solicitações em aberto com esse mesmo produto"></a></font></td>
+		</tr> 
+<% 
+	TRBY->(DBSKIP())	 
+EndDo
+%>           
+	</table>   
+	<input type="hidden" name="C1_FILIAL" value="<%=xFilial('SC1')%>">
+	<input type="hidden" name="C1_NUM" value="<%=_cSolicC1%>">
+	<input type="hidden" name="_lgn" value="<%=_lgn%>">
+	<br>
+<%                 
+If _userAPS == ""
+%>			
+	<table width=80% align="center" >
+		<tr><td>
+<%
+	If _usr $ _userC
+%>
+			<font size = "2" face="Arial"><b>Validade da Solicitação em dias</font>
+			<input type="text" size="02" maxlength="02" name="validade" onKeyUp="javascript:somente_numero(this);">
+<%
+	Else
+%>
+			<font size = "2" face="Arial"><b>Validade da Solicitação</font>
+			<input type="text" size="10" maxlength="10" value="<%= _validade %>" name="validade" onKeyUp="javascript:FormataData(this);" onBlur="CheckDate(this)">
+<%
+	Endif
+%>
+		</td></tr>
+		<tr><td>
+			<font size = "2" face="Arial"><b>Forma de Pagamento</font>
+			<select name="pagamento">
+<%
+	_sql :=	"SELECT E4_CODIGO, E4_DESCRI FROM " + RetSqlName("SE4") + "(NOLOCK) WHERE D_E_L_E_T_ = '' ORDER BY E4_DESCRI"      
+	TCQUERY _sql NEW ALIAS "TRBFP"
+	dbSelectArea("TRBFP")   
+	Do While !Eof()
+		_pagtosel := iif (_pagto == TRBFP->E4_CODIGO, " selected", "")
+%>					
+				<option value="<%=TRBFP->E4_CODIGO%>" <%=_pagtosel%>><%=TRBFP->E4_DESCRI%></option>
+<%
+		dbSkip()
+	EndDo
+%>
+				</select>
+		</td></tr>                                                                   
+		<tr><td>
+			<font size = "2" face="Arial"><b> Tipo de Frete</font>
+			<select name="frete">
+				<option value="CIF"  <%=_fretesel1 %>>CIF</option>
+				<option value="FOB"  <%=_fretesel2 %>>FOB</option>
+			</select>
+		</td></tr>
+	</table>					      
+	<br>
+	<center>                         
+		<font size = "2" face="Arial"><b>Observações do Superior Aprovador </b></font>
+		<br>
+		<textarea name="obsSUP" rows="5" cols="80" disabled><%=_obsSuperior%></textarea>		
+	</center>   
+	<br>
+<%
+	If _usr $ _userC 
+		tipotela := "C"
+%>
+	<center>
+		<font size = "2" face="Arial"><b>Observações do Primeiro Aprovador </b></font>
+		<br>
+		<textarea name="obs" rows="5" cols="80"><%=_obs%></textarea>
+	</center>
+	<br>
+<%
+	Else
+		tipotela := "S"
+%>
+	<center>                         
+		<font size = "2" face="Arial"><b>Observações do Primeiro Aprovador </b></font>
+		<br>
+		<textarea name="obs" rows="5" cols="80" disabled><%=_obs%></textarea>		
+	</center>   
+	<br>
+	<center>                         
+		<font size = "2" face="Arial"><b>Observações do Supervisor </b></font>
+		<br>
+		<textarea name="obs1" rows="5" cols="80"></textarea>
+	</center>   
+	<br>
+<%
+	EndIf 
+Else
+	tipotela := "SUP"
+%>			
+	<center>
+		<font size = "2" face="Arial"><b>Observações</b></font>
+		<br>
+		<textarea name="obs" rows="5" cols="80"></textarea>
+	</center>
+	<br>
+<%
+EndIf
+%>
+	<table width="50%" align="center">
+		<tr>
+			<td width="33%" align="center"><input type="button" value= "Aprovar" onclick="aprovacao('A')"></td>
+			<td width="34%" align="center"><input type="button" value="Não Aprovar" onclick="aprovacao('R')"></td>
+			<td width="33%" align="center"><input type="button" value="Voltar" onclick="history.back(-1)">
+		</tr>
+	</table>		
+	<input type=hidden name="tipotela" value="<%= tipotela %>">
+</form>
+<%RESET ENVIRONMENT %>

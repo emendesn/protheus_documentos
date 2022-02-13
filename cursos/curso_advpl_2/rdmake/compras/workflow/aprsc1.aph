@@ -1,0 +1,433 @@
+#INCLUDE "RWMAKE.CH"
+#INCLUDE "TOPCONN.CH"
+#INCLUDE "TBICONN.CH"
+#INCLUDE "TBICODE.CH"
+
+<table border="0" width="100%">
+	<tr bgcolor="lightblue"><td width="100%"><img src="/solic_compra/logobgh.jpg"></td></tr>
+</table>
+<br>
+<%
+PREPARE ENVIRONMENT EMPRESA "02" FILIAL "02"
+cor := ""
+_cServer 	:= getMV("MV_WFBRWSR")
+_xuserC		:= getMV("MV_SC1COMP")   // usuários compradores que farão a aprovação de SC
+_xuserS		:= getMV("MV_SC1SUPE")
+lOk := .F.
+_user := ""
+//ConOut('qtde no array __aProcParms... '+ strzero(len(__aProcParms),1))
+If Len(__aProcParms) > 0
+	//ConOut('Usuario Logado... '+ __aProcParms[1,2])	                                                 
+	_cUser 		:= __aProcParms[1,2] 
+	_cUser 		:= strToKarr(_cUser, "lgn")
+	_cUser 		:= _cUser[1] + _cUser[2] + _cUser[3] + _cUser[4] + _cUser[5] + _cUser[6] 	      
+	//ConOut('Usuario logado formatado '+ _cUser)
+	_user := _cUser
+	lOk := .T. 		
+Else
+	_cUser   := __aPostParms[1,2]
+	_cpass   := __aPostParms[2,2]
+	//ConOut('Usuario fazendo o login... '+ alltrim(_cUser))
+	//ConOut('Senha do usario fazendo login... '+ alltrim(_cpass))
+	//If PswSeek(alltrim(_cpass), .T.)
+	PswOrder(2)
+	If PswSeek(_cUser)
+		//ConOut('Encontrou usuario no arquivo de profile - OK')
+		If PswName(_cpass)
+			_user := PswID()
+			//  ConOut('Usuario validados no arquivo de profile...'+alltrim(_user))
+			lOk := .T.
+		Else
+			//ConOut("Senha : "+alltrim(_cpass)+ " nao encontrada no arquivo de profile - Falhou")
+		EndIf
+	EndIf
+EndIf
+If lOk == .T.  
+	// _user := "000779"	 		 
+	// _user := "000302"	 		 
+	_cQuery	:= "SELECT COUNT(*) AS TOTREG "
+	_cQuery += "FROM " + retSqlName("SAJ") + " AS SAJ "
+	_cQuery	+= "WHERE AJ_USER = '" + _user + "' "
+	_cQuery	+= " AND AJ_USER NOT IN  ('"+_xuserC+"','"+_xuserS+"') "
+	_cQuery += "  AND SAJ.D_E_L_E_T_ <> '*' "
+	TCQUERY _cQuery NEW ALIAS "TMPQRY" 
+	COnOut(_cQuery)                      
+	_userAPS := ""
+	If TMPQRY->TOTREG <> 0 
+		_userAPS := _user
+	EndIf
+	TMPQRY->(dbCloseArea())
+	_userC	:= getMV("MV_SC1COMP")   // usuários compradores que farão a aprovação de SC
+	_userS	:= getMV("MV_SC1SUPE")   // usuários supervisores que farão a aprovação de SC
+	_per 		:= .T.
+	_telSolic	:= .T.
+	_u1	:= substr(_user,1,1)
+	_u2	:= substr(_user,2,1)
+	_u3	:= substr(_user,3,1)
+	_u4	:= substr(_user,4,1)
+	_u5	:= substr(_user,5,1)
+	_u6	:= substr(_user,6,1)
+	_lgn:= _u1+"lgn"+_u2+"lgn"+_u3+"lgn"+_u4+"lgn"+_u5+"lgn"+_u6
+	_SQL1 := ""
+	If _user $ _userC       // usuarios de nivel comprador
+		ConOut('usuarios de nivel comprador')
+		_SQL:= " SELECT  	C1_FILIAL, SPACE(50) as DFILIAL, MAX(C1_NUM) AS C1_NUM, "
+		_SQL+= " 			COUNT(*) as ITENS, "
+		_SQL+= "			MAX(C1_EMISSAO) AS C1_EMISSAO, "
+		_SQL+= "			MAX(C1_SOLICIT) AS C1_SOLICIT, "
+		_SQL+= "			MAX(C1_APROVA1) AS C1_APROVA1, "
+		_SQL+= "			MAX(C1_APRSUPE) AS C1_APRSUPE "
+		_SQL+= "	FROM " + retsqlname("SC1") + " AS SC1 "
+		//_SQL+= "	JOIN  " + retsqlname("SAI") + " AS SAI ON AI_USER = C1_USER "
+		//_SQL+= "    AND SAI.D_E_L_E_T_ <> '*' "
+		_SQL+= " WHERE  SC1.D_E_L_E_T_ <> '*' "
+//		_SQL+= " 		 AND C1_FILIAL = '" + xFilial("SC1") + "' "
+		//_SQL+= " 		 AND C1_DTAPRV1 = '' "
+		_SQL+= " 		 AND C1_APROVA1 = '' "
+		_SQL+= " 		 AND C1_DTAPSUP <> '' "
+		_SQL+= "		 AND C1_APROV = ''  "
+	   	_SQL+= "		 AND C1_EMISSAO > '20110401'  "
+		_SQL+= " GROUP BY C1_FILIAL, C1_NUM "
+		_SQL+= " ORDER BY C1_FILIAL, C1_NUM "
+	ElseIf _user $ _userS     // usuarios de nivel supervisor
+		ConOut('usuarios de nivel supervisor')
+		_SQL:= " SELECT C1_FILIAL, MAX(C1_NUM) AS C1_NUM,"
+		_SQL+= " 		COUNT(*) as ITENS, "
+		_SQL+= "		MAX(C1_EMISSAO) AS C1_EMISSAO, "
+		_SQL+= "		MAX(C1_SOLICIT) AS C1_SOLICIT, "
+		_SQL+= "		MAX(C1_APROVA1) AS C1_APROVA1, "
+		_SQL+= "		MAX(C1_APRSUPE) AS C1_APRSUPE "
+		_SQL+= " FROM " + retsqlname("SC1") + " AS SC1 "
+		//_SQL+= " JOIN  " + retsqlname("SAI") + " AS SAI ON AI_USER = C1_USER "
+		//_SQL+= "    AND SAI.D_E_L_E_T_ <> '*' "
+		_SQL+= " WHERE  SC1.D_E_L_E_T_ = '' "
+//		_SQL+= "  AND C1_FILIAL = '" + xFilial("SC1") + "' "
+		_SQL+= "  AND C1_APROVA1 <> '' "
+		_SQL+= "  AND C1_APROVA2 = ''  "
+		_SQL+= "  AND C1_APROV <> 'R'  "
+		_SQL+= " GROUP BY C1_FILIAL, C1_NUM "
+		_SQL+= " ORDER BY C1_FILIAL, C1_NUM "
+	ElseIf _userAPS <> ""    // aprovação do superior do solicitante
+		ConOut('aprovação do superior do solicitante')
+		_SQL:= " SELECT C1_FILIAL, SPACE(50) as DFILIAL, MAX(C1_NUM) AS C1_NUM,"
+		_SQL+= " 		COUNT(*) as ITENS, "
+		_SQL+= "		MAX(C1_EMISSAO) AS C1_EMISSAO, "
+		_SQL+= "		MAX(C1_SOLICIT) AS C1_SOLICIT, "
+		_SQL+= "		MAX(C1_APROVA1) AS C1_APROVA1 "
+		_SQL+= " FROM " + retsqlname("SC1") + " AS SC1 "
+		//_SQL+= " JOIN  " + retsqlname("SAI") + " AS SAI ON AI_USER = C1_USER "
+		//_SQL+= " 									   AND SAI.D_E_L_E_T_ <> '*' "
+		_SQL+= " WHERE SC1.D_E_L_E_T_ = '' "
+//		_SQL+= "   AND C1_FILIAL = '" + xFilial("SC1") + "' "
+		_SQL+= "   AND C1_APROVA1 = '' "
+		_SQL+= "   AND C1_APROVA2 = ''  "
+		_SQL+= "   AND C1_APRSUPE = '" + _userAPS +  "'  "
+		_SQL+= "   AND C1_DTAPSUP = ''  "
+		_SQL+= "   AND C1_APROV <> 'R'  "
+		_SQL+= "   AND C1_SEQMRP = ''  "
+		_SQL+= "   OR  SC1.D_E_L_E_T_ = '' "
+//		_SQL+= "   AND C1_FILIAL = '" + xFilial("SC1") + "' "
+		_SQL+= "   AND C1_USER = C1_APROVA1 "
+		_SQL+= "   AND C1_APROVA2 = ''  "
+		_SQL+= "   AND C1_APRSUPE = '" + _userAPS +  "'  "
+		_SQL+= "   AND C1_DTAPSUP = ''  "
+		_SQL+= "   AND C1_APROV <> 'R'  "
+		_SQL+= "   AND C1_SEQMRP = ''  " 
+		_SQL+= " GROUP BY C1_FILIAL, C1_NUM "
+		_SQL+= " ORDER BY C1_FILIAL, C1_NUM "
+		_SQL1 := "SELECT C7_FILIAL, MAX(C7_NUM) AS C7_NUM, "
+		_SQL1 += "		COUNT(*) AS ITENS, "
+		_SQL1 += "		MIN(C7_DATPRF) AS C7_DATPRF, "
+		_SQL1 += "		MAX(C7_EMISSAO) AS C7_EMISSAO "
+		_SQL1 += "FROM SCR020 AS SCR	"
+		_SQL1 += "INNER JOIN SC7020 AS SC7 ON SC7.D_E_L_E_T_ = '' "
+		_SQL1 += "						AND SC7.C7_FILIAL  = SCR.CR_FILIAL "
+		_SQL1 += "						AND SC7.C7_NUM  = SCR.CR_NUM "
+		_SQL1 += "						AND SC7.C7_CONAPRO <> 'L' "
+		_SQL1 += "WHERE CR_STATUS = '02' "
+		_SQL1 += "  and SCR.D_E_L_E_T_ <> '*' "
+		_SQL1 += "  and SCR.CR_USER = '" + _user + "' "
+		_SQL1 += "	  and C7_EMISSAO > '20120101'  "
+		_SQL1 += "  and C7_NUM NOT IN (SELECT CR_NUM FROM SCR020 AS CR WHERE CR.CR_STATUS='04' AND CR.D_E_L_E_T_ = '') "
+		_SQL1 += "GROUP BY C7_FILIAL, C7_NUM "
+		_SQL1 += "ORDER BY C7_FILIAL, C7_NUM "
+		ConOut(_SQL1)
+	Else      // aprovadores com alçada
+		ConOut('aprovadores com alçada')
+		_SQL := "SELECT	C7_FILIAL, MAX(C7_NUM) AS C7_NUM, "
+		_SQL += "		COUNT(*) AS ITENS, "
+		_SQL += "		MIN(C7_DATPRF) AS C7_DATPRF, "
+		_SQL += "		MAX(C7_EMISSAO) AS C7_EMISSAO "
+		_SQL += "FROM SCR020 AS SCR	"
+		_SQL += "INNER JOIN SC7020 AS SC7 ON SC7.D_E_L_E_T_ = '' "
+		_SQL += "						AND SC7.C7_FILIAL  = SCR.CR_FILIAL "
+		_SQL += "						AND SC7.C7_NUM  = SCR.CR_NUM "
+		_SQL += "						AND SC7.C7_CONAPRO <> 'L' "
+		_SQL += "WHERE CR_STATUS = '02' "
+		_SQL += "  and SCR.D_E_L_E_T_ <> '*' "
+		_SQL += "  and SCR.CR_USER = '" + _user + "' "
+		_SQL += "  and C7_EMISSAO > '20120101'  "        
+		_SQL += "  and C7_NUM NOT IN (SELECT CR_NUM FROM SCR020 AS CR WHERE CR.CR_STATUS='04' AND CR.D_E_L_E_T_ <> '*') "
+		_SQL += "GROUP BY C7_FILIAL,  C7_NUM "
+		_SQL += "ORDER BY C7_FILIAL,  C7_NUM "
+		_telSolic	:= .F.
+	EndIf
+	//ConOut(_SQL)
+	If _per 
+		TCQUERY _SQL NEW ALIAS "TRBY"  
+		If _telSolic       // tela de solicitações
+			TcSetField("TRBY","C1_EMISSAO" ,"D")      
+%>
+<br>
+<%
+			ConOUt(_userAPS)		
+			If _userAPS <> ""
+%>
+<table align="center" border="1" cellpadding="2" cellspacing="2"  width='95%'>
+	<tr>
+		<td width='50%' valign='top'>
+			<table width='100%'>
+				<tr>
+					<td colspan='5' bgcolor='red'><center><b><font size=4 face="Arial" color='white'>Solicitações de Compra</font></b></center></td>
+				</tr>
+				<tr bgcolor="F9F9DB">
+					<td width="10%" align="center" valign="top"><font size = "2" face="Arial"><b>Filial </font></td>
+					<td width="20%" align="center" valign="top"><font size = "2" face="Arial"><b>Solicitação </font></td>
+					<td width="20%" align="center" valign="top"><font size = "2" face="Arial"><b>Total de Ítens</font></td>
+					<td width="20%" align="center" valign="top"><font size = "2" face="Arial"><b>Data de Emissão</font></td>
+					<td width="30%" align="center" valign="top"><font size = "2" face="Arial"><b>Solicitante</font></td>
+					<td width="10%" align="center" valign="top"><font size = "2" face="Arial">&nbsp;</td>
+				</tr>
+<%
+				Do While ! TRBY->(eof())
+					If cor == "lightblue"
+						cor := "white"
+					else
+						cor := "lightblue"
+					EndIf
+					dbSelectArea("SM0")
+					dbSeek(cEmpAnt+TRBY->C1_FILIAL,.T.)
+%>
+				<tr bgcolor=<%=cor%>>
+					<td align="center" valign="top"><font size = "2" face="Arial">&nbsp;<%=SM0->M0_FILIAL%> </font></td>
+					<td align="center" valign="top"><font size = "2" face="Arial">&nbsp;<%=TRBY->C1_NUM%> </font></td>
+					<td align="center" valign="top"><font size = "2" face="Arial">&nbsp;<%=TRBY->ITENS%></font></td>
+					<td align="center" valign="top"><font size = "2" face="Arial">&nbsp;<%=TRBY->C1_EMISSAO%>  </font></td>
+					<td align="left" valign="top"><font size = "2" face="Arial">&nbsp;<%=TRBY->C1_SOLICIT%>  </font></td>
+					<td align="center" valign="top"><font size = "2" face="Arial"><a href="http://<%=_cServer%>/h_TLDETSC1.APL?num_pedido=<%=TRBY->C1_NUM%>&lgn=<%=_lgn%>&filial=<%=TRBY->C1_FILIAL%>"><font color="blue">Analisar</a></font></td>
+				</tr>
+<%
+					TRBY->(dbSkip())
+				EndDo
+%>							
+			</table>	
+		</td>
+		<td width='50%' valign='top'>
+			<table width='100%'>
+				<tr>
+					<td colspan='5' bgcolor='red'><center><b><font size=4 face="Arial" color='white'>Pedidos de Compra</font></b></center></td>
+				</tr>
+				<tr bgcolor="F9F9DB">
+					<td width="10%" align="center" valign="top"><font size = "2" face="Arial"><b>Filial </font></td>    
+					<td width="20%" align="center" valign="top"><font size = "2" face="Arial"><b>Pedido </font></td>    
+					<td width="20%" align="center" valign="top"><font size = "2" face="Arial"><b>Total de Ítens</font></td>
+					<td width="20%" align="center" valign="top"><font size = "2" face="Arial"><b>Data da Necessidade</font></td>
+					<td width="20%" align="center" valign="top"><font size = "2" face="Arial"><b>Data de Emissão</font></td>
+					<td width="10%" align="center" valign="top"><font size = "2" face="Arial">&nbsp;</td>
+				</tr>   
+<%								
+				conout ("SQL : " + _SQL1)
+				TCQUERY _SQL1 NEW ALIAS "TRBY1"  
+				TcSetField("TRBY1","C7_DATPRF" ,"D")      
+				TcSetField("TRBY1","C7_EMISSAO" ,"D")      
+				Do While ! TRBY1->(eof())
+					If cor == "lightblue"
+						cor := "white"
+					Else
+						cor := "lightblue"
+					EndIf
+					dbSelectArea("SM0")
+					dbSeek(cEmpAnt+TRBY1->C7_FILIAL,.T.)
+%>								 
+				<tr bgcolor=<%=cor%>>
+					<td align="center" valign="top"><font size = "2" face="Arial">&nbsp;<%=SM0->M0_FILIAL%> </font></td>    
+					<td align="center" valign="top"><font size = "2" face="Arial">&nbsp;<%=TRBY1->C7_NUM%> </font></td>    
+					<td align="center" valign="top"><font size = "2" face="Arial">&nbsp;<%=TRBY1->ITENS%></font></td>
+					<td align="center" valign="top"><font size = "2" face="Arial">&nbsp;<%=TRBY1->C7_DATPRF%>  </font></td>
+					<td align="center" valign="top"><font size = "2" face="Arial">&nbsp;<%=TRBY1->C7_EMISSAO%>  </font></td>
+					<td align="center" valign="top"><font size = "2" face="Arial"><a href="http://<%=_cServer%>/h_APRSC7.APL?opcao=2&num_pedido=<%=TRBY1->C7_NUM%>&lgn=<%=_lgn%>&nivel=1&filial=<%=TRBY1->C7_FILIAL%>"><font color="blue">Analisar</a></font></td>
+				</tr> 
+<%								
+					TRBY1->(dbSkip())
+				EndDo
+%>							
+			</table>
+		</td>
+	</tr>
+</table>						
+<%
+			Else
+%>
+<center><b><font size=4 face="Arial">Solicitações de Compra</font></b></center>
+<br>
+<table align="center" border="1" cellpadding="2" cellspacing="2">
+	<tr bgcolor="F9F9DB">
+		<td width="10" align="center" valign="top"><font size = "2" face="Arial"><b>Filial </font></td>
+		<td width="200" align="center" valign="top"><font size = "2" face="Arial"><b>Número da Solicitação </font></td>
+		<td width="150" align="center" valign="top"><font size = "2" face="Arial"><b>Total de Ítens</font></td>
+		<td width="150" align="center" valign="top"><font size = "2" face="Arial"><b>Data de Emissão</font></td>
+		<td width="200" align="center" valign="top"><font size = "2" face="Arial"><b>Solicitante</font></td>
+<%
+				If _user  $ _userS .or. _user  $ _userC
+%>
+		<td width="200" align="center" valign="top"><font size = "2" face="Arial"><b>Aprovado por</font></td>
+<%
+				EndIf
+%>
+		<td width="50" align="center" valign="top"><font size = "2" face="Arial">&nbsp;</td>
+<%
+			EndIf
+		Else       // tela de pedidos
+			TcSetField("TRBY","C7_EMISSAO" ,"D")
+			TcSetField("TRBY","C7_DATPRF" ,"D")      
+			_nivel := "0"					                                                                             
+		    _Query :=	"SELECT COUNT(*) AS TOT1 FROM SAL020 WHERE AL_USER = '" + _user + "' AND AL_NIVEL = '01' AND D_E_L_E_T_ = '' "
+			TCQUERY _Query NEW ALIAS "TRBGRP1"  
+			If TRBGRP1->TOT1 > 0
+				_nivel := "1"
+			Else
+				_Query :=	"SELECT COUNT(*) AS TOT2 FROM SAL020 WHERE AL_USER = '" + _user + "' AND AL_NIVEL = '02' AND D_E_L_E_T_ = '' "
+				TCQUERY _Query NEW ALIAS "TRBGRP2"
+				If TRBGRP2->TOT2 > 0
+					_nivel := "2"
+				EndIf
+			EndIf
+%>
+<center>
+	<b><font size=4 face="Arial">Aprova&ccedil;&atilde;o de Pedidos de Compra</font></b>
+</center>
+<br>
+<table align="center" border="1" cellpadding="2" cellspacing="2">
+	<tr bgcolor="F9F9DB">
+		<td width="150" align="center" valign="top"><font size = "2" face="Arial"><b>Filial</font></td>    
+		<td width="150" align="center" valign="top"><font size = "2" face="Arial"><b>Número do Pedido</font></td>    
+		<td width="120" align="center" valign="top"><font size = "2" face="Arial"><b>Total de Ítens</font></td>
+		<td width="150" align="center" valign="top"><font size = "2" face="Arial"><b>Data de Emissão</font></td>
+		<td width="150" align="center" valign="top"><font size = "2" face="Arial"><b>Data da Necessidade</font></td>
+		<td width="300" align="center" valign="top"><font size = "2" face="Arial"><b>Aprovações até o momento</font></td>
+		<td width="50" align="center" valign="top"><font size = "2" face="Arial">&nbsp;</td>
+	</tr> 
+<%
+		EndIf
+		If _userAPS == ""
+			cor := ""
+			dbselectarea("TRBY")
+			Count to nQtdReg
+			TRBY->(dbGoTop())
+			If nQtdReg == 0
+%>				
+	<script>alert("Não existem Pedidos para ser aprovados por você !!!")</script>
+<%
+			EndIf
+			Do While ! TRBY->(eof())
+				If cor == "lightblue"
+			    	cor := "white"
+			 	Else
+			    	cor := "lightblue"
+				EndIf
+				If _telSolic       // tela de solicitações
+					dbSelectArea("SM0")
+					SM0->(dbSeek(cEmpAnt+TRBY->C1_FILIAL,.T.))
+%>			    		
+	<tr bgcolor=<%=cor%>>
+		<td align="center" valign="top"><font size = "2" face="Arial">&nbsp;<%=SM0->M0_FILIAL%></font></td>    
+		<td align="center" valign="top"><font size = "2" face="Arial">&nbsp;<%=TRBY->C1_NUM%></font></td>    
+		<td align="center" valign="top"><font size = "2" face="Arial">&nbsp;<%=TRBY->ITENS%></font></td>
+		<td align="center" valign="top"><font size = "2" face="Arial">&nbsp;<%=TRBY->C1_EMISSAO%></font></td>
+		<td align="left" valign="top"><font size = "2" face="Arial">&nbsp;__<%=TRBY->C1_SOLICIT%></font></td>
+<%
+					_nomes := ""
+					nome := {}
+					If Len(Alltrim(TRBY->C1_APRSUPE)) > 0
+						If PswSeek(TRBY->C1_APRSUPE, .T.)
+							nome := PSWret(1)        
+						EndIf               
+						If len(nome) > 0
+							_nomes += nome[1][4]
+						EndIf
+					EndIf
+					nome := {}
+					If Len(Alltrim(TRBY->C1_APROVA1)) > 0
+						If PswSeek(TRBY->C1_APROVA1, .T.)
+							nome := PSWret(1)        
+						EndIf               
+						If Len(nome) > 0
+							_nomes += ", <br>" + nome[1][4]
+						EndIf
+					EndIf
+//					_nomes := "Teste"
+%>
+		<td valign="top"><font size = "2" face="Arial"><%=Iif(Len(_nomes)>0,_nomes,"")%></font></td>
+		<td align="left" valign="top"><font size = "2" face="Arial"><a href="http://<%=_cServer%>/h_TLDETSC1.APL?num_pedido=<%=TRBY->C1_NUM%>&lgn=<%=_lgn%>&filial=<%=TRBY->C1_FILIAL%>"><font color="blue">Analisar</a></font></td>
+	</tr> 
+<% 
+				Else
+					dbSelectArea("SM0")
+					SM0->(dbSeek(cEmpAnt+TRBY->C7_FILIAL,.T.))
+%>	   
+	<tr bgcolor=<%=cor%>>
+		<td align="center" valign="top"><font size = "2" face="Arial">&nbsp;<%=TRBY->C7_FILIAL%> </font></td>    
+		<td align="center" valign="top"><font size = "2" face="Arial">&nbsp;<%=TRBY->C7_NUM%> </font></td>    
+		<td align="center" valign="top"><font size = "2" face="Arial">&nbsp;<%=TRBY->ITENS%></font></td>
+		<td align="center" valign="top"><font size = "2" face="Arial">&nbsp;<%=TRBY->C7_EMISSAO%>  </font></td>
+		<td align="center" valign="top"><font size = "2" face="Arial">&nbsp;<%=TRBY->C7_DATPRF%>  </font></td>   
+<%
+					_userlib := ""
+					_SQLLIB := "SELECT"
+					_SQLLIB += " CR_USER,"
+					_SQLLIB += " CR_DATALIB"
+					_SQLLIB += " FROM SCR020(NOLOCK)"
+					_SQLLIB += " WHERE D_E_L_E_T_ = ''"
+					_SQLLIB += " AND CR_FILIAL = '" + TRBY->C7_FILIAL + "' "
+					_SQLLIB += " AND CR_NUM = '" + TRBY->C7_NUM + "' "
+					_SQLLIB += " AND CR_STATUS = '03' "
+
+					TCQUERY _SQLLIB NEW ALIAS "TRBLIB"
+					TcSetField("TRBLIB","CR_DATALIB" ,"D")
+					Do While !TRBLIB->(EOF())
+						PswOrder(1)
+						If PswSeek(TRBLIB->CR_USER, .T.)
+							_aUser := PswRet()
+							_userlib +=  _aUser[1,4] + " em " + dtoc(TRBLIB->CR_DATALIB)  + "<br>"
+						EndIf
+						TRBLIB->(dbSkip())
+					EndDo
+					TRBLIB->(dbCloseArea())
+%>								
+		<td align="left" valign="top"><font size = "2" face="Arial"><%=_userlib%></font></td>   
+		<td align="center" valign="top"><font size = "2" face="Arial"><a href="http://<%=_cServer%>/h_APRSC7.APL?opcao=2&num_pedido=<%=TRBY->C7_NUM%>&lgn=<%=_lgn%>&nivel=<%=_nivel %>&filial=<%=TRBY->C7_FILIAL %>"><font color="blue">Analisar</a></font></td>
+	</tr>					
+<%
+				EndIf       
+				TRBY->(DBSKIP())
+			EndDo
+		EndIf
+%>
+</table>   
+
+<%
+	Else
+%>
+<script>alert('Usuário sem permissão para acessar o módulo de Aprovação !!');history.back();</script>
+<%
+	EndIf
+Else
+%>
+<script>alert('Usuário inválido, favor usar os mesmo do Protheus');history.back();</script>
+<%
+EndIf
+%>
+
+<%
+RESET ENVIRONMENT
+%>

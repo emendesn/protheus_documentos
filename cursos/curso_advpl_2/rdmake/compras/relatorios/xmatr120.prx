@@ -1,0 +1,134 @@
+#Include "PROTHEUS.CH"
+#include 'topconn.ch'
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ XMATR120 ³ Autor ³ Claudia Cabral        ³ Data ³ 01/05/2009³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Emiss„o da Rela‡„o de Pedidos de Compras  - especifico      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ .T.	/  .F.                                                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+User Function XMatr120()
+Local cQry1 :=""
+Local cDirDocs:= __RelDir
+Local cCrLf:=Chr(13)+Chr(10)
+Local cArquivo:=CriaTrab(,.F.)
+Local cPath:=AllTrim(GetTempPath())     
+Local cQuery := ''         
+Local nTotsRec  := 0     
+Local _cArqTmp  := lower(AllTrim(__RELDIR)+cArquivo)
+Local cAliasSC7 := "SC7"	  
+PRIVATE cPerg := "MTR120"                      
+Private _csrvapl    := ALLTRIM(GetMV("MV_SERVAPL"))
+
+nHandle := MsfCreate(cDirDocs+"\"+cArquivo+".CSV",0)
+
+Pergunte("MTR120",.t.)
+
+IF Select("QRY1") <> 0 
+	DbSelectArea("QRY1")
+	DbCloseArea()
+Endif   
+
+DbSelectArea("SC7")
+DbSetOrder(3)
+
+cQuery := "SELECT C7_FORNECE,C7_LOJA,C7_MOEDA,C7_NUM,A2_NOME,C7_EMISSAO, SUM(C7_TOTAL + C7_VALIPI) ' TOTAL',SUM(((C7_QUANT - C7_QUJE) * C7_PRECO)+ C7_VALIPI) 'SALDO' ,SUM(C7_QUANT - C7_QUJE) 'QTDE'"
+cQuery += " FROM " + RETSQLNAME("SC7") + " SC7 (NOLOCK), "
+cQuery += RETSQLNAME("SA2") + " SA2 (NOLOCK) "
+cQuery += " WHERE SC7.D_E_L_E_T_ = '' "                  
+cQuery += " AND SA2.A2_COD = SC7.C7_FORNECE "
+cQuery += " AND SA2.A2_LOJA = SC7.C7_LOJA "
+If mv_par11 == 1 
+	cQuery += "AND C7_CONAPRO <> 'B' "	
+ElseIf mv_par11 == 2
+	cQuery += "AND C7_CONAPRO = 'B' "	
+Endif
+If mv_par07 == 2 
+	cQuery += "AND ( (C7_QUANT-C7_QUJE) > 0 ) "	
+	cQuery += "AND C7_RESIDUO = ' ' "
+ElseIf mv_par07 == 3
+	cQuery += "AND C7_RESIDUO <> ' ' "
+ElseIf mv_par07 == 4
+	cQuery += "AND C7_QUANT <= C7_QUJE "	
+ElseIf mv_par07 == 5
+	cQuery += "AND C7_QUJE > 0 "		
+Endif
+If mv_par10 == 1 
+	cQuery += "AND C7_TIPO = 1 "	
+ElseIf mv_par10 == 2
+	cQuery += "AND C7_TIPO = 2 "	
+Endif
+If mv_par12 == 1 //Firmes
+	cQuery += "AND (C7_TPOP = 'F' OR C7_TPOP = ' ') "	
+ElseIf mv_par12 == 2 //Previstas
+	cQuery += "AND C7_TPOP = 'P' "	
+Endif
+cQuery += " AND C7_NUM >= '"      + mv_par08      + "' AND "
+cQuery += " C7_NUM <= '"  	  + mv_par09      + "' AND "
+cQuery += " C7_PRODUTO >= '"  + mv_par01      + "' AND "
+cQuery += "	C7_PRODUTO <= '"  + mv_par02      + "'  AND "
+cQuery += " C7_EMISSAO >=  '" + Dtos(mv_par03)+ "'  AND "
+cQuery += "	C7_EMISSAO <=  '" + Dtos(mv_par04)+ "'  AND "
+cQuery += " C7_DATPRF >=  '"  + Dtos(mv_par05)+ "'  AND "
+cQuery += "	C7_DATPRF <=  '"  + Dtos(mv_par06)+ "'  AND "		  
+cQuery += "	C7_FORNECE >=  '" + mv_par15      + "'  AND "
+cQuery += "	C7_FORNECE <=  '" + mv_par16      + "'   "                
+cQuery += " GROUP BY C7_FORNECE,C7_LOJA,C7_MOEDA,C7_NUM,A2_NOME,C7_EMISSAO"
+cQuery += " ORDER BY C7_FORNECE,C7_LOJA,C7_MOEDA,C7_NUM,A2_NOME,C7_EMISSAO" 
+TCQUERY cQuery NEW ALIAS "QRY1"  
+
+cLinha := " ************* PEDIDOS DE COMPRA EMITIDOS EM : " + DTOC(MV_PAR03) + " ATE " + DTOC(MV_PAR04)
+fWrite(nHandle, cLinha  + cCrLf)
+cLinha := 'Pedido'           + ';'
+cLinha += 'Fornecedor'       + ';'
+cLinha += 'Loja'             + ';'
+cLinha += 'Razao Social'     + ';'
+cLinha += 'Emissao'          + ';'
+cLinha += 'Total Ped. Compra'            + ';'
+cLinha += 'Saldo em Aberto'            + ';'
+fWrite(nHandle, cLinha  + cCrLf)
+
+DbSelectArea("QRY1")
+nTotsRec := QRY1->(RECCOUNT())
+ProcRegua(nTotsRec)               
+
+While !QRY1->(Eof())
+	IncProc() 
+	cLinha := QRY1->C7_NUM           + ";" // PEDIDO
+	cLinha += QRY1->C7_FORNECE       + ";" // FORNECEDOR
+	cLinha += QRY1->C7_LOJA          + ";" // LOJA
+	cLinha += QRY1->A2_NOME          + ";" // RAZAO SOCIAL
+	cLinha += DTOC(STOD(QRY1->C7_EMISSAO)) + ";" // EMISSAO
+	cLinha += Transform(QRY1->TOTAL , "@E 99,999,999,999.99") + ";" // TOTAL
+	cLinha += Transform(IIF(QRY1->QTDE > 0,QRY1->SALDO,0) , "@E 99,999,999,999.99") + ";" // TOTAL
+	fWrite(nHandle, cLinha  + cCrLf)						
+	QRY1->(DBSKIP())
+Enddo               
+fClose(nHandle)
+//CpyS2T(cDirDocs+"\"+cArquivo+".CSV" , cPath, .T. )-- Removido a pedido do Carlos Rocha 14/07/10 --
+	
+If !ApOleClient( 'MsExcel' )
+	MsgAlert( "Ms Excel nao Instalado" ) //'MsExcel nao instalado'
+Else
+	oExcelApp := MsExcel():New()
+	//oExcelApp:WorkBooks:Open( cPath+cArquivo+".CSV" ) // Abre uma planilha	-- Removido a pedido do Carlos Rocha 14/07/10 --
+	oExcelApp:WorkBooks:Open( "\\" + _csrvapl+_cArqTmp+".CSV" )	// Abre uma planilha	-- Alterado a pedido do Carlos Rocha 14/07/10 --
+	oExcelApp:SetVisible(.T.)
+EndIf
+
+IF Select("QRY1") <> 0 
+	DbSelectArea("QRY1")
+	DbCloseArea()
+Endif   
+
+RETURN .T.

@@ -1,0 +1,44 @@
+#include "rwmake.ch"    
+#include "TOPCONN.ch"
+#include "Ap5Mail.ch"   
+#include "TbiConn.ch"
+#include "TbiCoDE.ch"
+
+<%PREPARE ENVIRONMENT EMPRESA "01" FILIAL "01" TABLES "PB2"
+  /* TRAZ O VALOR DA VARIAVEL PASSADA ATRAVES DO LINK, 
+     EX: http://servidor:5080/h_prjpb21.apl?PEDIDO=123456
+     __aPROCParms[1,1] = 'PEDIDO' 
+     __aPROCParms[1,2] = '123456'*/
+     
+  if !empty(len(__aPROCParms))
+     _cPedido := Alltrim(__aPROCParms[1,2])
+ //     _cIdUser := Alltrim(__aPROCParms[2,2])
+  else
+     _cPedido := ""
+ //     _cIdUser := ""
+  endif
+%>
+
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="pt-br">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>Usuário</title>
+</head>
+
+<body>
+
+<form method="POST" action='<%=getmv("MV_WSRVWEB")%>/h_prjpb22.apl'>  
+	
+	<p>Usuario:      <input type="text" name="usuario" size="15"></p>
+	<p>Senha.:&nbsp; <input type="password" name="senha"  size="6"></p>
+	
+	<p><input type="submit" value="Entrar" name="B1"></p>  
+    
+    <input type='text' name='pedido'  value='<%=_cPedido%>' style="visibility: hidden"> 
+</form>
+
+</body>
+
+<%RESET ENVIRONMENT%>  

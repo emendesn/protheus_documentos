@@ -1,0 +1,29 @@
+Static Function RunProc()
+cCodCli		:= AvKey(CODIGO_CLIENTE,"A1_COD")
+cLojCli		:= AvKey(LOJA_CLIENTE,"A1_LOJA")
+cOpera		:= AvKey(OPERACAO,"ZZ4_OPERA")
+cProdFab	:= AvKey(DPY,"ZA_CODPRO")
+nqtde		:= 1 // XXX
+cImei  		:= AvKey(IMEI,"ZA_IMEI")
+cCodic		:= XXX
+cOpecel		:= AvKey(OPERADORA,"ZA_NOMEOPE")
+cNumOS		:= AvKey(NUMERO_OS,"ZA_OSGVS")
+dtrecpro	:= XXX
+cnfreme		:= AvKey(NF_DE_REMESSA,"ZA_NFISCAL")
+nVal		:= AvKey(VALOR_DO_APARELHO,"ZA_PRECO")
+dtrecpro	:= AvKey(XXX,"ZA_EMISSAO")
+ddataOS		:= AvKey(DATA_OS,"ZA_DTOSGVS")
+cCodPost	:= AvKey(POSTO,"ZA_CODPOST")
+cSEQ		:= SEQ
+clocaten	:= AvKey(LOCAL_ATENDIMENTO,"ZA_LOCATEN")
+cCodCob		:= AvKey(COBERTURA,"ZA_CODCOBE")
+cCodProc	:= AvKey(PROCEDENCIA,"ZA_CODPROC")
+cDatfab		:= AvKey(DATA_FABRICACAO,"ZA_DTFABRI")
+ctpserv		:= AvKey(TIPO_SERVICO,"ZA_CODTPSE")
+cnatend		:= AvKey(ATENDENTE,"ZA_NOMEATE")
+cCompra		:= AvKey(NF_COMPRA,"ZA_NFCOMPR")
+ddtNfcp		:= AvKey(DATA_DE_COMPRA,"ZA_DTNFCOM")
+cnreven		:= AvKey(REVENDEDOR,"ZA_NOMEREV")
+cawb		:= AWB
+cDefrec		:= AvKey(DEFEITO_RECLAMADO,"ZA_DEFCONS")
+Return

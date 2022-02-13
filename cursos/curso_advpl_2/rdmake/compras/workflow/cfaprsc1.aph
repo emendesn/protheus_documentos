@@ -1,0 +1,271 @@
+#INCLUDE "RWMAKE.CH"
+#INCLUDE "TOPCONN.CH"
+#INCLUDE "TBICONN.CH"
+#INCLUDE "TBICODE.CH"
+
+<%
+_x		:= 0
+_itens	:= ""
+cabs	:= ""
+For x=1 to Len(__aPostParms)
+	If SubSTR(__aPostParms[x,1],1,5) == "quant" .OR. SubSTR(__aPostParms[x,1],1,6) == "aprova" .OR. SubSTR(__aPostParms[x,1],1,5) == "neces"
+		_x++
+		If SubSTR(__aPostParms[x,1],1,6) == "aprova"
+			If Len(_itens) > 0
+				_itens += ","
+			Endif
+			_itens += SubSTR(__aPostParms[x,1],7)
+		ElseIf SubSTR(__aPostParms[x,1],1,5) == "quant"
+			cVar := SubSTR(__aPostParms[x,1],6)
+			quant&cVar := __aPostParms[x,2]
+		Elseif SubSTR(__aPostParms[x,1],1,5) == "neces"
+			cVar := SubSTR(__aPostParms[x,1],6)
+			neces&cVar := __aPostParms[x,2]
+		Endif 
+		cabs += "<input type='hidden' id='" + __aPostParms[x,1] + "' name='" + __aPostParms[x,1] + "' value='" + __aPostParms[x,2] + "'>"
+	Endif
+Next x
+_totitem := strToKarr(_itens, ",")
+_x++
+_cFil		:= __aPostParms[_x++,2]
+_cSolicC1	:= __aPostParms[_x++,2]
+_lgn		:= __aPostParms[_x++,2]
+If Len(__aPostParms) > ((Len(_totitem)*3) + 5)
+	_validade	:= __aPostParms[_x++,2]
+	_pagto	 	:= __aPostParms[_x++,2]
+	_frete 		:= __aPostParms[_x++,2]
+Endif
+_obs	 	:= __aPostParms[_x++,2]
+_tipotela	:= __aPostParms[_x++,2]
+PREPARE ENVIRONMENT EMPRESA "02" FILIAL _cFil
+_cServer	:= GetMV("MV_WFBRWSR")
+_userC		:= GetMV("MV_SC1COMP")   // usuários compradores que farão a aprovação de SC
+_userS		:= GetMV("MV_SC1SUPE")   // usuários supervisores que farão a aprovação de SC
+_usr		:= strToKarr(_lgn, "lgn")
+_usr		:= _usr[1] + _usr[2] + _usr[3] + _usr[4] + _usr[5] + _usr[6]
+_cQuery	:= "SELECT AJ_GRCOM, COUNT(*) AS TOTREG "
+_cQuery += "FROM " + retSqlName("SAJ") + " AS SAJ "
+_cQuery	+= "WHERE AJ_USER = '" + _usr + "' "
+_cQuery	+= " AND AJ_USER NOT IN  ('"+_userC+"','"+_userS+"') "
+_cQuery += "  AND SAJ.D_E_L_E_T_ = '' "
+_cQuery += "  AND SAJ.AJ_FILIAL = '"+xFilial("SAJ")+"' "
+_cQuery += "GROUP BY AJ_GRCOM "	
+TCQUERY _cQuery NEW ALIAS "TMPQRY" 
+_userAPS := ""
+If TMPQRY->TOTREG <> 0
+	_userAPS := _usr
+	_Grupcom := TMPQRY->AJ_GRCOM
+Endif
+TMPQRY->(dbCloseArea())
+If _tipotela <> "X"
+	If _userAPS <> ""
+		dbSelectArea("SC1")
+		dbSetOrder(1)
+		dbSeek(xFilial("SC1")+_cSolicC1)
+		While SC1->(!Eof()) .AND. (SC1->C1_NUM = _cSolicC1)
+			_C1_QTDORIG	:= SC1->C1_QUANT
+			If 	SC1->C1_ITEM $ _itens
+		  		it = SC1->C1_ITEM
+	 	    	qtde := &(quant&it)
+	 	    	neces := neces&it
+				RecLock("SC1",.F.)
+				 SC1->C1_DTAPSUP	:= Date()
+				 SC1->C1_OBSSUPE	:= _obs
+				 SC1->C1_DATPRF		:= ctod(neces)
+				 SC1->C1_QUANT		:= qtde
+				 SC1->C1_GRUPCOM	:= _Grupcom
+				 SC1->C1_QTDORIG	:= _C1_QTDORIG
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³Solicitado para autorizar SC com aprovação dos superiores.³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				 SC1->C1_APROVA1	:= _userC
+				 SC1->C1_DTAPRV1 	:= Date()
+				 SC1->C1_OBSAPR1	:= "Aprovação automática"
+				 SC1->C1_DATPRF		:= ctod(neces)
+				 SC1->C1_QUANT		:= qtde
+				 SC1->C1_QTDORIG	:= _C1_QTDORIG
+				 SC1->C1_APROVA2	:= _userS
+				 SC1->C1_DTAPRV2	:= Date()
+				 SC1->C1_OBSAPR2	:= "Aprovação automática"
+				 SC1->C1_DTENTRE	:= ctod(neces)
+				 SC1->C1_QUANT		:= qtde
+//				 SC1->C1_APROV		:= "L"
+				MsUnlock()
+			Endif
+			SC1->(dbSkip())
+		Enddo
+%>
+<script>
+	alert('Encaminhamento da Solicitação efetuada com Sucesso !!');
+	window.location='http://<%=_cServer%>/h_APRSC1.APL?lgn=<%=_lgn%>';
+</script>
+<%		                 
+	Else
+		If !_usr $ _userC
+			_SQL := " SELECT "
+			_SQL += "  C1_FILIAL AS C1_FILIAL, "
+			_SQL += "  MAX(C1_ITEM) AS C1_ITEM, "
+			_SQL += "  MAX(C1_PRODUTO) AS C1_PRODUTO, "
+			_SQL += "  MAX(C1_DESCRI) AS C1_DESCRI, "
+			_SQL += "  MAX(C1_QUANT) AS C1_QUANT, "
+			_SQL += "  MAX(A5_FORNECE) AS D1_FORNECE , "
+			_SQL += "  MAX(A2_NOME) AS A2_NOME ,  "
+			_SQL += "  MAX(A2_EMAIL) AS A2_EMAIL "
+			_SQL += " FROM " + RetSqlName("SC1") + " AS SC1 "
+			_SQL += " INNER JOIN " + RetSqlName("SA5") + " AS SA5 ON SA5.D_E_L_E_T_ = '' "
+			_SQL += "  AND A5_PRODUTO = C1_PRODUTO "
+			_SQL += " INNER JOIN " + RetSqlName("SA2") + " AS SA2 ON SA2.D_E_L_E_T_ = '' "
+			_SQL += "  AND A2_COD = A5_FORNECE "
+			_SQL += "  AND A2_LOJA = A5_LOJA "
+			_SQL += " WHERE  SC1.D_E_L_E_T_ = '' "
+			_SQL += "  AND C1_FILIAL = '" + xFilial("SC1") + "' "
+			_SQL += "  AND C1_NUM = '" + _cSolicC1 + "' "
+			_SQL += "  AND C1_ITEM IN (" + _itens + ") "
+			_SQL += " GROUP BY A5_FORNECE, C1_FILIAL, C1_PRODUTO "
+			_SQL += " ORDER BY C1_ITEM "
+			TCQUERY _SQL NEW ALIAS "TRBY"
+%>		
+<table border="0" width="100%">
+	<tr bgcolor="lightblue">
+		<td width="100%"><img src="/solic_compra/logobgh.jpg"></td>
+	</tr>
+</table>
+<br>
+<center>
+	<b>
+		<font size=4 face="Arial">Aprovação da Solicitação de Compra <font color=red> <%=_cSolicC1%></font>
+	</b>
+</center>
+<br>
+<form action="http://<%=_cServer%>/H_GERACOTA.APL" method="POST">
+	<input type="hidden" name="C1_FILIAL"	value="<%=_cFil%>">
+	<input type="hidden" name="C1_NUM"		value="<%=_cSolicC1%>">
+	<input type="hidden" name="_lgn"		value="<%=_lgn%>">
+	<input type="hidden" name="obs"			value="<%=_obs%>">
+	<input type="hidden" name="validade"	value="<%=_validade%>">
+	<input type="hidden" name="pagamento"	value="<%=_pagto%>">
+	<input type="hidden" name="frete"		value="<%=_frete%>">
+	<input type="hidden" name="itens"		value="<%=_itens%>">
+			<%=cabs%>
+	<table align="center" border="1" cellpadding="2" cellspacing="2">
+		<tr bgcolor="F9F9DB">
+			<td width="250" align="center" valign="top"><font size = "1" face="Arial"><b>Produto</font></td>
+			<td width="080" align="center" valign="top"><font size = "1" face="Arial"><b>Quantidade</font></td>
+			<td width="280" align="center" valign="top"><font size = "1" face="Arial"><b>Fornecedor</font></td>
+			<td width="200" align="center" valign="top"><font size = "1" face="Arial"><b>Email do Fornecedor</td>
+		</tr> 
+<%
+			cor			:= ""
+			cod_prod	:= TRBY->C1_PRODUTO
+			_ncnt		:= 0
+			dbSelectArea("TRBY")
+			Do While !Eof()
+				If cod_prod <> TRBY->C1_PRODUTO .OR. _ncnt == 3
+					If cod_prod == TRBY->C1_PRODUTO
+						dbSkip()
+						Loop
+					Endif
+					_ncnt		:= 0
+					cod_prod	:= TRBY->C1_PRODUTO
+%>					
+		<tr bgcolor="F9F9DB">
+			<td colspan="5">&nbsp;</td>    
+		</tr> 
+<%				    		
+				Endif
+				If cor == "lightblue"
+					cor := "white"
+				Else
+					cor := "lightblue"
+				Endif
+				it		:= TRBY->C1_ITEM
+				qtde	:= quant&it
+%>			    		
+		<tr bgcolor=<%=cor%>>
+			<td align="left"   valign="top"><font face="Arial" size="1"><%=TRBY->C1_PRODUTO%> - <%=TRBY->C1_DESCRI%></font></td>
+			<td align="center" valign="top"><font face="Arial" size="1"><%=qtde%></font></td>
+			<td align="left"   valign="top"><font face="Arial" size="1"><%=TRBY->D1_FORNECE%> - <%=TRBY->A2_NOME%></font></td>
+			<td align="left"   valign="top"><font face="Arial" size="1"><%=TRBY->A2_EMAIL%></font></td>
+		</tr> 
+<%           
+				dbSkip()
+				_ncnt++
+			EndDo
+%>           
+	</table> 
+	<br>
+	<table width="50%" align="center">
+		<tr>
+			<td width="50%" align="center"><input type="submit" value="Gerar Cotação"></td>
+			<td width="50%" align="center"><input type="button" value="Voltar" onclick="history.back(-1)">
+		</tr>
+	</table>		
+</form>
+<%           
+		Else
+			dbSelectArea("SC1")
+			SC1->(dbSetOrder(1))
+			SC1->(dbGoTop())
+			SC1->(dbSeek(xFilial("SC1")+_cSolicC1))
+			While SC1->(!EOF()) .And. (SC1->C1_NUM = _cSolicC1)
+				_C1_QTDORIG	:= SC1->C1_QUANT
+				If 	SC1->C1_ITEM $ _itens
+					it = SC1->C1_ITEM
+					qtde := &(quant&it)
+					neces := neces&it
+					RecLock("SC1",.F.)
+					 SC1->C1_APROVA1	:= _usr
+					 SC1->C1_DTAPRV1 	:= Date()
+					 SC1->C1_DTAPRV2	:= StoD("")
+					 SC1->C1_OBSAPR1	:= _obs
+					 SC1->C1_OBSAPR2	:= ""
+					 SC1->C1_FPAGTO 	:= _pagto
+					 SC1->C1_FRETE		:= _frete
+					 SC1->C1_DTVALID	:= (Date()+Val(_validade))
+					 SC1->C1_DTENTRE	:= ctod(neces)
+					 SC1->C1_DATPRF		:= ctod(neces)
+					 SC1->C1_QUANT		:= qtde
+					 SC1->C1_QTDORIG	:= _C1_QTDORIG
+//					 SC1->C1_APROV	:= "L"
+					MsUnlock()
+				Endif
+				SC1->(dbSkip())
+			EndDo
+%>		
+<script>
+	alert('Aprovação de nível Comprador efetuada com Sucesso !!');
+	window.location='http://<%=_cServer%>/h_APRSC1.APL?lgn=<%=_lgn%>';
+</script>
+<%
+		Endif
+	Endif
+Else   // se for reprovada	
+	dbSelectArea("SC1")
+	dbSetOrder(1)
+	dbSeek(xFilial()+_cSolicC1)
+	While SC1->(!EOF()) .And. (SC1->C1_NUM = _cSolicC1)
+		If 	Empty(SC1->C1_APROV)
+			Conout('Reprovação')
+			RecLock("SC1",.F.)
+			 SC1->C1_APROV	:= "R"
+			If _userAPS == ""
+				SC1->C1_APROVA1	:= _usr
+				SC1->C1_DTAPRV1 := Date()
+				SC1->C1_OBSAPR1	:= _obs
+			Else
+				SC1->C1_DTAPSUP := Date()
+				SC1->C1_OBSSUPE	:= _obs
+			Endif
+			MsUnlock()
+		Endif
+		SC1->(dbSkip())
+	Enddo
+%>
+<script>
+	alert('Reprovação efetuada com Sucesso !!');
+	window.location='http://<%=_cServer%>/h_APRSC1.APL?lgn=<%=_lgn%>';
+</script>
+<%	
+Endif
+RESET ENVIRONMENT
+%>

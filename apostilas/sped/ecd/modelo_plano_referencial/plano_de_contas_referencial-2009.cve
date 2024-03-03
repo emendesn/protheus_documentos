@@ -1,0 +1,757 @@
+CVN_FILIAL;CVN_CODPLA;CVN_DSCPLA;CVN_DTVIGI;CVN_DTVIGF;CVN_ENTREF;CVN_LINHA;CVN_CTAREF;CVN_DSCCTA
+;0;Modelo;;;50;1;1;ATIVO
+;0;Modelo;;;50;2;1.01;CIRCULANTE
+;0;Modelo;;;50;3;1.01.01;DISPONIBILIDADES
+;0;Modelo;;;50;4;1.01.01.01.00;Caixa
+;0;Modelo;;;50;5;1.01.01.02.00;Bancos
+;0;Modelo;;;50;6;1.01.01.03.00;Recursos no Exterior Decorrentes de Exportação
+;0;Modelo;;;50;7;1.01.01.04.00;Contas Bancárias - Subvenções
+;0;Modelo;;;50;8;1.01.01.05.00;Contas Bancárias - Doações
+;0;Modelo;;;50;9;1.01.01.06.00;Contas Bancárias - Outros Recursos Sujeitos a Restrições
+;0;Modelo;;31122008;50;10;1.01.01.07.00;Títulos e Valores Mobiliários
+;0;Modelo;1012008;;50;11;1.01.01.07.01;Valores Mobiliários - Mercado de Capitais Interno
+;0;Modelo;1012008;;50;12;1.01.01.07.02;Valores Mobiliários - Mercado de Capitais Externo
+;0;Modelo;;;50;13;1.01.01.08.00;Valores Mobiliários - Aplicações de Subvenções
+;0;Modelo;;;50;14;1.01.01.09.00;Valores Mobiliários - Aplicações de Doações
+;0;Modelo;;;50;15;1.01.01.10.00;Valores Mobiliários - Aplicações de Outros Recursos Sujeitos a Restrições
+;0;Modelo;;;50;16;1.01.01.11.00;Outras
+;0;Modelo;;;50;17;1.01.03;ESTOQUES
+;0;Modelo;;31122008;50;18;1.01.03.01.00;Estoques
+;0;Modelo;1012008;;50;19;1.01.03.01.01;Mercadorias para Revenda
+;0;Modelo;1012008;;50;20;1.01.03.01.02;Insumos (materiais diretos)
+;0;Modelo;1012008;;50;21;1.01.03.01.03;Produtos em Elaboração
+;0;Modelo;1012008;;50;22;1.01.03.01.04;Produtos Acabados
+;0;Modelo;1012008;;50;23;1.01.03.01.05;Serviços em andamento
+;0;Modelo;1012008;;50;24;1.01.03.01.06;Insumos Agropecuários
+;0;Modelo;1012008;;50;25;1.01.03.01.07;Produtos Agropecuários em Formação
+;0;Modelo;1012008;;50;26;1.01.03.01.08;Produtos Agropecuários Acabados
+;0;Modelo;;;50;27;1.01.03.02.00;Imóveis Destinados à Venda
+;0;Modelo;1012008;;50;28;1.01.03.02.01;Construções em Andamento de Imóveis Destinados à Venda
+;0;Modelo;;;50;29;1.01.03.03.00;Estoques Destinados à Doação
+;0;Modelo;;;50;30;1.01.03.04.00;Outras
+;0;Modelo;;;50;31;1.01.05;CRÉDITOS
+;0;Modelo;;;50;32;1.01.05.01.00;Adiantamentos a Fornecedores
+;0;Modelo;;;50;33;1.01.05.02.00;Clientes
+;0;Modelo;;;50;34;1.01.05.03.00;Créditos Fiscais CSLL - Diferenças Temporárias e Base de Cálculo Negativa
+;0;Modelo;;;50;35;1.01.05.04.00;Créditos Fiscais IRPJ - Diferenças Temporárias e Prejuízos Fiscais
+;0;Modelo;;31122008;50;36;1.01.05.05.00;Impostos e Contribuições a Recuperar
+;0;Modelo;1012008;;50;37;1.01.05.05.01;Imposto de Renda a Recuperar
+;0;Modelo;1012008;;50;38;1.01.05.05.02;IPI a Recuperar
+;0;Modelo;1012008;;50;39;1.01.05.05.03;PIS e COFINS a Recuperar
+;0;Modelo;1012008;;50;40;1.01.05.05.04;CSLL a Recuperar
+;0;Modelo;1012008;;50;41;1.01.05.05.05;ICMS e Contribuições a Recuperar
+;0;Modelo;1012008;;50;42;1.01.05.05.06;Tributos Municipais a Recuperar
+;0;Modelo;1012008;;50;43;1.01.05.05.90;Outros Impostos e Contribuições a Recuperar
+;0;Modelo;;;50;44;1.01.05.06.00;Créditos por Contribuições e Doações
+;0;Modelo;;;50;45;1.01.05.07.00;Outras
+;0;Modelo;;;50;46;1.01.07;DESPESAS DO EXERCÍCIO SEGUINTE
+;0;Modelo;;;50;47;1.01.07.01.00;Despesas do Exercício Seguinte
+;0;Modelo;;;50;48;1.01.07.02.00;Outras Contas
+;0;Modelo;;;50;49;1.01.09;CONTAS RETIFICADORAS
+;0;Modelo;;31122008;50;50;1.01.09.01.00;(-) Contas Retificadoras
+;0;Modelo;1012008;;50;51;1.01.09.01.01;(-) Duplicatas Descontadas
+;0;Modelo;1012008;;50;52;1.01.09.01.03;(-) Provisões para Créditos de Liquidação Duvidosa
+;0;Modelo;1012008;;50;53;1.01.09.01.05;(-) Provisão para Ajuste do Estoque ao Valor de Mercado
+;0;Modelo;1012008;;50;54;1.01.09.01.07;(-) Provisões para Ajuste ao Valor Provável de Realização
+;0;Modelo;1012008;;50;55;1.01.09.01.90;(-) Outras Contas Retificadoras
+;0;Modelo;;31122008;50;56;1.04;REALIZÁVEL A LONGO PRAZO
+;0;Modelo;;31122008;50;57;1.04.01;CRÉDITOS
+;0;Modelo;;31122008;50;58;1.04.01.01.00;Clientes
+;0;Modelo;;31122008;50;59;1.04.01.02.00;Créditos com Pessoas Ligadas (Físicas/Jurídicas)
+;0;Modelo;;31122008;50;60;1.04.01.03.00;Títulos e Valores Mobiliários
+;0;Modelo;;31122008;50;61;1.04.01.04.00;Depósitos Judiciais
+;0;Modelo;;31122008;50;62;1.04.01.05.00;Créditos Fiscais CSLL - Diferenças Temporárias e Base de Cálculo Negativa
+;0;Modelo;;31122008;50;63;1.04.01.06.00;Créditos Fiscais IRPJ - Diferenças Temporárias e Prejuízos Fiscais
+;0;Modelo;;31122008;50;64;1.04.01.07.00;Créditos por Contribuições e Doações
+;0;Modelo;;31122008;50;65;1.04.01.08.00;Outras Contas
+;0;Modelo;;31122008;50;66;1.04.01.09.00;(-) Contas Retificadoras
+;0;Modelo;;31122008;50;67;1.07;PERMANENTE
+;0;Modelo;1012008;;50;68;1.07;NÃO CIRCULANTE
+;0;Modelo;1012008;;50;69;1.07.00;REALIZÁVEL A LONGO PRAZO
+;0;Modelo;1012008;;50;70;1.07.00.01.00;Clientes
+;0;Modelo;1012008;;50;71;1.07.00.02.00;Créditos com Pessoas Ligadas (Físicas/Jurídicas)
+;0;Modelo;1012008;;50;72;1.07.00.03.00;Valores Mobiliários
+;0;Modelo;1012008;;50;73;1.07.00.04.00;Depósitos Judiciais
+;0;Modelo;1012008;;50;74;1.07.00.05.00;Créditos Fiscais CSLL - Diferenças Temporárias e Base de Cálculo Negativa
+;0;Modelo;1012008;;50;75;1.07.00.06.00;Créditos Fiscais IRPJ - Diferenças Temporárias e Prejuízos Fiscais
+;0;Modelo;1012008;;50;76;1.07.00.07.00;Créditos por Contribuições e Doações
+;0;Modelo;1012008;;50;77;1.07.00.08.00;Outras Contas
+;0;Modelo;1012008;;50;78;1.07.00.90.00;(-) Duplicatas Descontadas
+;0;Modelo;1012008;;50;79;1.07.00.93.00;(-) Provisões para Créditos de Liquidação Duvidosa
+;0;Modelo;1012008;;50;80;1.07.00.95.00;(-) Provisões para Ajuste ao Valor Provável de Realização
+;0;Modelo;1012008;;50;81;1.07.00.97.00;(-) Outras Contas Retificadoras
+;0;Modelo;;;50;82;1.07.01;INVESTIMENTOS
+;0;Modelo;;;50;83;1.07.01.01.00;Participações Permanentes em Coligadas ou Controladas
+;0;Modelo;;;50;84;1.07.01.02.00;Investimentos Decorrentes de Incentivos Fiscais
+;0;Modelo;;;50;85;1.07.01.03.00;Outros Investimentos
+;0;Modelo;;;50;86;1.07.01.04.00;Ágios em Investimentos
+;0;Modelo;;;50;87;1.07.01.05.00;Correção Monetária - Diferença IPC/BTNF (Lei no 8.200/1991)
+;0;Modelo;;;50;88;1.07.01.06.00;Correção Monetária Especial (Lei no 8.200/1991)
+;0;Modelo;;;50;89;1.07.01.07.00;(-) Deságios e Provisão para Perdas Prováveis em Investimentos
+;0;Modelo;1012008;;50;90;1.07.01.90.00;Outras Contas
+;0;Modelo;1012008;;50;91;1.07.01.97.00;(-) Outras Contas Retificadoras
+;0;Modelo;;;50;92;1.07.04;IMOBILIZADO
+;0;Modelo;;;50;93;1.07.04.01.00;Terrenos
+;0;Modelo;;;50;94;1.07.04.02.00;Edifícios e Construções
+;0;Modelo;1012008;;50;95;1.07.04.02.01;Construções em Andamento
+;0;Modelo;;;50;96;1.07.04.03.00;Equipamentos, Máquinas e Instalações Industriais
+;0;Modelo;;;50;97;1.07.04.04.00;Veículos
+;0;Modelo;1012008;;50;98;1.07.04.04.01;Embarcações
+;0;Modelo;1012008;;50;99;1.07.04.04.02;Aeronaves
+;0;Modelo;;;50;100;1.07.04.05.00;Móveis, Utensílios e Instalações Comerciais
+;0;Modelo;;;50;101;1.07.04.06.00;Recursos Minerais
+;0;Modelo;;;50;102;1.07.04.07.00;Florestamento e Reflorestamento
+;0;Modelo;;;50;103;1.07.04.08.00;Direitos Contratuais de Exploração de Florestas
+;0;Modelo;;;50;104;1.07.04.09.00;Outras Imobilizações
+;0;Modelo;;;50;105;1.07.04.10.00;Correção Monetária - Diferença IPC/BTNF (Lei no 8.200/1991)
+;0;Modelo;;;50;106;1.07.04.11.00;Correção Monetária Especial (Lei no 8.200/1991)
+;0;Modelo;;;50;107;1.07.04.12.00;(-) Depreciações, Amortizações e Quotas de Exaustão
+;0;Modelo;1012008;;50;108;1.07.04.90.00;(-) Outras Contas Redutoras do Imobilizado
+;0;Modelo;1012008;;50;109;1.07.05;INTANGÍVEL
+;0;Modelo;1012008;;50;110;1.07.05.01.00;Concessões
+;0;Modelo;1012008;;50;111;1.07.05.03.00;Marcas e Patentes
+;0;Modelo;1012008;;50;112;1.07.05.05.00;Direitos Autorais
+;0;Modelo;1012008;;50;113;1.07.05.07.00;Fundo de Comércio
+;0;Modelo;1012008;;50;114;1.07.05.09.00;Software ou Programas de Computador
+;0;Modelo;1012008;;50;115;1.07.05.11.00;Franquias
+;0;Modelo;1012008;;50;116;1.07.05.13.00;Desenvolvimento de Produtos
+;0;Modelo;1012008;;50;117;1.07.05.15.00;Outras
+;0;Modelo;1012008;;50;118;1.07.05.90.00;(-) Amortização do Intangível
+;0;Modelo;1012008;;50;119;1.07.05.97.00;(-) Outras Contas Redutoras do Intangível
+;0;Modelo;;;50;120;1.07.07;DIFERIDO
+;0;Modelo;;;50;121;1.07.07.01.00;Despesas Pré-Operacionais ou Pré-Industriais
+;0;Modelo;;;50;122;1.07.07.02.00;Despesas com Pesquisas Científicas ou Tecnológicas
+;0;Modelo;;;50;123;1.07.07.03.00;Demais Aplicações em Despesas Amortizáveis
+;0;Modelo;;;50;124;1.07.07.04.00;Correção Monetária - Diferença IPC/BTNF (Lei no 8.200/1991)
+;0;Modelo;;;50;125;1.07.07.05.00;Correção Monetária Especial (Lei no 8.200/1991)
+;0;Modelo;;;50;126;1.07.07.06.00;(-) Amortização do Diferido
+;0;Modelo;;;50;127;2;PASSIVO
+;0;Modelo;;;50;128;2.01;CIRCULANTE
+;0;Modelo;;;50;129;2.01.01;OBRIGAÇÕES DE CURTO PRAZO
+;0;Modelo;;;50;130;2.01.01.01.00;Fornecedores
+;0;Modelo;1012008;;50;131;2.01.01.01.01;Adiantamentos de Clientes
+;0;Modelo;;31122008;50;132;2.01.01.02.00;Financiamentos a Curto Prazo
+;0;Modelo;1012008;;50;133;2.01.01.02.01;Financiamentos a Curto Prazo - Sistema Financeiro Nacional
+;0;Modelo;1012008;;50;134;2.01.01.02.02;Arrendamento Mercantil (Financeiro) a Curto Prazo - Sistema Financeiro Nacional
+;0;Modelo;1012008;;50;135;2.01.01.02.03;Financiamentos a Curto Prazo - Outros
+;0;Modelo;1012008;;50;136;2.01.01.02.04;Financiamentos a Curto Prazo - Exterior
+;0;Modelo;1012008;;50;137;2.01.01.02.05;Arrendamento Mercantil (Financeiro) a Curto Prazo - Exterior
+;0;Modelo;;31122008;50;138;2.01.01.03.00;Impostos, Taxas e Contribuições a Recolher
+;0;Modelo;1012008;;50;139;2.01.01.03.01;IPI a Recolher
+;0;Modelo;1012008;;50;140;2.01.01.03.02;ICMS e Contribuições a Recolher
+;0;Modelo;1012008;;50;141;2.01.01.03.03;Tributos Municipais a Recolher
+;0;Modelo;;;50;142;2.01.01.04.00;FGTS a Recolher
+;0;Modelo;;;50;143;2.01.01.05.00;PIS e COFINS a Recolher
+;0;Modelo;;;50;144;2.01.01.06.00;Contribuições Previdenciárias a Recolher
+;0;Modelo;;;50;145;2.01.01.06.90;Outros tributos a recolher
+;0;Modelo;;;50;146;2.01.01.07.00;Salários a Pagar
+;0;Modelo;;;50;147;2.01.01.08.00;Dividendos Propostos ou Lucros Creditados
+;0;Modelo;;;50;148;2.01.01.09.00;Provisão para a Contribuição Social sobre o Lucro Líquido
+;0;Modelo;;;50;149;2.01.01.10.00;Provisão para o Imposto de Renda
+;0;Modelo;;;50;150;2.01.01.11.00;Débitos Fiscais CSLL - Diferenças Temporárias
+;0;Modelo;;;50;151;2.01.01.12.00;Débitos Fiscais IRPJ - Diferenças Temporárias
+;0;Modelo;1012008;;50;152;2.01.01.12.10;Provisões de Natureza Fiscal
+;0;Modelo;1012008;;50;153;2.01.01.12.20;Provisões de Natureza Trabalhista
+;0;Modelo;1012008;;50;154;2.01.01.12.30;Provisões de Natureza Cível
+;0;Modelo;1012008;;50;155;2.01.01.12.40;Doações e Subvenções para Investimentos
+;0;Modelo;1012008;;50;156;2.01.01.13.00;Outras Contas
+;0;Modelo;;31122008;50;157;2.01.01.14.00;(-) Contas Retificadoras
+;0;Modelo;;;50;158;2.01.01.90.00;(-) Contas Retificadoras
+;0;Modelo;;31122008;50;159;2.03;EXIGÍVEL A LONGO PRAZO
+;0;Modelo;1012008;;50;160;2.03;NÃO-CIRCULANTE
+;0;Modelo;;;50;161;2.03.01;OBRIGAÇÕES A LONGO PRAZO
+;0;Modelo;;;50;162;2.03.01.01.00;Fornecedores
+;0;Modelo;;31122008;50;163;2.03.01.02.00;Financiamentos a Longo Prazo
+;0;Modelo;1012008;;50;164;2.03.01.02.01;Financiamentos a Longo Prazo - Sistema Financeiro Nacional
+;0;Modelo;1012008;;50;165;2.03.01.02.02;Arrendamento Mercantil (Financeiro) a Longo Prazo - Sistema Financeiro Nacional
+;0;Modelo;1012008;;50;166;2.03.01.02.03;Financiamentos a Longo Prazo - Brasil - Outros
+;0;Modelo;1012008;;50;167;2.03.01.02.04;Financiamentos a Longo Prazo - Exterior
+;0;Modelo;1012008;;50;168;2.03.01.02.05;Arrendamento Mercantil (Financeiro) a Longo Prazo - Exterior
+;0;Modelo;;;50;169;2.03.01.03.00;Empréstimos de Sócios/Acionistas Não Administradores
+;0;Modelo;;;50;170;2.03.01.04.00;Créditos de Pessoas Ligadas (Físicas/Jurídicas)
+;0;Modelo;;;50;171;2.03.01.05.00;Provisão para o Imposto de Renda sobre Lucros Diferidos
+;0;Modelo;;;50;172;2.03.01.06.00;Débitos Fiscais CSLL - Diferenças Temporárias
+;0;Modelo;;;50;173;2.03.01.07.00;Débitos Fiscais IRPJ - Diferenças Temporárias
+;0;Modelo;1012008;;50;174;2.03.01.07.10;Outras Provisões de Natureza Fiscal
+;0;Modelo;1012008;;50;175;2.03.01.07.20;Outras Provisões de Natureza Trabalhista
+;0;Modelo;1012008;;50;176;2.03.01.07.30;Outras Provisões de Natureza Cível
+;0;Modelo;1012008;;50;177;2.03.01.07.40;Doações e Subvenções para Investimentos
+;0;Modelo;;;50;178;2.03.01.08.00;Outras Contas
+;0;Modelo;;31122008;50;179;2.03.01.09.00;(-) Contas Retificadoras
+;0;Modelo;1012008;;50;180;2.03.01.90.00;(-) Contas Retificadoras
+;0;Modelo;1012008;;50;181;2.03.03.;RECEITAS DIFERIDAS
+;0;Modelo;1012008;;50;182;2.03.03.01.00;Receitas Diferidas
+;0;Modelo;1012008;;50;183;2.03.03.03.00;(-) Custos Correspondentes às Receitas Diferidas
+;0;Modelo;;31122008;50;184;2.05;RESULTADO DE EXERCÍCIOS FUTUROS
+;0;Modelo;;31122008;50;185;2.05.01;RESULTADO DE EXERCÍCIOS FUTUROS
+;0;Modelo;;31122008;50;186;2.05.01.01.00;Receita de Exercícios Futuros
+;0;Modelo;;31122008;50;187;2.05.01.02.00;(-) Custos e Despesas Correspondentes
+;0;Modelo;;;50;188;2.07;PATRIMÔNIO LÍQUIDO
+;0;Modelo;;;50;189;2.07.01;CAPITAL REALIZADO
+;0;Modelo;;;50;190;2.07.01.01.00;Capital Subscrito de Domiciliados e Residentes no País
+;0;Modelo;;;50;191;2.07.01.02.00;(-) Capital a Integralizar de Domiciliados e Residentes no País
+;0;Modelo;;;50;192;2.07.01.03.00;Capital Subscrito de Domiciliados e Residentes no Exterior
+;0;Modelo;;;50;193;2.07.01.04.00;(-) Capital a Integralizar de Domiciliados e Residentes no Exterior
+;0;Modelo;;;50;194;2.07.04;RESERVAS
+;0;Modelo;;;50;195;2.07.04.01.00;Reservas de Capital
+;0;Modelo;;;50;196;2.07.04.02.00;Reservas de Reavaliação
+;0;Modelo;;;50;197;2.07.04.03.00;Reservas de Lucros
+;0;Modelo;1012008;;50;198;2.07.04.03.01;Reservas de Lucros - Doações e Subvenções para Investimentos
+;0;Modelo;1012008;;50;199;2.07.04.03.02;Reservas de Lucros - Prêmio na Emissão de Debêntures
+;0;Modelo;;;50;200;2.07.04.04.00;Reserva para Aumento de Capital (Lei no 9.249/1995, art. 9o, § 9o)
+;0;Modelo;;;50;201;2.07.04.05.00;Outras Reservas
+;0;Modelo;1012008;;50;202;2.07.05;AJUSTES DE AVALIAÇÃO PATRIMONIAL
+;0;Modelo;1012008;;50;203;2.07.05.01.00;Ajustes às Normas Internacionais de Contabilidade
+;0;Modelo;1012008;;50;204;2.07.05.01.01;(-) Ajustes às Normas Internacionais de Contabilidade
+;0;Modelo;;;50;205;2.07.07;OUTRAS CONTAS
+;0;Modelo;;;50;206;2.07.07.01.00;Lucros Acumulados e/ou Saldo à Disposição da Assembléia
+;0;Modelo;;;50;207;2.07.07.02.00;(-) Prejuízos Acumulados
+;0;Modelo;;;50;208;2.07.07.03.00;(-) Ações em Tesouraria
+;0;Modelo;;;50;209;2.07.07.04.00;Outras
+;0;Modelo;;;50;210;2.08;PATRIMÔNIO SOCIAL
+;0;Modelo;;;50;211;2.08.01;FUNDO PATRIMONIAL
+;0;Modelo;;;50;212;2.08.01.01.00;Fundo Patrimonial
+;0;Modelo;;;50;213;2.08.04;RESERVAS
+;0;Modelo;;;50;214;2.08.04.01.00;Reservas Patrimoniais
+;0;Modelo;;;50;215;2.08.04.02.00;Reservas Estatutárias
+;0;Modelo;;;50;216;2.08.07;OUTRAS CONTAS
+;0;Modelo;;;50;217;2.08.07.01.00;Superávits Acumulados
+;0;Modelo;;;50;218;2.08.07.02.00;Déficits Acumulados
+;0;Modelo;;;50;219;3;RESULTADO LÍQUIDO DO PERÍODO
+;0;Modelo;;;50;220;3.01;RESULTADO LÍQUIDO DO PERÍODO ANTES DO IRPJ E DA CSLL - ATIVIDADE GERAL
+;0;Modelo;;;50;221;3.01.01;RESULTADO OPERACIONAL
+;0;Modelo;;;50;222;3.01.01.01;RECEITA LIQUIDA
+;0;Modelo;;;50;223;3.01.01.01.01;RECEITA BRUTA
+;0;Modelo;;31122008;50;224;3.01.01.01.01.01.00;Receita da Exportação de Produtos
+;0;Modelo;1012008;;50;225;3.01.01.01.01.01.01;Receita de Exportação Direta de Mercadorias e Produtos
+;0;Modelo;1012008;;50;226;3.01.01.01.01.01.02;Receita de Vendas de Mercadorias e Produtos a Comercial Exportadora com Fim Específico de Exportação
+;0;Modelo;1012008;;50;227;3.01.01.01.01.01.03;Receita de Exportação de Serviços
+;0;Modelo;;;50;228;3.01.01.01.01.02.00;Receita da Venda no Mercado Interno de Produtos de Fabricação Própria
+;0;Modelo;;;50;229;3.01.01.01.01.03.00;Receita da Revenda de Mercadorias no Mercado Interno
+;0;Modelo;;;50;230;3.01.01.01.01.04.00;Receita da Prestação de Serviços - Mercado Interno
+;0;Modelo;;;50;231;3.01.01.01.01.05.00;Receita das Unidades Imobiliárias Vendidas
+;0;Modelo;;;50;232;3.01.01.01.01.06.00;Receita de Locação de Bens Móveis e Imóveis
+;0;Modelo;;;50;233;3.01.01.01.01.07.00;Outras
+;0;Modelo;;;50;234;3.01.01.01.03;DEDUÇÕES DA RECEITA BRUTA
+;0;Modelo;;;50;235;3.01.01.01.03.01.00;(-) Vendas Canceladas, Devoluções e Descontos Incondicionais
+;0;Modelo;;;50;236;3.01.01.01.03.02.00;(-) ICMS
+;0;Modelo;;;50;237;3.01.01.01.03.03.00;(-) Cofins
+;0;Modelo;;;50;238;3.01.01.01.03.04.00;(-) PIS/Pasep
+;0;Modelo;;;50;239;3.01.01.01.03.05.00;(-) ISS
+;0;Modelo;;;50;240;3.01.01.01.03.06.00;(-) Demais Impostos e Contribuições Incidentes sobre Vendas e Serviços
+;0;Modelo;;;50;241;3.01.01.03;CUSTO DOS BENS E SERVIÇOS VENDIDOS
+;0;Modelo;;;50;242;3.01.01.03.01;CUSTO DOS PRODUTOS DE FABRICAÇÃO PRÓPRIA VENDIDOS
+;0;Modelo;1012008;;50;243;3.01.01.03.01.00.00;Custo dos Produtos de Fabricação Própria Vendidos
+;0;Modelo;;31122008;50;244;3.01.01.03.01.01.00;Estoques no Início do Período de Apuração
+;0;Modelo;;31122008;50;245;3.01.01.03.01.02.00;Compras de Insumos à Vista
+;0;Modelo;;31122008;50;246;3.01.01.03.01.03.00;Compras de Insumos a Prazo
+;0;Modelo;;31122008;50;247;3.01.01.03.01.04.00;Remuneração a Dirigentes de Indústria
+;0;Modelo;;31122008;50;248;3.01.01.03.01.05.00;Custo do Pessoal Aplicado na Produção
+;0;Modelo;;31122008;50;249;3.01.01.03.01.06.00;Encargos Sociais - Previdência Social
+;0;Modelo;;31122008;50;250;3.01.01.03.01.07.00;Encargos Sociais - FGTS
+;0;Modelo;;31122008;50;251;3.01.01.03.01.08.00;Encargos Sociais - Outros
+;0;Modelo;;31122008;50;252;3.01.01.03.01.09.00;Alimentação do Trabalhador
+;0;Modelo;;31122008;50;253;3.01.01.03.01.10.00;Manutenção e Reparo de Bens Aplicados na Produção
+;0;Modelo;;31122008;50;254;3.01.01.03.01.11.00;Arrendamento Mercantil
+;0;Modelo;;31122008;50;255;3.01.01.03.01.12.00;Encargos de Depreciação, Amortização e Exaustão
+;0;Modelo;;31122008;50;256;3.01.01.03.01.13.00;Constituição de Provisões
+;0;Modelo;;31122008;50;257;3.01.01.03.01.14.00;Serviços Prestados por Pessoa Física sem Vínculo Empregatício
+;0;Modelo;;31122008;50;258;3.01.01.03.01.15.00;Serviços Prestados Pessoa Jurídica
+;0;Modelo;;31122008;50;259;3.01.01.03.01.16.00;Royalties e Assistência Técnica - PAÍS
+;0;Modelo;;31122008;50;260;3.01.01.03.01.17.00;Royalties e Assistência Técnica - EXTERIOR
+;0;Modelo;;31122008;50;261;3.01.01.03.01.18.00;Outros Custos
+;0;Modelo;;31122008;50;262;3.01.01.03.01.19.00;(-) Estoques no Final do Período de Apuração
+;0;Modelo;;;50;263;3.01.01.03.03;CUSTO DAS MERCADORIAS REVENDIDAS
+;0;Modelo;1012008;;50;264;3.01.01.03.03.00.00;Custo das Mercadorias Revendidas
+;0;Modelo;;31122008;50;265;3.01.01.03.03.01.00;Estoques no Início do Período de Apuração
+;0;Modelo;;31122008;50;266;3.01.01.03.03.02.00;Compras de Mercadorias à Vista
+;0;Modelo;;31122008;50;267;3.01.01.03.03.03.00;Compras de Mercadorias a Prazo
+;0;Modelo;;31122008;50;268;3.01.01.03.03.04.00;(-) Estoques no Final do Período de Apuração
+;0;Modelo;;31122008;50;269;3.01.01.03.05;CUSTO DOS SERVIÇOS VENDIDOS
+;0;Modelo;1012008;;50;270;3.01.01.03.05.00.00;Custo dos Serviços Vendidos
+;0;Modelo;;31122008;50;271;3.01.01.03.05.01.00;Saldo Inicial de Serviços em Andamento
+;0;Modelo;;31122008;50;272;3.01.01.03.05.02.00;Material Aplicado na Produção dos Serviços
+;0;Modelo;;31122008;50;273;3.01.01.03.05.03.00;Remuneração de Dirigentes de Produção dos Serviços
+;0;Modelo;;31122008;50;274;3.01.01.03.05.04.00;Custo do Pessoal Aplicado na Produção dos Serviços
+;0;Modelo;;31122008;50;275;3.01.01.03.05.05.00;Serviços Prestados por Pessoa Física sem Vínculo Empregatício
+;0;Modelo;;31122008;50;276;3.01.01.03.05.06.00;Serviços Prestados Pessoa Jurídica
+;0;Modelo;;31122008;50;277;3.01.01.03.05.07.00;Encargos Sociais - Previdência Social
+;0;Modelo;;31122008;50;278;3.01.01.03.05.08.00;Encargos Sociais - FGTS
+;0;Modelo;;31122008;50;279;3.01.01.03.05.09.00;Encargos Sociais - Outros
+;0;Modelo;;31122008;50;280;3.01.01.03.05.10.00;Alimentação do Trabalhador
+;0;Modelo;;31122008;50;281;3.01.01.03.05.11.00;Encargos de Depreciação e Amortização
+;0;Modelo;;31122008;50;282;3.01.01.03.05.12.00;Arrendamento Mercantil
+;0;Modelo;;31122008;50;283;3.01.01.03.05.13.00;Constituição de Provisões
+;0;Modelo;;31122008;50;284;3.01.01.03.05.14.00;Royalties e Assistência Técnica - PAÍS
+;0;Modelo;;31122008;50;285;3.01.01.03.05.15.00;Royalties e Assistência Técnica - EXTERIOR
+;0;Modelo;;31122008;50;286;3.01.01.03.05.16.00;Outros Custos
+;0;Modelo;;31122008;50;287;3.01.01.03.05.17.00;(-) Saldo Final de Serviços em Andamento
+;0;Modelo;;;50;288;3.01.01.03.07;CUSTO DAS UNIDADES IMOBILIÁRIAS VENDIDAS
+;0;Modelo;;;50;289;3.01.01.03.07.01.00;Custo das Unidades Imobiliárias Vendidas
+;0;Modelo;;;50;290;3.01.01.03.09;AJUSTES DE ESTOQUES DECORRENTES DE ARBITRAMENTO
+;0;Modelo;;31122008;50;291;3.01.01.03.09.01.00;Ajustes de Estoques Decorrentes de Arbitramento
+;0;Modelo;;;50;292;3.01.01.05;OUTRAS RECEITAS OPERACIONAIS
+;0;Modelo;;;50;293;3.01.01.05.01;OUTRAS RECEITAS OPERACIONAIS
+;0;Modelo;;;50;294;3.01.01.05.01.01.00;Variações Cambiais Ativas
+;0;Modelo;;;50;295;3.01.01.05.01.02.00;Ganhos Auferidos no Mercado de Renda Variável, exceto Day-Trade
+;0;Modelo;;;50;296;3.01.01.05.01.03.00;Ganhos em Operações Day-Trade
+;0;Modelo;;;50;297;3.01.01.05.01.04.00;Receitas de Juros sobre o Capital Próprio
+;0;Modelo;;;50;298;3.01.01.05.01.05.00;Outras Receitas Financeiras
+;0;Modelo;;;50;299;3.01.01.05.01.06.00;Ganhos na Alienação de Participações Não Integrantes do Ativo Permanente
+;0;Modelo;;;50;300;3.01.01.05.01.07.00;Resultados Positivos em Participações Societárias
+;0;Modelo;1012008;;50;301;3.01.01.05.01.07.10;Amortização de Deságio nas Aquisições de Investimentos Avaliados pelo Patrimônio Líquido
+;0;Modelo;;;50;302;3.01.01.05.01.08.00;Resultados Positivos em SCP
+;0;Modelo;;;50;303;3.01.01.05.01.09.00;Rendimentos e Ganhos de Capital Auferidos no Exterior
+;0;Modelo;;;50;304;3.01.01.05.01.10.00;Reversão dos Saldos das Provisões Operacionais
+;0;Modelo;1012008;;50;305;3.01.01.05.01.10.10;Prêmios Recebidos na Emissão de Debêntures
+;0;Modelo;1012008;;50;306;3.01.01.05.01.10.20;Doações e Subvenções para Investimentos
+;0;Modelo;1012008;;50;307;3.01.01.05.01.10.30;Contrapartida dos Ajustes ao Valor Presente
+;0;Modelo;1012008;;50;308;3.01.01.05.01.10.40;Contrapartida de outros Ajustes às Normas Internacionais de Contabilidade
+;0;Modelo;;;50;309;3.01.01.05.01.11.00;Outras Receitas Operacionais
+;0;Modelo;;;50;310;3.01.01.07;DESPESAS OPERACIONAIS
+;0;Modelo;;;50;311;3.01.01.07.01;DESPESAS OPERACIONAIS DAS ATIVIDADES EM GERAL
+;0;Modelo;;;50;312;3.01.01.07.01.01.00;Remuneração a Dirigentes e a Conselho de Administração
+;0;Modelo;;31122008;50;313;3.01.01.07.01.02.00;Ordenados, Salários, Gratificações e Outras Remunerações a Empregados
+;0;Modelo;1012008;;50;314;3.01.01.07.01.02.01;Ordenados, Salários Gratificações e Outras Remunerações a Empregados
+;0;Modelo;1012008;;50;315;3.01.01.07.01.02.03;Planos de Poupança e Investimentos de Empregados
+;0;Modelo;1012008;;50;316;3.01.01.07.01.02.05;Fundo de Aposentadoria Programada Individual de Empregados
+;0;Modelo;1012008;;50;317;3.01.01.07.01.02.07;Plano de Previdência Privada de Empregados
+;0;Modelo;1012008;;50;318;3.01.01.07.01.02.09;Outros Gastos com Pessoal
+;0;Modelo;;;50;319;3.01.01.07.01.03.00;Prestação de Serviços por Pessoa Física sem Vínculo Empregatício
+;0;Modelo;;;50;320;3.01.01.07.01.04.00;Prestação de Serviço Pessoa Jurídica
+;0;Modelo;1012008;;50;321;3.01.01.07.01.04.01;Serviços Prestados por Cooperativa de Trabalho
+;0;Modelo;1012008;;50;322;3.01.01.07.01.04.02;Locação de Mão-de-obra
+;0;Modelo;;;50;323;3.01.01.07.01.05.00;Encargos Sociais - Previdência Social
+;0;Modelo;;;50;324;3.01.01.07.01.06.00;Encargos Sociais - FGTS
+;0;Modelo;;;50;325;3.01.01.07.01.07.00;Encargos Sociais - Outros
+;0;Modelo;;;50;326;3.01.01.07.01.08.00;Doações e Patrocínios de Caráter Cultural e Artístico (Lei no 8.313/1991)
+;0;Modelo;;;50;327;3.01.01.07.01.09.00;Doações a Instituições de Ensino e Pesquisa (Lei nº 9.249/1995, art.13, § 2º)
+;0;Modelo;;;50;328;3.01.01.07.01.10.00;Doações a Entidades Civis
+;0;Modelo;;;50;329;3.01.01.07.01.11.00;Outras Contribuições e Doações
+;0;Modelo;;;50;330;3.01.01.07.01.12.00;Alimentação do Trabalhador
+;0;Modelo;;;50;331;3.01.01.07.01.13.00;PIS/Pasep
+;0;Modelo;;;50;332;3.01.01.07.01.14.00;Cofins
+;0;Modelo;;;50;333;3.01.01.07.01.15.00;CPMF
+;0;Modelo;;;50;334;3.01.01.07.01.16.00;Demais Impostos, Taxas e Contribuições, exceto IR e CSLL
+;0;Modelo;;;50;335;3.01.01.07.01.17.00;Arrendamento Mercantil
+;0;Modelo;;;50;336;3.01.01.07.01.18.00;Aluguéis
+;0;Modelo;;;50;337;3.01.01.07.01.19.00;Despesas com Veículos e de Conservação de Bens e Instalações
+;0;Modelo;;31122008;50;338;3.01.01.07.01.20.00;Propaganda e Publicidade
+;0;Modelo;1012008;;50;339;3.01.01.07.01.20.01;Propaganda, Publicidade e Patrocínio (Associações Desportivas que Mantenham Equipe de Futebol Profissional)
+;0;Modelo;1012008;;50;340;3.01.01.07.01.20.02;Propaganda, Publicidade e Patrocínio
+;0;Modelo;;;50;341;3.01.01.07.01.21.00;Multas
+;0;Modelo;;;50;342;3.01.01.07.01.22.00;Encargos de Depreciação e Amortização
+;0;Modelo;;;50;343;3.01.01.07.01.23.00;Perdas em Operações de Crédito
+;0;Modelo;;;50;344;3.01.01.07.01.24.00;Provisões para Férias e 13o Salário de Empregados
+;0;Modelo;;;50;345;3.01.01.07.01.25.00;Provisão para Perda de Estoque
+;0;Modelo;;;50;346;3.01.01.07.01.26.00;Demais Provisões
+;0;Modelo;;;50;347;3.01.01.07.01.27.00;Gratificações a Administradores
+;0;Modelo;;;50;348;3.01.01.07.01.28.00;Royalties e Assistência Técnica - PAÍS
+;0;Modelo;;;50;349;3.01.01.07.01.29.00;Royalties e Assistência Técnica - EXTERIOR
+;0;Modelo;;;50;350;3.01.01.07.01.30.00;Assistência Médica, Odontológica e Farmacêutica a Empregados
+;0;Modelo;;;50;351;3.01.01.07.01.31.00;Pesquisas Científicas e Tecnológicas
+;0;Modelo;;;50;352;3.01.01.07.01.32.00;Bens de Natureza Permanente Deduzidos como Despesa
+;0;Modelo;;31122008;50;353;3.01.01.07.01.33.00;Outras Despesas Operacionais
+;0;Modelo;1012008;;50;354;3.01.01.07.01.33.01;Despesas com viagens, diárias e ajusta de custo
+;0;Modelo;1012008;;50;355;3.01.01.07.01.33.90;Outras Despesas Operacionais
+;0;Modelo;;;50;356;3.01.01.09;OUTRAS DESPESAS OPERACIONAIS
+;0;Modelo;;;50;357;3.01.01.09.01;OUTRAS DESPESAS OPERACIONAIS
+;0;Modelo;;;50;358;3.01.01.09.01.01.00;(-) Variações Cambiais Passivas
+;0;Modelo;;;50;359;3.01.01.09.01.02.00;(-) Perdas Incorridas no Mercado de Renda Variável, exceto Day-Trade
+;0;Modelo;;;50;360;3.01.01.09.01.03.00;(-) Perdas em Operações Day-Trade
+;0;Modelo;;;50;361;3.01.01.09.01.04.00;(-) Juros sobre o Capital Próprio
+;0;Modelo;;;50;362;3.01.01.09.01.05.00;(-) Outras Despesas Financeiras
+;0;Modelo;;;50;363;3.01.01.09.01.06.00;(-) Prejuízos na Alienação de Participações Não Integrantes do Ativo Permanente
+;0;Modelo;;;50;364;3.01.01.09.01.07.00;(-) Resultados Negativos em Participações Societárias
+;0;Modelo;1012008;;50;365;3.01.01.09.01.07.10;(-) Amortização de Ágio nas Aquisições de Investimentos Avaliados pelo Patrimônio Líquido
+;0;Modelo;;;50;366;3.01.01.09.01.08.00;(-) Resultados Negativos em SCP
+;0;Modelo;;;50;367;3.01.01.09.01.09.00;(-) Perdas em Operações Realizadas no Exterior
+;0;Modelo;1012008;;50;368;3.01.01.09.01.10.00;(-) Contrapartida dos Ajustes ao Valor Presente
+;0;Modelo;;;50;369;3.01.01.09.01.11.00;(-) Contrapartida de outros Ajustes às Normas Internacionais de Contabilidade
+;0;Modelo;;;50;370;3.01.01.09.01.12.00;(-) Contrapartida dos Ajustes de Valor do Imobilizado e Intangível
+;0;Modelo;;;50;371;3.01.03;OUTRAS RECEITAS E OUTRAS DESPESAS
+;0;Modelo;;;50;372;3.01.03.01;RECEITAS E DESPESAS NÃO OPERACIONAIS
+;0;Modelo;;;50;373;3.01.03.01.01;RECEITAS NÃO OPERACIONAIS
+;0;Modelo;;;50;374;3.01.03.01.01.01.00;Receitas de Alienações de Bens e Direitos do Ativo Permanente
+;0;Modelo;1012008;;50;375;3.01.03.01.01.01.10;Ganhos de Capital por Variação Percentual em Participação Societária Avaliada pelo Patrimônio Líquido
+;0;Modelo;;;50;376;3.01.03.01.01.02.00;Outras Receitas Não Operacionais
+;0;Modelo;;;50;377;3.01.03.01.03;DESPESAS NÃO OPERACIONAIS
+;0;Modelo;;;50;378;3.01.03.01.03.01.00;(-) Valor Contábil dos Bens e Direitos Alienados
+;0;Modelo;1012008;;50;379;3.01.03.01.03.01.10;(-) Perdas de Capital por Variação Percentual em Participação Societária Avaliada pelo Patrimônio Líquido
+;0;Modelo;;;50;380;3.01.03.01.03.02.00;(-) Outras Despesas Não Operacionais
+;0;Modelo;;;50;381;3.01.05;PARTICIPAÇÕES
+;0;Modelo;;;50;382;3.01.05.01;PARTICIPAÇÕES NOS LUCROS
+;0;Modelo;;;50;383;3.01.05.01.01;PARTICIPAÇÕES DE EMPREGADOS
+;0;Modelo;;;50;384;3.01.05.01.01.01.00;(-) Participações de Empregados
+;0;Modelo;;;50;385;3.01.05.01.01.02.00;(-) Contribuições para Assistência ou Previdência de Empregados
+;0;Modelo;;;50;386;3.01.05.01.01.03.00;(-) Outras Participações de Empregados
+;0;Modelo;;;50;387;3.01.05.01.03;OUTRAS PARTICIPAÇÕES
+;0;Modelo;;;50;388;3.01.05.01.03.01.00;(-) Participações de Administradores e Partes Beneficiárias
+;0;Modelo;;;50;389;3.01.05.01.03.02.00;(-) Participações de Debêntures
+;0;Modelo;;;50;390;3.01.05.01.03.03.00;(-) Outras
+;0;Modelo;;;50;391;3.02;PROVISÃO PARA CSLL E IRPJ (ATIVIDADES EM GERAL)
+;0;Modelo;;;50;392;3.02.01;PROVISÃO PARA CSLL E IRPJ
+;0;Modelo;;;50;393;3.02.01.01;PROVISÃO PARA CSLL E IRPJ
+;0;Modelo;;;50;394;3.02.01.01.01;PROVISÃO PARA CSLL E IRPJ
+;0;Modelo;;;50;395;3.02.01.01.01.01.00;(-) Contribuição Social sobre o Lucro Líquido
+;0;Modelo;;;50;396;3.02.01.01.01.02.00;(-) Provisão para Imposto de Renda - Pessoa Jurídica
+;0;Modelo;;;50;397;3.05;RESULTADO ANTES DO IRPJ E DA CSLL - ATIVIDADE RURAL
+;0;Modelo;;;50;398;3.05.01;RESULTADO OPERACIONAL DA ATIVIDADE RURAL
+;0;Modelo;;;50;399;3.05.01.01;RECEITA OPERACIONAL LÍQUIDA DA ATIVIDADE RURAL
+;0;Modelo;;;50;400;3.05.01.01.01;RECEITA BRUTA DA ATIVIDADE RURAL
+;0;Modelo;;;50;401;3.05.01.01.01.01.00;Receita da Atividade Rural
+;0;Modelo;;;50;402;3.05.01.01.03;DEDUÇÕES DA RECEITA BRUTA
+;0;Modelo;;;50;403;3.05.01.01.03.01.00;(-) Vendas Canceladas, Devoluções e Descontos Incondicionais
+;0;Modelo;;;50;404;3.05.01.01.03.02.00;(-) ICMS
+;0;Modelo;;;50;405;3.05.01.01.03.03.00;(-) Cofins
+;0;Modelo;;;50;406;3.05.01.01.03.04.00;(-) PIS/Pasep
+;0;Modelo;;;50;407;3.05.01.01.03.05.00;(-) ISS
+;0;Modelo;;;50;408;3.05.01.01.03.06.00;(-) Demais Impostos e Contribuições Incidentes sobre Vendas e Serviços
+;0;Modelo;;;50;409;3.05.01.03;CUSTO DOS BENS E SERVIÇOS VENDIDOS
+;0;Modelo;;;50;410;3.05.01.03.01;CUSTO DOS PRODUTOS DA ATIVIDADE RURAL VENDIDOS
+;0;Modelo;1012008;;50;411;3.05.01.03.01.00.00;Custo dos Produtos Vendidos da Atividade Rural
+;0;Modelo;;31122008;50;412;3.05.01.03.01.01.01;Estoques Iniciais de Insumos Agropecuários
+;0;Modelo;;31122008;50;413;3.05.01.03.01.01.02;Estoques Iniciais de Produtos Agropecuários Acabados
+;0;Modelo;;31122008;50;414;3.05.01.03.01.01.03;Estoques Iniciais de Produtos Agropecuários em Formação
+;0;Modelo;;31122008;50;415;3.05.01.03.01.02.00;Compras de Insumos Agropecuários à Vista
+;0;Modelo;;31122008;50;416;3.05.01.03.01.03.00;Compras de Insumos Agropecuários a Prazo
+;0;Modelo;;31122008;50;417;3.05.01.03.01.04.00;Remuneração a Dirigentes da Produção
+;0;Modelo;;31122008;50;418;3.05.01.03.01.05.00;Custo do Pessoal Aplicado na Produção
+;0;Modelo;;31122008;50;419;3.05.01.03.01.06.00;Encargos Sociais - Previdência Social
+;0;Modelo;;31122008;50;420;3.05.01.03.01.07.00;Encargos Sociais - FGTS
+;0;Modelo;;31122008;50;421;3.05.01.03.01.08.00;Encargos Sociais - Outros
+;0;Modelo;;31122008;50;422;3.05.01.03.01.09.00;Alimentação do Trabalhador
+;0;Modelo;;31122008;50;423;3.05.01.03.01.10.00;Manutenção e Reparo de Bens Aplicados na Produção
+;0;Modelo;;31122008;50;424;3.05.01.03.01.11.00;Arrendamento Mercantil
+;0;Modelo;;31122008;50;425;3.05.01.03.01.12.00;Encargos de Depreciação, Amortização e Exaustão
+;0;Modelo;;31122008;50;426;3.05.01.03.01.13.00;Constituição de Provisões
+;0;Modelo;;31122008;50;427;3.05.01.03.01.14.00;Serviços Prestados por Pessoa Física sem Vínculo Empregatício
+;0;Modelo;;31122008;50;428;3.05.01.03.01.15.00;Serviços Prestados por Pessoa Jurídica
+;0;Modelo;;31122008;50;429;3.05.01.03.01.16.00;Royalties e Assistência Técnica - PAÍS
+;0;Modelo;;31122008;50;430;3.05.01.03.01.17.00;Royalties e Assistência Técnica - EXTERIOR
+;0;Modelo;;31122008;50;431;3.05.01.03.01.18.00;Outros Custos
+;0;Modelo;;31122008;50;432;3.05.01.03.01.19.01;(-) Estoques Finais de Insumos Agropecuários
+;0;Modelo;;31122008;50;433;3.05.01.03.01.19.02;(-) Estoques Finais de Produtos Agropecuários em Formação
+;0;Modelo;;31122008;50;434;3.05.01.03.01.19.03;(-) Estoques Finais de Produtos Agropecuários Acabados
+;0;Modelo;;;50;435;3.05.01.03.09;AJUSTES DE ESTOQUES DECORRENTES DE ARBITRAMENTO
+;0;Modelo;;31122008;50;436;3.05.01.03.09.01.00;Ajustes de Estoques Decorrentes de Arbitramento
+;0;Modelo;;;50;437;3.05.01.05;OUTRAS RECEITAS OPERACIONAIS
+;0;Modelo;;;50;438;3.05.01.05.01;OUTRAS RECEITAS OPERACIONAIS
+;0;Modelo;;;50;439;3.05.01.05.01.01.00;Variações Cambiais Ativas
+;0;Modelo;;;50;440;3.05.01.05.01.02.00;Ganhos Auferidos no Mercado de Renda Variável, exceto Day-Trade
+;0;Modelo;;;50;441;3.05.01.05.01.03.00;Ganhos em Operações Day-Trade
+;0;Modelo;;;50;442;3.05.01.05.01.04.00;Receitas de Juros sobre o Capital Próprio
+;0;Modelo;;;50;443;3.05.01.05.01.05.00;Outras Receitas Financeiras
+;0;Modelo;;;50;444;3.05.01.05.01.06.00;Ganhos na Alienação de Participações Não Integrantes do Ativo Permanente
+;0;Modelo;;;50;445;3.05.01.05.01.07.00;Resultados Positivos em Participações Societárias
+;0;Modelo;1012008;;50;446;3.05.01.05.01.07.10;Amortização de Deságio nas Aquisições de Investimentos Avaliados pelo Patrimônio Líquido
+;0;Modelo;;;50;447;3.05.01.05.01.08.00;Resultados Positivos em SCP
+;0;Modelo;;;50;448;3.05.01.05.01.09.00;Rendimentos e Ganhos de Capital Auferidos no Exterior
+;0;Modelo;;;50;449;3.05.01.05.01.10.00;Reversão dos Saldos das Provisões Operacionais
+;0;Modelo;;;50;450;3.05.01.05.01.11.00;Outras Receitas Operacionais
+;0;Modelo;1012008;;50;451;3.05.01.05.01.12.00;Prêmios Recebidos na Emissão de Debêntures
+;0;Modelo;1012008;;50;452;3.05.01.05.01.13.00;Doações e Subvenções para Investimentos
+;0;Modelo;1012008;;50;453;3.05.01.05.01.14.00;Contrapartida dos Ajustes ao Valor Presente
+;0;Modelo;1012008;;50;454;3.05.01.05.01.15.00;Contrapartida de outros Ajustes às Normas Internacionais de Contabilidade
+;0;Modelo;;;50;455;3.05.01.07;DESPESAS OPERACIONAIS
+;0;Modelo;;;50;456;3.05.01.07.01;DESPESAS OPERACIONAIS DA ATIVIDADE RURAL
+;0;Modelo;;;50;457;3.05.01.07.01.01.00;Remuneração a Dirigentes e a Conselho de Administração
+;0;Modelo;;31122008;50;458;3.05.01.07.01.02.00;Ordenados, Salários, Gratificações e Outras Remunerações a Empregados
+;0;Modelo;1012008;;50;459;3.05.01.07.01.02.01;Ordenados, Salários Gratificações e Outras Remunerações a Empregados
+;0;Modelo;1012008;;50;460;3.05.01.07.01.02.03;Planos de Poupança e Investimentos de Empregados
+;0;Modelo;1012008;;50;461;3.05.01.07.01.02.05;Fundo de Aposentadoria Programada Individual de Empregados
+;0;Modelo;1012008;;50;462;3.05.01.07.01.02.07;Plano de Previdência Privada de Empregados
+;0;Modelo;1012008;;50;463;3.05.01.07.01.02.09;Outros Gastos com Pessoal
+;0;Modelo;;;50;464;3.05.01.07.01.03.00;Prestação de Serviços por Pessoa Física sem Vínculo Empregatício
+;0;Modelo;;;50;465;3.05.01.07.01.04.00;Prestação de Serviço Pessoa Jurídica
+;0;Modelo;1012008;;50;466;3.05.01.07.01.04.01;Serviços Prestados por Cooperativa de Trabalho
+;0;Modelo;1012008;;50;467;3.05.01.07.01.04.02;Locação de Mão-de-obra
+;0;Modelo;;;50;468;3.05.01.07.01.05.00;Encargos Sociais - Previdência Social
+;0;Modelo;;;50;469;3.05.01.07.01.06.00;Encargos Sociais - FGTS
+;0;Modelo;;;50;470;3.05.01.07.01.07.00;Encargos Sociais - Outros
+;0;Modelo;;;50;471;3.05.01.07.01.08.00;Doações e Patrocínios de Caráter Cultural e Artístico (Lei no 8.313/1991)
+;0;Modelo;;;50;472;3.05.01.07.01.09.00;Doações a Instituições de Ensino e Pesquisa (Lei no 9.249/1995, art.13, § 2o)
+;0;Modelo;;;50;473;3.05.01.07.01.10.00;Doações a Entidades Civis
+;0;Modelo;;;50;474;3.05.01.07.01.11.00;Outras Contribuições e Doações
+;0;Modelo;;;50;475;3.05.01.07.01.12.00;Alimentação do Trabalhador
+;0;Modelo;;;50;476;3.05.01.07.01.13.00;PIS/Pasep
+;0;Modelo;;;50;477;3.05.01.07.01.14.00;Cofins
+;0;Modelo;;;50;478;3.05.01.07.01.15.00;CPMF
+;0;Modelo;;;50;479;3.05.01.07.01.16.00;Demais Impostos, Taxas e Contribuições, exceto IR e CSLL
+;0;Modelo;;;50;480;3.05.01.07.01.17.00;Arrendamento Mercantil
+;0;Modelo;;;50;481;3.05.01.07.01.18.00;Aluguéis
+;0;Modelo;;;50;482;3.05.01.07.01.19.00;Despesas com Veículos e de Conservação de Bens e Instalações
+;0;Modelo;;31122008;50;483;3.05.01.07.01.20.00;Propaganda e Publicidade
+;0;Modelo;1012008;;50;484;3.05.01.07.01.20.01;Propaganda, Publicidade e Patrocínio (Associações Desportivas que Mantenham Equipe de Futebol Profissional)
+;0;Modelo;1012008;;50;485;3.05.01.07.01.20.02;Propaganda, Publicidade e Patrocínio
+;0;Modelo;;;50;486;3.05.01.07.01.21.00;Multas
+;0;Modelo;;;50;487;3.05.01.07.01.22.00;Encargos de Depreciação e Amortização
+;0;Modelo;;;50;488;3.05.01.07.01.23.00;Perdas em Operações de Crédito
+;0;Modelo;;;50;489;3.05.01.07.01.24.00;Provisões para Férias e 13o Salário de Empregados
+;0;Modelo;;;50;490;3.05.01.07.01.25.00;Provisão para Perda de Estoque
+;0;Modelo;;;50;491;3.05.01.07.01.26.00;Demais Provisões
+;0;Modelo;;;50;492;3.05.01.07.01.27.00;Gratificações a Administradores
+;0;Modelo;;;50;493;3.05.01.07.01.28.00;Royalties e Assistência Técnica - PAÍS
+;0;Modelo;;;50;494;3.05.01.07.01.29.00;Royalties e Assistência Técnica - EXTERIOR
+;0;Modelo;;;50;495;3.05.01.07.01.30.00;Assistência Médica, Odontológica e Farmacêutica a Empregados
+;0;Modelo;;;50;496;3.05.01.07.01.31.00;Pesquisas Científicas e Tecnológicas
+;0;Modelo;;;50;497;3.05.01.07.01.32.00;Bens de Natureza Permanente Deduzidos como Despesa
+;0;Modelo;;31122008;50;498;3.05.01.07.01.33.00;Outras Despesas Operacionais
+;0;Modelo;1012008;;50;499;3.05.01.07.01.33.01;Despesas com viagens, diárias e ajusta de custo
+;0;Modelo;1012008;;50;500;3.05.01.07.01.33.90;Outras Despesas Operacionais
+;0;Modelo;;;50;501;3.05.01.09;OUTRAS DESPESAS OPERACIONAIS
+;0;Modelo;;;50;502;3.05.01.09.01;OUTRAS DESPESAS OPERACIONAIS
+;0;Modelo;;;50;503;3.05.01.09.01.01.00;(-) Variações Cambiais Passivas
+;0;Modelo;;;50;504;3.05.01.09.01.02.00;(-) Perdas Incorridas no Mercado de Renda Variável, exceto Day-Trade
+;0;Modelo;;;50;505;3.05.01.09.01.03.00;(-) Perdas em Operações Day-Trade
+;0;Modelo;;;50;506;3.05.01.09.01.04.00;(-) Juros sobre o Capital Próprio
+;0;Modelo;;;50;507;3.05.01.09.01.05.00;(-) Outras Despesas Financeiras
+;0;Modelo;;;50;508;3.05.01.09.01.06.00;(-) Prejuízos na Alienação de Participações Não Integrantes do Ativo Permanente
+;0;Modelo;;;50;509;3.05.01.09.01.07.00;(-) Resultados Negativos em Participações Societárias
+;0;Modelo;1012008;;50;510;3.05.01.09.01.07.10;(-) Amortização de Ágio nas Aquisições de Investimentos Avaliados pelo Patrimônio Líquido
+;0;Modelo;;;50;511;3.05.01.09.01.08.00;(-) Resultados Negativos em SCP
+;0;Modelo;;;50;512;3.05.01.09.01.09.00;(-) Perdas em Operações Realizadas no Exterior
+;0;Modelo;1012008;;50;513;3.05.01.09.01.10.00;(-) Contrapartida dos Ajustes ao Valor Presente
+;0;Modelo;1012008;;50;514;3.05.01.09.01.11.00;(-) Contrapartida de outros Ajustes às Normas Internacionais de Contabilidade
+;0;Modelo;;;50;515;3.05.01.09.01.12.00;(-) Contrapartida dos ajustes de valor do imobilizado e intangível
+;0;Modelo;;;50;516;3.05.03;PARTICIPAÇÕES
+;0;Modelo;;;50;517;3.05.03.01;PARTICIPAÇÕES NOS LUCROS
+;0;Modelo;;;50;518;3.05.03.01.01;PARTICIPAÇÕES DE EMPREGADOS
+;0;Modelo;;;50;519;3.05.03.01.01.01.00;(-) Participações de Empregados
+;0;Modelo;;;50;520;3.05.03.01.01.02.00;(-) Contribuições para Assistência ou Previdência de Empregados
+;0;Modelo;;;50;521;3.05.03.01.01.03.00;(-) Outras Participações de Empregados
+;0;Modelo;;;50;522;3.05.03.01.03;OUTRAS PARTICIPAÇÕES
+;0;Modelo;;;50;523;3.05.03.01.03.01.00;(-) Participações de Administradores e Partes Beneficiárias
+;0;Modelo;;;50;524;3.05.03.01.03.02.00;(-) Participações de Debêntures
+;0;Modelo;;;50;525;3.05.03.01.03.05.00;(-) Outras
+;0;Modelo;;;50;526;3.06;PROVISÃO PARA CSLL E IRPJ (ATIVIDADE RURAL)
+;0;Modelo;;;50;527;3.06.01;PROVISÃO PARA CSLL E IRPJ
+;0;Modelo;;;50;528;3.06.01.01;PROVISÃO PARA CSLL E IRPJ
+;0;Modelo;;;50;529;3.06.01.01.01;PROVISÃO PARA CSLL E IRPJ
+;0;Modelo;;;50;530;3.06.01.01.01.01.00;(-) Contribuição Social sobre o Lucro Líquido
+;0;Modelo;;;50;531;3.06.01.01.01.02.00;(-) Provisão para Imposto de Renda - Pessoa Jurídica
+;0;Modelo;;;50;532;4;SUPERÁVIT/DÉFICIT LÍQUIDO DO PERÍODO
+;0;Modelo;;;50;533;4.01;RESULTADO OPERACIONAL
+;0;Modelo;;;50;534;4.01.01;RECEITA OPERACIONAL LÍQUIDA
+;0;Modelo;;;50;535;4.01.01.01;RECEITA BRUTA
+;0;Modelo;;;50;536;4.01.01.01.01;RECEITA DE VENDA DE PRODUTOS
+;0;Modelo;;;50;537;4.01.01.01.01.01.00;Da atividade de Educação
+;0;Modelo;;;50;538;4.01.01.01.01.02.00;Da atividade de Saúde
+;0;Modelo;;;50;539;4.01.01.01.01.03.00;Da atividade de Assistência Social
+;0;Modelo;;;50;540;4.01.01.01.01.04.00;Outras
+;0;Modelo;;;50;541;4.01.01.01.02;RECEITA DE PRESTAÇÃO DOS SERVIÇOS
+;0;Modelo;;;50;542;4.01.01.01.02.01.00;Serviços Educacionais
+;0;Modelo;;;50;543;4.01.01.01.02.02.00;Doações/Subvenções Vinculadas
+;0;Modelo;;;50;544;4.01.01.01.02.03.00;Doações
+;0;Modelo;;;50;545;4.01.01.01.02.04.00;Contribuições
+;0;Modelo;;;50;546;4.01.01.01.02.05.00;Outras
+;0;Modelo;;;50;547;4.01.01.01.03;RECEITA DE SERVIÇOS DE SAÚDE
+;0;Modelo;;;50;548;4.01.01.01.03.01.00;Pacientes Particulares
+;0;Modelo;;;50;549;4.01.01.01.03.02.00;Convênios - SUS
+;0;Modelo;;;50;550;4.01.01.01.03.03.00;Convênios - Outros
+;0;Modelo;;;50;551;4.01.01.01.03.04.00;Doações/Subvenções Vinculadas
+;0;Modelo;;;50;552;4.01.01.01.03.05.00;Doações
+;0;Modelo;;;50;553;4.01.01.01.03.06.00;Contribuições
+;0;Modelo;;;50;554;4.01.01.01.03.07.00;Outras
+;0;Modelo;;;50;555;4.01.01.01.04;RECEITAS DE SERVIÇOS DE ASSISTÊNCIA SOCIAL
+;0;Modelo;;;50;556;4.01.01.01.04.01.00;Pacientes Particulares
+;0;Modelo;;;50;557;4.01.01.01.04.02.00;Convênios - Outros
+;0;Modelo;;;50;558;4.01.01.01.04.03.00;Doações/Subvenções Vinculadas
+;0;Modelo;;;50;559;4.01.01.01.04.04.00;Doações
+;0;Modelo;;;50;560;4.01.01.01.04.05.00;Contribuições
+;0;Modelo;;;50;561;4.01.01.01.04.06.00;Outras
+;0;Modelo;;;50;562;4.01.01.01.05;RECEITAS DE OUTRAS ATIVIDADES
+;0;Modelo;;;50;563;4.01.01.01.05.01.00;Contribuições Sindicais
+;0;Modelo;;;50;564;4.01.01.01.05.02.00;Contribuições Confederativas/Associativas
+;0;Modelo;;;50;565;4.01.01.01.05.03.00;Mensalidades
+;0;Modelo;;;50;566;4.01.01.01.05.04.00;Doações/Subvenções
+;0;Modelo;;;50;567;4.01.01.01.05.05.00;Outras Contribuições
+;0;Modelo;;;50;568;4.01.01.01.05.06.00;Outras
+;0;Modelo;;;50;569;4.01.01.01.09;DEDUÇÕES DA RECEITA BRUTA
+;0;Modelo;;;50;570;4.01.01.01.09.01.00;(-) Vendas Canceladas
+;0;Modelo;;;50;571;4.01.01.01.09.02.00;(-) Devoluções e Descontos Incondicionais
+;0;Modelo;;;50;572;4.01.01.01.09.03.00;Outras
+;0;Modelo;;;50;573;4.01.03;CUSTO DOS PRODUTOS E SERVIÇOS VENDIDOS
+;0;Modelo;;;50;574;4.01.03.01;CUSTO DOS PRODUTOS VENDIDOS
+;0;Modelo;;;50;575;4.01.03.01.01;CUSTO DOS PRODUTOS VENDIDOS PARA EDUCAÇÃO
+;0;Modelo;;;50;576;4.01.03.01.01.01.00;Custos dos Produtos para Educação - Vendidos
+;0;Modelo;;;50;577;4.01.03.01.01.02.00;Custos dos Produtos para Educação - Gratuidades
+;0;Modelo;;;50;578;4.01.03.01.01.03.00;Outros Custos
+;0;Modelo;;;50;579;4.01.03.01.02;CUSTO DOS PRODUTOS VENDIDOS PARA SAÚDE
+;0;Modelo;;;50;580;4.01.03.01.02.01.00;Custos dos Produtos para Saúde - Vendidos
+;0;Modelo;;;50;581;4.01.03.01.02.02.00;Custos dos Produtos para Saúde - Gratuidades
+;0;Modelo;;;50;582;4.01.03.01.02.03.00;Outros Custos
+;0;Modelo;;;50;583;4.01.03.01.03;CUSTO DOS PRODUTOS VENDIDOS PARA ASSISTÊNCIA SOCIAL
+;0;Modelo;;;50;584;4.01.03.01.03.01.00;Custos dos Produtos para Assistência Social - Vendidos
+;0;Modelo;;;50;585;4.01.03.01.03.02.00;Custos dos Produtos para Assistência Social - Gratuidades
+;0;Modelo;;;50;586;4.01.03.01.03.03.00;Outras
+;0;Modelo;;;50;587;4.01.03.01.04;CUSTO DOS PRODUTOS VENDIDOS PARA AS DEMAIS ATIVIDADES
+;0;Modelo;;;50;588;4.01.03.01.04.01.00;Custos dos Produtos Vendidos em Geral
+;0;Modelo;;;50;589;4.01.03.01.04.02.00;Outros Custos
+;0;Modelo;;;50;590;4.01.03.02;CUSTO DOS SERVIÇOS PRESTADOS
+;0;Modelo;;;50;591;4.01.03.02.01;CUSTO DOS SERVIÇOS PRESTADOS PARA EDUCAÇÃO
+;0;Modelo;;;50;592;4.01.03.02.01.01.00;Custo dos Serviços Prestados a Alunos Não Bolsistas
+;0;Modelo;;;50;593;4.01.03.02.01.02.00;Custo dos Serviços Prestados a Convênios/Contratos/Parcerias (Exceto PROUNI)
+;0;Modelo;;;50;594;4.01.03.02.01.03.00;Custo dos Serviços Prestados a Doações/Subvenções Vinculadas
+;0;Modelo;;;50;595;4.01.03.02.01.04.00;Custo dos Serviços Prestados a Doações
+;0;Modelo;;;50;596;4.01.03.02.01.05.00;Custo dos Serviços Prestados ao PROUNI
+;0;Modelo;;;50;597;4.01.03.02.01.06.00;Custo dos Serviços Prestados a Gratuidade
+;0;Modelo;;;50;598;4.01.03.02.01.07.00;Outros Custos
+;0;Modelo;;;50;599;4.01.03.02.02;CUSTO DOS SERVIÇOS PRESTADOS PARA SAÚDE
+;0;Modelo;;;50;600;4.01.03.02.02.01.00;Custo dos Serviços Prestados a Pacientes Particulares
+;0;Modelo;;;50;601;4.01.03.02.02.02.00;Custo dos Serviços Prestados a Convênios SUS
+;0;Modelo;;;50;602;4.01.03.02.02.03.00;Custo dos Serviços Prestados a Convênios/Contratos/Parcerias
+;0;Modelo;;;50;603;4.01.03.02.02.04.00;Custo dos Serviços Prestados a Doações/Subvenções Vinculadas
+;0;Modelo;;;50;604;4.01.03.02.02.05.00;Custo dos Serviços Prestados a Doações
+;0;Modelo;;;50;605;4.01.03.02.02.06.00;Custo dos Serviços Prestados a Gratuidade
+;0;Modelo;;;50;606;4.01.03.02.02.07.00;Outros Custos
+;0;Modelo;;;50;607;4.01.03.02.03;CUSTO DOS SERVIÇOS PRESTADOS PARA ASSISTÊNCIA SOCIAL
+;0;Modelo;;;50;608;4.01.03.02.03.01.00;Custo dos Serviços Prestados a Pacientes Particulares
+;0;Modelo;;;50;609;4.01.03.02.03.02.00;Custo dos Serviços Prestados a Convênios/Contratos/Parcerias
+;0;Modelo;;;50;610;4.01.03.02.03.03.00;Custo dos Serviços Prestados a Doações/Subvenções Vinculadas
+;0;Modelo;;;50;611;4.01.03.02.03.04.00;Custo dos Serviços Prestados a Doações
+;0;Modelo;;;50;612;4.01.03.02.03.05.00;Custo dos Serviços Prestados a Gratuidade
+;0;Modelo;;;50;613;4.01.03.02.03.06.00;Outros Custos
+;0;Modelo;;;50;614;4.01.03.02.04;CUSTO DOS SERVIÇOS PRESTADOS PARA AS DEMAIS ATIVIDADES
+;0;Modelo;;;50;615;4.01.03.02.04.01.00;Custo dos Serviços Prestados em Geral
+;0;Modelo;;;50;616;4.01.03.02.04.02.00;Outros Custos
+;0;Modelo;;;50;617;4.01.05;OUTRAS RECEITAS OPERACIONAIS
+;0;Modelo;;;50;618;4.01.05.01;OUTRAS RECEITAS OPERACIONAIS
+;0;Modelo;;;50;619;4.01.05.01.01;OUTRAS RECEITAS OPERACIONAIS
+;0;Modelo;;;50;620;4.01.05.01.01.01.00;Variações Cambiais Ativas
+;0;Modelo;;;50;621;4.01.05.01.01.02.00;Ganhos Auferidos no Mercado de Renda Variável, exceto Day-Trade
+;0;Modelo;;;50;622;4.01.05.01.01.03.00;Ganhos em Operações Day-Trade
+;0;Modelo;;;50;623;4.01.05.01.01.04.00;Outras Receitas de Aplicações Financeiras
+;0;Modelo;;;50;624;4.01.05.01.01.05.00;Ganhos na Alienação de Participações Não Integrantes do Ativo Permanente
+;0;Modelo;;;50;625;4.01.05.01.01.06.00;Resultados Positivos em Participações Societárias
+;0;Modelo;;;50;626;4.01.05.01.01.07.00;Rendimentos e Ganhos de Capital Auferidos no Exterior
+;0;Modelo;;;50;627;4.01.05.01.01.08.00;Reversão dos Saldos das Provisões Operacionais
+;0;Modelo;;;50;628;4.01.05.01.01.09.00;Outras Receitas Operacionais
+;0;Modelo;;;50;629;4.01.05.01.01.10.00;Outras
+;0;Modelo;;;50;630;4.01.07;DESPESAS OPERACIONAIS
+;0;Modelo;;;50;631;4.01.07.01;DESPESAS OPERACIONAIS
+;0;Modelo;;;50;632;4.01.07.01.01;DESPESAS OPERACIONAIS
+;0;Modelo;;;50;633;4.01.07.01.01.00;Remunerações a Empregados
+;0;Modelo;;;50;634;4.01.07.01.02.00;Indenizações Trabalhistas
+;0;Modelo;;;50;635;4.01.07.01.03.00;Remuneração a Dirigentes e a Conselho de Administração/Fiscal
+;0;Modelo;;;50;636;4.01.07.01.04.00;Prestação de Serviços por Pessoa Física sem Vínculo Empregatício
+;0;Modelo;;;50;637;4.01.07.01.05.00;Prestação de Serviço por Pessoa Jurídica
+;0;Modelo;;;50;638;4.01.07.01.06.00;Doações e Patrocínios de Caráter Cultural e Artístico (Lei no 8.313/1991)
+;0;Modelo;;;50;639;4.01.07.01.07.00;Doações a Instituições de Ensino e Pesquisa (Lei no 9.249/1995, art.13, § 2o)
+;0;Modelo;;;50;640;4.01.07.01.08.00;Doações a Entidades Civis
+;0;Modelo;;;50;641;4.01.07.01.09.00;Outras Contribuições e Doações
+;0;Modelo;;;50;642;4.01.07.01.10.00;FGTS (sem indenização 40%)
+;0;Modelo;;;50;643;4.01.07.01.11.00;Assistência Médica, Odontológica, Medicamentos, Aparelhos Ortopédicos e Similares
+;0;Modelo;;;50;644;4.01.07.01.12.00;Provisões para Férias e 13o Salário de Empregados
+;0;Modelo;;;50;645;4.01.07.01.13.00;Demais Provisões
+;0;Modelo;;;50;646;4.01.07.01.14.00;Arrendamento Mercantil
+;0;Modelo;;;50;647;4.01.07.01.15.00;Aluguéis
+;0;Modelo;;;50;648;4.01.07.01.16.00;Despesas com Veículos e de Conservação de Bens e Instalações
+;0;Modelo;;;50;649;4.01.07.01.17.00;Propaganda e Publicidade
+;0;Modelo;;;50;650;4.01.07.01.18.00;Multas
+;0;Modelo;;;50;651;4.01.07.01.19.00;Encargos de Depreciação e Amortização
+;0;Modelo;;;50;652;4.01.07.01.20.00;Repasses para Outras Entidades (Sindicatos/Federações/Confederações)
+;0;Modelo;;;50;653;4.01.07.01.21.00;Contribuições Previdenciárias Patronais
+;0;Modelo;;;50;654;4.01.07.01.22.00;COFINS
+;0;Modelo;;;50;655;4.01.07.01.23.00;CSLL
+;0;Modelo;;;50;656;4.01.07.01.24.00;PIS/PASEP
+;0;Modelo;;;50;657;4.01.07.01.25.00;CPMF
+;0;Modelo;;;50;658;4.01.07.01.26.00;Demais Impostos, Taxas e Contribuições, exceto as citadas acima.
+;0;Modelo;;;50;659;4.01.07.01.27.00;Outras Despesas Operacionais
+;0;Modelo;;;50;660;4.01.09;OUTRAS DESPESAS OPERACIONAIS
+;0;Modelo;;;50;661;4.01.09.01;OUTRAS DESPESAS OPERACIONAIS
+;0;Modelo;;;50;662;4.01.09.01.01;OUTRAS DESPESAS OPERACIONAIS
+;0;Modelo;;;50;663;4.01.09.01.01.01.00;(-) Variações Cambiais Passivas
+;0;Modelo;;;50;664;4.01.09.01.01.02.00;(-) Perdas Incorridas no Mercado de Renda Variável, exceto Day-Trade
+;0;Modelo;;;50;665;4.01.09.01.01.03.00;(-) Perdas em Operações Day-Trade
+;0;Modelo;;;50;666;4.01.09.01.01.04.00;(-) Outras Despesas de Aplicações
+;0;Modelo;;;50;667;4.01.09.01.01.05.00;(-) Prejuízos na Alienação de Participações Não Integrantes do Ativo Permanente
+;0;Modelo;;;50;668;4.01.09.01.01.06.00;(-) Resultados Negativos em Participações Societárias
+;0;Modelo;;;50;669;4.01.09.01.01.07.00;(-) Perdas em Operações Realizadas no Exterior
+;0;Modelo;;;50;670;4.01.09.01.01.08.00;Outras Despesas Operacionais
+;0;Modelo;;;50;671;4.03;OUTRAS RECEITAS E DESPESAS
+;0;Modelo;;;50;672;4.03.01;RECEITAS E DESPESAS NÃO OPERACIONAIS
+;0;Modelo;;;50;673;4.03.01.01;RECEITAS E DESPESAS NÃO OPERACIONAIS
+;0;Modelo;;;50;674;4.03.01.01.01;RECEITAS NÃO OPERACIONAIS
+;0;Modelo;;;50;675;4.03.01.01.01.01.00;Receitas de Alienações de Bens e Direitos do Ativo Permanente.
+;0;Modelo;;;50;676;4.03.01.01.01.02.00;Outras Receitas Não Operacionais
+;0;Modelo;;;50;677;4.03.02.01.01;DESPESAS NÃO OPERACIONAIS
+;0;Modelo;;;50;678;4.03.02.01.01.01.00;(-) Valor Contábil dos Bens e Direitos Alienados
+;0;Modelo;;;50;679;4.03.02.01.01.02.00;(-) Outras Despesas Não Operacionais
+;0;Modelo;1012008;;50;680;5;CUSTOS DE PRODUÇÃO
+;0;Modelo;1012008;;50;681;5.01;CUSTO DOS BENS E SERVIÇOS PRODUZIDOS
+;0;Modelo;1012008;;50;682;5.01.01;CUSTO DOS PRODUTOS DE FABRICAÇÃO PRÓPRIA PRODUZIDOS
+;0;Modelo;1012008;;50;683;5.01.01.01.00;Consumo de Insumos
+;0;Modelo;1012008;;50;684;5.01.01.04.00;Remuneração a Dirigentes de Ligados à Produção
+;0;Modelo;1012008;;50;685;5.01.01.05.00;Custo do Pessoal Aplicado na Produção
+;0;Modelo;1012008;;50;686;5.01.01.05.03;Planos de Poupança e Investimentos de Empregados Ligados à Produção
+;0;Modelo;1012008;;50;687;5.01.01.05.05;Fundo de Aposentadoria Programada Individual de Empregados Ligados à Produção
+;0;Modelo;1012008;;50;688;5.01.01.05.07;Plano de Previdência Privada de Empregados Ligados à Produção
+;0;Modelo;1012008;;50;689;5.01.01.05.09;Outros Gastos com Pessoal Ligado à Produção
+;0;Modelo;1012008;;50;690;5.01.01.06.00;Prestação de Serviços por Pessoa Física sem Vínculo Empregatício
+;0;Modelo;1012008;;50;691;5.01.01.07.00;Prestação de Serviço Pessoa Jurídica
+;0;Modelo;1012008;;50;692;5.01.01.08.00;Serviços Prestados por Cooperativa de Trabalho
+;0;Modelo;1012008;;50;693;5.01.01.09.00;Locação de Mão-de-obra
+;0;Modelo;1012008;;50;694;5.01.01.10.00;Encargos Sociais - Previdência Social
+;0;Modelo;1012008;;50;695;5.01.01.11.00;Encargos Sociais - FGTS
+;0;Modelo;1012008;;50;696;5.01.01.12.00;Encargos Sociais - Outros
+;0;Modelo;1012008;;50;697;5.01.01.13.00;Alimentação do Trabalhador
+;0;Modelo;1012008;;50;698;5.01.01.14.00;Manutenção e Reparo de Bens Aplicados na Produção
+;0;Modelo;1012008;;50;699;5.01.01.15.00;Arrendamento Mercantil
+;0;Modelo;1012008;;50;700;5.01.01.16.00;Encargos de Depreciação, Amortização e Exaustão
+;0;Modelo;1012008;;50;701;5.01.01.17.00;Constituição de Provisões
+;0;Modelo;1012008;;50;702;5.01.01.18.00;Serviços Prestados por Pessoa Física sem Vínculo Empregatício
+;0;Modelo;1012008;;50;703;5.01.01.19.00;Serviços Prestados Pessoa Jurídica
+;0;Modelo;1012008;;50;704;5.01.01.20.00;Royalties e Assistência Técnica - PAÍS
+;0;Modelo;1012008;;50;705;5.01.01.21.00;Royalties e Assistência Técnica - EXTERIOR
+;0;Modelo;1012008;;50;706;5.01.01.90.00;Outros Custos
+;0;Modelo;1012008;;50;707;5.01.03;CUSTO DOS SERVIÇOS PRODUZIDOS
+;0;Modelo;1012008;;50;708;5.01.03.02.00;Material Aplicado na Produção de Serviços
+;0;Modelo;1012008;;50;709;5.01.03.04.00;Remuneração a Dirigentes ligados à Produção de Serviços
+;0;Modelo;1012008;;50;710;5.01.03.05.00;Custo do Pessoal Aplicado na Produção de Serviços
+;0;Modelo;1012008;;50;711;5.01.03.05.03;Planos de Poupança e Investimentos de Empregados Ligados à Produção de Serviços
+;0;Modelo;1012008;;50;712;5.01.03.05.05;Fundo de Aposentadoria Programada Individual de Empregados Ligados à Produção de Serviços
+;0;Modelo;1012008;;50;713;5.01.03.05.07;Plano de Previdência Privada de Empregados Ligados à Produção de Serviços
+;0;Modelo;1012008;;50;714;5.01.03.05.09;Outros Gastos com Pessoal Ligado à Produção de Serviços
+;0;Modelo;1012008;;50;715;5.01.03.06.00;Prestação de Serviços por Pessoa Física sem Vínculo Empregatício
+;0;Modelo;1012008;;50;716;5.01.03.07.00;Prestação de Serviço Pessoa Jurídica
+;0;Modelo;1012008;;50;717;5.01.03.08.00;Serviços Prestados por Cooperativa de Trabalho
+;0;Modelo;1012008;;50;718;5.01.03.09.00;Locação de Mão-de-obra
+;0;Modelo;1012008;;50;719;5.01.03.10.00;Encargos Sociais - Previdência Social
+;0;Modelo;1012008;;50;720;5.01.03.11.00;Encargos Sociais - FGTS
+;0;Modelo;1012008;;50;721;5.01.03.12.00;Encargos Sociais - Outros
+;0;Modelo;1012008;;50;722;5.01.03.13.00;Alimentação do Trabalhador
+;0;Modelo;1012008;;50;723;5.01.03.14.00;Manutenção e Reparo de Bens Aplicados na Produção de Serviços
+;0;Modelo;1012008;;50;724;5.01.03.15.00;Arrendamento Mercantil
+;0;Modelo;1012008;;50;725;5.01.03.16.00;Encargos de Depreciação, Amortização e Exaustão
+;0;Modelo;1012008;;50;726;5.01.03.17.00;Constituição de Provisões
+;0;Modelo;1012008;;50;727;5.01.03.18.00;Serviços Prestados por Pessoa Física sem Vínculo Empregatício
+;0;Modelo;1012008;;50;728;5.01.03.19.00;Serviços Prestados Pessoa Jurídica
+;0;Modelo;1012008;;50;729;5.01.03.20.00;Royalties e Assistência Técnica - PAÍS
+;0;Modelo;1012008;;50;730;5.01.03.21.00;Royalties e Assistência Técnica - EXTERIOR
+;0;Modelo;1012008;;50;731;5.01.03.90.00;Outros Custos
+;0;Modelo;1012008;;50;732;5.01.05;CUSTO DOS PRODUTOS DE FABRICAÇÃO PRÓPRIA PRODUZIDOS DA ATIVIDADE RURAL
+;0;Modelo;1012008;;50;733;5.01.05.01.00;Consumo de Insumos
+;0;Modelo;1012008;;50;734;5.01.05.04.00;Remuneração a Dirigentes de Ligados à Produção
+;0;Modelo;1012008;;50;735;5.01.05.05.00;Custo do Pessoal Aplicado na Produção
+;0;Modelo;1012008;;50;736;5.01.05.05.03;Planos de Poupança e Investimentos de Empregados Ligados à Produção
+;0;Modelo;1012008;;50;737;5.01.05.05.05;Fundo de Aposentadoria Programada Individual de Empregados Ligados à Produção
+;0;Modelo;1012008;;50;738;5.01.05.05.07;Plano de Previdência Privada de Empregados Ligados à Produção
+;0;Modelo;1012008;;50;739;5.01.05.05.09;Outros Gastos com Pessoal Ligado à Produção
+;0;Modelo;1012008;;50;740;5.01.05.06.00;Prestação de Serviços por Pessoa Física sem Vínculo Empregatício
+;0;Modelo;1012008;;50;741;5.01.05.07.00;Prestação de Serviço Pessoa Jurídica
+;0;Modelo;1012008;;50;742;5.01.05.08.00;Serviços Prestados por Cooperativa de Trabalho
+;0;Modelo;1012008;;50;743;5.01.05.09.00;Locação de Mão-de-obra
+;0;Modelo;1012008;;50;744;5.01.05.10.00;Encargos Sociais - Previdência Social
+;0;Modelo;1012008;;50;745;5.01.05.11.00;Encargos Sociais - FGTS
+;0;Modelo;1012008;;50;746;5.01.05.12.00;Encargos Sociais - Outros
+;0;Modelo;1012008;;50;747;5.01.05.13.00;Alimentação do Trabalhador
+;0;Modelo;1012008;;50;748;5.01.05.14.00;Manutenção e Reparo de Bens Aplicados na Produção
+;0;Modelo;1012008;;50;749;5.01.05.15.00;Arrendamento Mercantil
+;0;Modelo;1012008;;50;750;5.01.05.16.00;Encargos de Depreciação, Amortização e Exaustão
+;0;Modelo;1012008;;50;751;5.01.05.17.00;Constituição de Provisões
+;0;Modelo;1012008;;50;752;5.01.05.18.00;Serviços Prestados por Pessoa Física sem Vínculo Empregatício
+;0;Modelo;1012008;;50;753;5.01.05.19.00;Serviços Prestados Pessoa Jurídica
+;0;Modelo;1012008;;50;754;5.01.05.20.00;Royalties e Assistência Técnica - PAÍS
+;0;Modelo;1012008;;50;755;5.01.05.21.00;Royalties e Assistência Técnica - EXTERIOR
+;0;Modelo;1012008;;50;756;5.01.05.90.00;Outros Custos

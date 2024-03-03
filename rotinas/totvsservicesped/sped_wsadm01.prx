@@ -1,0 +1,1145 @@
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "APWEBSRV.CH"
+
+USER FUNCTION __SPED_WSAD   ;  RETURN  // "dummy" function - Internal Use 
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Definicao das estruturas do Web Services                                ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+WSSTRUCT SPED_GenericStruct
+	WSDATA Code        AS String
+	WSDATA Description AS String
+ENDWSSTRUCT
+
+WSSTRUCT SPED_EntidadeReferencial
+	WSDATA Inscricao AS ARRAY OF SPED_GenericStruct OPTIONAL
+ENDWSSTRUCT
+
+WSSTRUCT SPED_Entidade
+	WSDATA ID_MATRIZ            AS String OPTIONAL
+	WSDATA CNPJ                 AS String OPTIONAL
+	WSDATA CPF                  AS String OPTIONAL
+	WSDATA IE                   AS String OPTIONAL
+	WSDATA UF                   AS STRING
+	WSDATA INDSITESP            AS STRING OPTIONAL
+	WSDATA COD_MUN              AS STRING 
+	WSDATA COD_PAIS             AS STRING 
+	WSDATA IM                   AS STRING OPTIONAL
+	WSDATA SUFRAMA              AS STRING OPTIONAL
+	WSDATA NIT                  AS STRING OPTIONAL
+	WSDATA NIRE                 AS STRING
+	WSDATA DTRE                 AS DATE   OPTIONAL
+	WSDATA NOME                 AS STRING
+	WSDATA FANTASIA             AS STRING OPTIONAL
+	WSDATA CEP                  AS STRING 
+	WSDATA ENDERECO             AS STRING
+	WSDATA NUM                  AS STRING OPTIONAL
+	WSDATA COMPL                AS STRING OPTIONAL
+	WSDATA BAIRRO               AS STRING OPTIONAL
+	WSDATA MUN                  AS STRING OPTIONAL	
+	WSDATA CEP_CP               AS STRING OPTIONAL
+	WSDATA CP                   AS STRING OPTIONAL
+	WSDATA DDD                  AS STRING OPTIONAL
+	WSDATA FONE                 AS STRING OPTIONAL
+	WSDATA FAX                  AS STRING OPTIONAL
+	WSDATA EMAIL                AS STRING OPTIONAL
+ENDWSSTRUCT
+
+WSSTRUCT SPED_Participante
+	WSDATA ID_ENT               AS STRING
+	WSDATA CNPJ                 AS STRING OPTIONAL
+	WSDATA CPF                  AS STRING OPTIONAL
+	WSDATA IE                   AS STRING OPTIONAL
+	WSDATA UF                   AS STRING 
+	WSDATA DTINI                AS DATE
+	WSDATA DTFIM                AS DATE   OPTIONAL
+	WSDATA COD_REL              AS STRING OPTIONAL
+	WSDATA NOME                 AS STRING
+	WSDATA COD_PAIS             AS STRING
+	WSDATA NIT                  AS STRING OPTIONAL
+	WSDATA COD_MUN              AS STRING
+	WSDATA IE_ST                AS STRING OPTIONAL
+	WSDATA IM                   AS STRING OPTIONAL
+	WSDATA SUFRAMA              AS STRING OPTIONAL
+	WSDATA DDD                  AS STRING OPTIONAL
+	WSDATA FONE                 AS STRING OPTIONAL
+	WSDATA FAX                  AS STRING OPTIONAL
+	WSDATA CEP                  AS STRING
+	WSDATA ENDERECO             AS STRING
+	WSDATA NUM                  AS STRING OPTIONAL
+	WSDATA COMPL                AS STRING OPTIONAL
+	WSDATA BAIRRO               AS STRING OPTIONAL
+	WSDATA MUN                  AS STRING OPTIONAL	
+	WSDATA CEP_CP               AS STRING OPTIONAL
+	WSDATA CP                   AS STRING OPTIONAL
+ENDWSSTRUCT
+
+WSSTRUCT SPED_SIGNATARIO
+	WSDATA ID_ENT               AS STRING
+	WSDATA ID_PART              AS STRING
+	WSDATA IDENT_QUALIF         AS STRING
+	WSDATA COD_ASSIN            AS STRING
+	WSDATA CRC                  AS STRING
+ENDWSSTRUCT
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Definicao do Web Service                                                ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+WSSERVICE SPEDADM	;
+	DESCRIPTION "<b>Serviço genérico de administração do SPED.</b><br><br>Este serviço permite a administração das tabelas comuns do projeto SPED, que são:<br><br> 1) Entidades - Cadastro das empresas/filiais;<br> 2) Participantes - Clientes, Fornecedores, contabilistas, administradores, entre outros;<br> 3) Signatários - Responsáveis pela escrituração digital;"  ;
+	NAMESPACE "http://webservices.totvs.com.br/spedadm.apw"
+
+	WSDATA USERTOKEN            AS String
+	WSDATA Empresa              AS SPED_Entidade
+	WSDATA Empresas             AS ARRAY OF SPED_Entidade
+	WSDATA Participante         AS SPED_Participante
+	WSDATA Signatario           AS SPED_Signatario  
+	WSDATA OutrasInscricoes     AS SPED_EntidadeReferencial
+	WSDATA ID_ENT               AS STRING
+	WSDATA ID_PART              AS STRING
+	WSDATA ID_MATRIZ            AS String OPTIONAL
+	WSDATA CNPJ                 AS String
+	WSDATA CPF                  AS String
+	WSDATA IE                   AS String
+	WSDATA UF                   AS STRING
+	WSDATA MSG	                AS STRING
+
+	WSMETHOD AdmEmpresas       DESCRIPTION "<b>Método de administracao da tabela de empresas.</b><br><br>Este método deve ser utilizado para informar ao sistema quais empresas estão habilitadas a utilização dos serviós do SPED. A identificação de uma empresa é realizada através da chave CNPJ,CPF,IE e UF, caso uma empresa altere estes dados, o sistema irá identificar uma nova empresa e portanto deve-se realizar o encerramento das escriturações antes de realizar esta operação.<br>Por questões de segurança e garantia da integridade da informação sugerimos que antes de executar cada serviço o código da entidade empresarial seja obtido através da execução deste método."
+	WSMETHOD GetAdmEmpresasID  DESCRIPTION "<b>Método de recupeção do ID da tabela de empresas.</b><br><br>Este método deve ser utilizado quando houver necessidade em saber-se o ID da entidade, sem a necessidade de atualização das tabelas internas."
+	WSMETHOD GetAdmEmpresas    DESCRIPTION "<b>Método de recupeção da tabela de empresas.</b><br><br>Este método deve ser utilizado quando houver necessidade em saber-se as informações da entidade."
+	WSMETHOD AdmClear		   DESCRIPTION "<b>Método de limpeza das tabelas de signatarios.</b><br><br>Este método deve ser utilizado para informar ao sistema quais são as pessoas responsáveis pela escrituração comercial e fiscal da entidade empresarial."
+	WSMETHOD AdmParticipantes  DESCRIPTION "<b>Método de administracao da tabela de participantes.</b><br><br>Este método deve ser utilizado para informar ao sistema quais são os participantes ( Cliente, Fornecedores, Transportadores, Contabilistas, Empresários, etc...) que estão relacionados a empresa. A identificação de um participantes é realizada através da chave CNPJ,CPF,IE e UF, caso um participante altere estes dados, o sistema irá identificar um novo participante.<br>Por questões de segurança e garantia da integridade da informação sugerimos que antes de executar cada serviço este método seja executado."
+	WSMETHOD AdmSignatarios    DESCRIPTION "<b>Método de administracao da tabela de signatarios.</b><br><br>Este método deve ser utilizado para informar ao sistema quais são as pessoas responsáveis pela escrituração comercial e fiscal da entidade empresarial."
+	
+ENDWSSERVICE
+
+WSMETHOD AdmEmpresas WSRECEIVE USERTOKEN,Empresa,OutrasInscricoes WSSEND ID_ENT WSSERVICE SPEDADM
+
+Local lRetorno := .T.
+Local nX       := 0
+Local dData    := Date()
+Local cQuery   := ""
+Local lArqCNPJ := GetSrvProfString("NFESPED_CNPJ","0")=="1"
+Local cArqCNPJ := "SPEDCNPJ.TXT"
+Local cCNPJs   := ""
+Private cVar := ""
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Inicializa o ambiente                                                   ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+InitSped()
+
+If lArqCNPJ 
+	If FT_FUSE(cArqCNPJ) > 0
+		FT_FGotop()
+		While !FT_FEOF()
+			cCNPJs += FT_FREADLN()+","
+			FT_FSKIP()
+	    EndDo
+	    FT_FUSE()
+	EndIf
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Parametros                                                              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+DEFAULT Self:Empresa:ID_MATRIZ            := ""
+DEFAULT Self:Empresa:CNPJ                 := ""
+DEFAULT Self:Empresa:CPF                  := ""
+DEFAULT Self:Empresa:IE                   := ""
+DEFAULT Self:Empresa:INDSITESP            := ""
+DEFAULT Self:Empresa:IM                   := ""
+DEFAULT Self:Empresa:SUFRAMA              := ""
+DEFAULT Self:Empresa:NIT                  := ""
+DEFAULT Self:Empresa:FANTASIA             := ""
+DEFAULT Self:Empresa:NUM                  := ""
+DEFAULT Self:Empresa:COMPL                := ""
+DEFAULT Self:Empresa:BAIRRO               := ""
+DEFAULT Self:Empresa:MUN                  := ""
+DEFAULT Self:Empresa:CEP_CP               := ""
+DEFAULT Self:Empresa:CP                   := ""
+DEFAULT Self:Empresa:DDD                  := ""
+DEFAULT Self:Empresa:FONE                 := ""
+DEFAULT Self:Empresa:FAX                  := ""
+DEFAULT Self:Empresa:EMAIL                := ""
+DEFAULT Self:Empresa:DTRE                 := CTOD("")
+
+If Self:UserToken == "TOTVS" .And. Select("SPED000")<>0
+	Self:Empresa:CNPJ := PadR(Self:Empresa:CNPJ,Len(SPED001->CNPJ))
+	Self:Empresa:CPF  := PadR(Self:Empresa:CPF,Len(SPED001->CPF))
+	Self:Empresa:IE   := PadR(Self:Empresa:IE,Len(SPED001->IE))
+	Self:Empresa:UF   := PadR(Self:Empresa:UF,Len(SPED001->UF))
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Analisa se os dados enviados estao corretos                             ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If lRetorno .And. (Empty(Self:Empresa:CNPJ) .And. Empty(Self:Empresa:CPF))
+		SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:Empresa:CNPJ+;
+					"CPF:"+Self:Empresa:CPF+;
+					"IE:"+Self:Empresa:IE+;
+					"UF:"+Self:Empresa:UF,;
+					"001 - CNPJ e CPF em branco")
+		lRetorno := .F.
+	EndIf	
+	If lRetorno .And. !Empty(Self:Empresa:CNPJ) .And. (Len(Self:Empresa:CNPJ)<=11 .Or. !CGC(Self:Empresa:CNPJ,"cVar",.F.))
+		SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:Empresa:CNPJ+;
+					"CPF:"+Self:Empresa:CPF+;
+					"IE:"+Self:Empresa:IE+;
+					"UF:"+Self:Empresa:UF,;
+					"002 - CNPJ invalido")
+		lRetorno := .F.
+	EndIf	
+	If lRetorno .And. !Empty(Self:Empresa:CPF) .And. (Len(Self:Empresa:CPF)>11 .Or. !CGC(Self:Empresa:CPF,"cVar",.F.))
+		SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:Empresa:CNPJ+;
+					"CPF:"+Self:Empresa:CPF+;
+					"IE:"+Self:Empresa:IE+;
+					"UF:"+Self:Empresa:UF,;
+					"003 - CPF invalido")
+		lRetorno := .F.
+	EndIf	
+	If lRetorno .And. (Empty(Self:Empresa:UF) .Or. aScan(GetUFCode(),{|x| x[1] == Self:Empresa:UF})==0)
+		SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:Empresa:CNPJ+;
+					"CPF:"+Self:Empresa:CPF+;
+					"IE:"+Self:Empresa:IE+;
+					"UF:"+Self:Empresa:UF,;
+					"004 - UF invalida")
+		lRetorno := .F.	
+	EndIf
+	If lRetorno .And. !Empty(Self:Empresa:IE) .And. !Empty(Self:Empresa:UF)
+		If !IE(Self:Empresa:IE,Self:Empresa:UF,.F.)
+			SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:Empresa:CNPJ+;
+					"CPF:"+Self:Empresa:CPF+;
+					"IE:"+Self:Empresa:IE+;
+					"UF:"+Self:Empresa:UF,;
+					"005 - IE invalida")
+			lRetorno := .F.
+		EndIf
+	EndIf
+	If lRetorno .And. (!Empty(Self:Empresa:INDSITESP) .And. !Self:Empresa:INDSITESP $ " 1234")
+		SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:Empresa:CNPJ+;
+					"CPF:"+Self:Empresa:CPF+;
+					"IE:"+Self:Empresa:IE+;
+					"UF:"+Self:Empresa:UF,;
+					"006 - Situacao especial invalida")
+		lRetorno := .F.
+	EndIf
+	If lRetorno .And. Empty(Self:Empresa:COD_MUN)
+		SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:Empresa:CNPJ+;
+					"CPF:"+Self:Empresa:CPF+;
+					"IE:"+Self:Empresa:IE+;
+					"UF:"+Self:Empresa:UF,;
+					"007 - Codigo do municipio não preenchido")
+		lRetorno := .F.
+	EndIf
+	If lRetorno .And. Empty(Self:Empresa:COD_PAIS)
+		SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:Empresa:CNPJ+;
+					"CPF:"+Self:Empresa:CPF+;
+					"IE:"+Self:Empresa:IE+;
+					"UF:"+Self:Empresa:UF,;
+					"008 - Codigo do pais não preenchido")
+		lRetorno := .F.
+	EndIf	
+	If lRetorno .And. Empty(Self:Empresa:NIRE)
+		SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:Empresa:CNPJ+;
+					"CPF:"+Self:Empresa:CPF+;
+					"IE:"+Self:Empresa:IE+;
+					"UF:"+Self:Empresa:UF,;
+					"009 - Número de inscrição no registro de empresas não preenchido")
+		lRetorno := .F.
+	EndIf
+	If lRetorno .And. Empty(Self:Empresa:NOME)
+		SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:Empresa:CNPJ+;
+					"CPF:"+Self:Empresa:CPF+;
+					"IE:"+Self:Empresa:IE+;
+					"UF:"+Self:Empresa:UF,;
+					"010 - Nome empresarial não preenchido")
+		lRetorno := .F.
+	EndIf
+	If lRetorno .And. Empty(Self:Empresa:CEP)
+		SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:Empresa:CNPJ+;
+					"CPF:"+Self:Empresa:CPF+;
+					"IE:"+Self:Empresa:IE+;
+					"UF:"+Self:Empresa:UF,;
+					"011 - CEP não preenchido")
+		lRetorno := .F.
+	EndIf
+	If lRetorno .And. Empty(Self:Empresa:ENDERECO)
+		SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:Empresa:CNPJ+;
+					"CPF:"+Self:Empresa:CPF+;
+					"IE:"+Self:Empresa:IE+;
+					"UF:"+Self:Empresa:UF,;
+					"012 - Logradouro não preenchido")
+		lRetorno := .F.
+	EndIf
+	If lRetorno .And. !Empty(Self:Empresa:ID_MATRIZ)
+		dbSelectArea("SPED001")
+		dbSetOrder(1)
+		If !MsSeek(Self:Empresa:ID_MATRIZ)		
+		SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:Empresa:CNPJ+;
+					"CPF:"+Self:Empresa:CPF+;
+					"IE:"+Self:Empresa:IE+;
+					"UF:"+Self:Empresa:UF,;
+					"013 - Codigo da Matriz invalido")
+			lRetorno := .F.
+		EndIf
+	EndIf
+	If lRetorno .And. Self:OutrasInscricoes <> Nil		
+		For nX := 1 To Len(Self:OutrasInscricoes:INSCRICAO)
+			If aScan(GetEntCode(),{|x| Self:OutrasInscricoes:INSCRICAO[nX]:Code==x[1]})==0
+				SetSoapFault("TOTVS SPED Services"+CRLF+;
+							"CNPJ:"+Self:Empresa:CNPJ+;
+							"CPF:"+Self:Empresa:CPF+;
+							"IE:"+Self:Empresa:IE+;
+							"UF:"+Self:Empresa:UF,;
+							"014 - Inscricoes das entidades referenciais invalidas")
+				lRetorno := .F.
+			EndIf
+		Next nX
+	EndIf
+	If lRetorno .And. lArqCNPJ .And. !(SubStr(Self:Empresa:CNPJ,1,8) $ cCNPJs .Or. Self:Empresa:CPF $ cCNPJs )
+			dbSelectArea("SPED001")
+			dbSetOrder(2)
+			If !MsSeek(PadR(Self:Empresa:CNPJ,Len(SPED001->CNPJ))+PadR(Self:Empresa:CPF,Len(SPED001->CPF))+PadR(Self:Empresa:IE,Len(SPED001->IE))+PadR(Self:Empresa:UF,Len(SPED001->UF)))
+				SetSoapFault("TOTVS SPED Services"+CRLF+;
+							"CNPJ:"+Self:Empresa:CNPJ+;
+							"CPF:"+Self:Empresa:CPF+;
+							"IE:"+Self:Empresa:IE+;
+							"UF:"+Self:Empresa:UF,;
+							"015 - Cliente não habilitado para operar na Totvs-Infra")
+				lRetorno := .F.
+			EndIf
+	EndIf
+	If lRetorno
+		Begin Transaction
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Verifica a operacao                                                     ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ		
+			dbSelectArea("SPED001")
+			dbSetOrder(2)
+			If MsSeek(PadR(Self:Empresa:CNPJ,Len(SPED001->CNPJ))+PadR(Self:Empresa:CPF,Len(SPED001->CPF))+PadR(Self:Empresa:IE,Len(SPED001->IE))+PadR(Self:Empresa:UF,Len(SPED001->UF)))
+				RecLock("SPED001",.F.)		
+			Else
+				RecLock("SPED001",.T.)
+				SPED001->CNPJ := Self:Empresa:CNPJ
+				SPED001->CPF  := Self:Empresa:CPF
+				SPED001->IE   := Self:Empresa:IE
+				SPED001->UF   := Self:Empresa:UF
+			EndIf
+			SPED001->INDSITESP := Self:Empresa:INDSITESP
+			SPED001->ID_MATRIZ := IIF(!Empty(Self:Empresa:ID_MATRIZ),Self:Empresa:ID_MATRIZ,SPED001->ID_MATRIZ)
+			SPED001->ID_ENT    := StrZero(SPED001->(RecNo()),6,0)
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Verifica se os dados cadastrais foram alterados                         ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			dbSelectArea("SPED001A")
+			BeginSql Alias "SQLSPED001A"	
+				SELECT A.DTULTALT
+				FROM SPED001A A
+				WHERE 
+				A.ID_ENT = %Exp:SPED001->ID_ENT% AND
+				A.DTULTALT = (SELECT MAX(DTULTALT)
+					FROM SPED001A B
+					WHERE
+					B.ID_ENT = %Exp:SPED001->ID_ENT% AND
+					B.%notdel%) AND
+				A.%notdel% AND 
+				A.COD_MUN = %Exp:Self:Empresa:COD_MUN% AND
+				A.COD_PAIS = %Exp:Self:Empresa:COD_PAIS% AND
+				A.IM = %Exp:Self:Empresa:IM% AND
+				A.SUFRAMA = %Exp:Self:Empresa:SUFRAMA% AND
+				A.NIT = %Exp:Self:Empresa:NIT% AND
+				A.NIRE = %Exp:Self:Empresa:NIRE% AND
+				A.DTRE = %Exp:Self:Empresa:DTRE% AND
+				A.NOME = %Exp:Self:Empresa:NOME% AND
+				A.FANTASIA = %Exp:Self:Empresa:FANTASIA% AND
+				A.CEP = %Exp:Self:Empresa:CEP% AND
+				A.ENDER = %Exp:Self:Empresa:ENDERECO% AND
+				A.NUM = %Exp:Self:Empresa:NUM% AND
+				A.COMPL = %Exp:Self:Empresa:COMPL% AND
+				A.BAIRRO = %Exp:Self:Empresa:BAIRRO% AND
+				A.MUN = %Exp:Self:Empresa:MUN% AND				
+				A.CEP_CP = %Exp:Self:Empresa:CEP_CP% AND
+				A.CP = %Exp:Self:Empresa:CP% AND
+				A.DDD = %Exp:Self:Empresa:DDD% AND
+				A.FONE = %Exp:Self:Empresa:FONE% AND
+				A.FAX = %Exp:Self:Empresa:FAX% AND
+				A.EMAIL = %Exp:Self:Empresa:EMAIL%
+			EndSql
+			TcSetField("SQLSPED001A","DTULTALT","D",8,0)
+			If SQLSPED001A->DTULTALT<>Date()
+				If Empty(SQLSPED001A->DTULTALT)
+					SQLSPED001A->(dbCloseArea())
+					BeginSql Alias "SQLSPED001A"	
+						SELECT MAX(DTULTALT) DTULTALT
+							FROM SPED001A B
+							WHERE
+							B.ID_ENT = %Exp:SPED001->ID_ENT% AND
+							B.%notdel%
+					EndSql
+					TcSetField("SQLSPED001A","DTULTALT","D",8,0)
+					If Empty(SQLSPED001A->DTULTALT)
+						dData := STOD("19800101")
+					Else
+						dData := Date()
+					EndIf
+				Else
+					dData := SQLSPED001A->DTULTALT
+				EndIf			
+				dbSelectArea("SPED001A")
+				dbSetOrder(1)
+				If MsSeek(SPED001->ID_ENT+DTOS(dData))
+					RecLock("SPED001A",.F.)
+				Else
+					RecLock("SPED001A",.T.)
+				EndIf
+				SPED001A->ID_ENT  := SPED001->ID_ENT
+				SPED001A->DTULTALT:= dData
+				SPED001A->COD_MUN := Self:Empresa:COD_MUN
+				SPED001A->COD_PAIS:= Self:Empresa:COD_PAIS
+				SPED001A->IM      := Self:Empresa:IM 
+				SPED001A->SUFRAMA := Self:Empresa:SUFRAMA
+				SPED001A->NIT     := Self:Empresa:NIT 
+				SPED001A->NIRE    := Self:Empresa:NIRE 
+				SPED001A->DTRE    := Self:Empresa:DTRE 
+				SPED001A->NOME    := Self:Empresa:NOME 
+				SPED001A->FANTASIA:= Self:Empresa:FANTASIA 
+				SPED001A->CEP     := Self:Empresa:CEP 
+				SPED001A->ENDER   := Self:Empresa:ENDERECO 
+				SPED001A->NUM     := Self:Empresa:NUM 
+				SPED001A->COMPL   := Self:Empresa:COMPL 
+				SPED001A->BAIRRO  := Self:Empresa:BAIRRO
+				SPED001A->MUN     := Self:Empresa:MUN
+				SPED001A->CEP_CP  := Self:Empresa:CEP_CP 
+				SPED001A->CP      := Self:Empresa:CP 
+				SPED001A->DDD     := Self:Empresa:DDD 
+				SPED001A->FONE    := Self:Empresa:FONE 
+				SPED001A->FAX     := Self:Empresa:FAX 
+				SPED001A->EMAIL   := Self:Empresa:EMAIL				
+			EndIf
+			SQLSPED001A->(dbCloseArea())
+			dbSelectArea("SPED001A")
+			cQuery := "DELETE "
+			cQuery += "FROM SPED001B "
+			cQuery += "WHERE "
+			cQuery += "ID_ENT='"+SPED001->ID_ENT+"'"
+			If TcSqlExec(cQuery) <> 0
+				SetSoapFault("TOTVS SPED Services",TcSqlError())
+				Return(FinishSped(.F.))
+			EndIf		
+			If lRetorno .And. Self:OutrasInscricoes<>Nil
+				For nX := 1 To Len(Self:OutrasInscricoes:INSCRICAO)
+					dbSelectArea("SPED001B")
+					dbSetOrder(1)
+					If MsSeek(SPED001->ID_ENT+Self:OutrasInscricoes:INSCRICAO[nX]:Code)
+						RecLock("SPED001B",.F.)
+					Else
+						RecLock("SPED001B",.T.)
+					EndIf
+					SPED001B->ID_ENT  := SPED001->ID_ENT
+					SPED001B->ENT_REF := Self:OutrasInscricoes:INSCRICAO[nX]:Code
+					SPED001B->INSCR   := Self:OutrasInscricoes:INSCRICAO[nX]:Description
+				Next nX
+			EndIf
+			If !Empty(Self:Empresa:IE)
+				RecLock("SPED001B",.T.)
+				SPED001B->ID_ENT  := SPED001->ID_ENT
+				SPED001B->ENT_REF := Self:Empresa:UF
+				SPED001B->INSCR   := Self:Empresa:IE
+			Else
+				RecLock("SPED001B",.T.)
+				SPED001B->ID_ENT  := SPED001->ID_ENT
+				SPED001B->ENT_REF := "00"
+				SPED001B->INSCR   := ""
+			EndIf
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Preenche a variavel de retorno do WS                                    ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			Self:ID_ENT := SPED001->ID_ENT
+		End Transaction
+	EndIf
+Else
+	If Select("SPED000")==0
+		SetSoapFault("TOTVS SPED Services","Bad configuration")
+	Else	
+		SetSoapFault("TOTVS SPED Services","Invalid Token")
+	EndIf
+	lRetorno := .F.
+EndIf
+Return(FinishSped(lRetorno))
+
+WSMETHOD GetAdmEmpresasID WSRECEIVE USERTOKEN,CNPJ,CPF,IE,UF WSSEND ID_ENT WSSERVICE SPEDADM
+
+Local lRetorno := .T.
+Local nX       := 0
+Local dData    := Date()
+Local cQuery   := ""
+Private cVar := ""
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Inicializa o ambiente                                                   ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+InitSped()
+
+If Self:UserToken == "TOTVS" .And. Select("SPED000")<>0
+	Self:CNPJ := PadR(Self:CNPJ,Len(SPED001->CNPJ))
+	Self:CPF  := PadR(Self:CPF,Len(SPED001->CPF))
+	Self:IE   := PadR(Self:IE,Len(SPED001->IE))
+	Self:UF   := PadR(Self:UF,Len(SPED001->UF))
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Analisa se os dados enviados estao corretos                             ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If lRetorno .And. (Empty(Self:CNPJ) .And. Empty(Self:CPF))
+		SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:CNPJ+;
+					"CPF:"+Self:CPF+;
+					"IE:"+Self:IE+;
+					"UF:"+Self:UF,;
+					"001 - CNPJ e CPF em branco")
+		lRetorno := .F.
+	EndIf	
+	If lRetorno .And. !Empty(Self:CNPJ) .And. (Len(Self:CNPJ)<=11 .Or. !CGC(Self:CNPJ,"cVar",.F.))
+		SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:CNPJ+;
+					"CPF:"+Self:CPF+;
+					"IE:"+Self:IE+;
+					"UF:"+Self:UF,;
+					"002 - CNPJ invalido")
+		lRetorno := .F.
+	EndIf	
+	If lRetorno .And. !Empty(Self:CPF) .And. (Len(Self:CPF)>11 .Or. !CGC(Self:CPF,"cVar",.F.))
+		SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:CNPJ+;
+					"CPF:"+Self:CPF+;
+					"IE:"+Self:IE+;
+					"UF:"+Self:UF,;
+					"003 - CPF invalido")
+		lRetorno := .F.
+	EndIf	
+	If lRetorno .And. (Empty(Self:UF) .Or. aScan(GetUFCode(),{|x| x[1] == Self:UF})==0)
+		SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:CNPJ+;
+					"CPF:"+Self:CPF+;
+					"IE:"+Self:IE+;
+					"UF:"+Self:UF,;
+					"004 - UF invalida")
+		lRetorno := .F.	
+	EndIf
+	If lRetorno .And. !Empty(Self:IE) .And. !Empty(Self:UF)
+		If !IE(Self:IE,Self:UF,.F.)
+			SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:CNPJ+;
+					"CPF:"+Self:CPF+;
+					"IE:"+Self:IE+;
+					"UF:"+Self:UF,;
+					"005 - IE invalida")
+			lRetorno := .F.
+		EndIf
+	EndIf
+	If lRetorno
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Verifica a operacao                                                     ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ		
+		dbSelectArea("SPED001")
+		dbSetOrder(2)
+		If MsSeek(PadR(Self:CNPJ,Len(SPED001->CNPJ))+PadR(Self:CPF,Len(SPED001->CPF))+PadR(Self:IE,Len(SPED001->IE))+PadR(Self:UF,Len(SPED001->UF)))
+			Self:ID_ENT := SPED001->ID_ENT
+		Else
+			Self:ID_ENT := ""
+			SetSoapFault("TOTVS SPED Services"+CRLF+;
+								"CNPJ:"+Self:CNPJ+;
+								"CPF:"+Self:CPF+;
+								"IE:"+Self:IE+;
+								"UF:"+Self:UF,;
+								"006 - Empresa não registrada.")
+			lRetorno := .F.
+		EndIf
+	EndIf
+Else
+	If Select("SPED000")==0
+		SetSoapFault("TOTVS SPED Services","Bad configuration")
+	Else	
+		SetSoapFault("TOTVS SPED Services","Invalid Token")
+	EndIf
+	lRetorno := .F.
+EndIf
+Return(FinishSped(lRetorno))
+
+WSMETHOD GetAdmEmpresas WSRECEIVE USERTOKEN,CNPJ,CPF,IE,UF WSSEND Empresas WSSERVICE SPEDADM
+
+Local lRetorno := .T.
+Local nX       := 0
+Local dData    := Date()
+Local cQuery   := ""
+Private cVar := ""
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Inicializa o ambiente                                                   ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+InitSped()
+
+If Self:UserToken == "TOTVS" .And. Select("SPED000")<>0
+	If Len(AllTrim(Self:CNPJ)) == 8
+		Self:CNPJ := PadR(Self:CNPJ,8)
+	Else
+		Self:CNPJ := PadR(Self:CNPJ,Len(SPED001->CNPJ))
+	EndIf
+	Self:CPF  := PadR(Self:CPF,Len(SPED001->CPF))
+	Self:IE   := PadR(Self:IE,Len(SPED001->IE))
+	Self:UF   := PadR(Self:UF,Len(SPED001->UF))
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Analisa se os dados enviados estao corretos                             ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If lRetorno .And. (Empty(Self:CNPJ) .And. Empty(Self:CPF))
+		SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:CNPJ+;
+					"CPF:"+Self:CPF+;
+					"IE:"+Self:IE+;
+					"UF:"+Self:UF,;
+					"001 - CNPJ e CPF em branco")
+		lRetorno := .F.
+	EndIf	
+	If lRetorno .And. !Empty(Self:CNPJ) .And. ((Len(Self:CNPJ)==14 .And. !CGC(Self:CNPJ,"cVar",.F.)) .Or. (Len(Self:CNPJ)<>8 .And. Len(Self:CNPJ)<>14))
+		SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:CNPJ+;
+					"CPF:"+Self:CPF+;
+					"IE:"+Self:IE+;
+					"UF:"+Self:UF,;
+					"002 - CNPJ invalido")
+		lRetorno := .F.
+	EndIf
+	If lRetorno .And. !Empty(Self:CPF) .And. (Len(Self:CPF)>11 .Or. !CGC(Self:CPF,"cVar",.F.))
+		SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:CNPJ+;
+					"CPF:"+Self:CPF+;
+					"IE:"+Self:IE+;
+					"UF:"+Self:UF,;
+					"003 - CPF invalido")
+		lRetorno := .F.
+	EndIf	
+	If lRetorno .And. (!Empty(Self:UF) .And. aScan(GetUFCode(),{|x| x[1] == Self:UF})==0)
+		SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:CNPJ+;
+					"CPF:"+Self:CPF+;
+					"IE:"+Self:IE+;
+					"UF:"+Self:UF,;
+					"004 - UF invalida")
+		lRetorno := .F.	
+	EndIf
+	If lRetorno .And. !Empty(Self:IE) .And. !Empty(Self:UF)
+		If !IE(Self:IE,Self:UF,.F.)
+			SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:CNPJ+;
+					"CPF:"+Self:CPF+;
+					"IE:"+Self:IE+;
+					"UF:"+Self:UF,;
+					"005 - IE invalida")
+			lRetorno := .F.
+		EndIf
+	EndIf
+	If lRetorno
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Verifica a operacao                                                     ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ		
+		dbSelectArea("SPED001")
+		dbSetOrder(1)
+		DbGotop()
+		While !Eof() 
+			If (Empty(Self:CNPJ) .Or. SubStr(SPED001->CNPJ,1,Len(Self:CNPJ)) == PadR(Self:CNPJ,Len(Self:CNPJ))) .And.;
+				(Empty(Self:CPF) .Or. SPED001->CPF == PadR(Self:CPF,Len(SPED001->CPF))) .And.;
+				(Empty(Self:IE) .Or. AllTrim(Self:IE) == AllTrim(SPED001->IE)) .And.;
+				(Empty(Self:UF) .Or. AllTrim(Self:UF) == SPED001->UF)
+			
+				aadd(Self:Empresas,WsClassNew("SPED_Entidade"))
+				
+				Atail(Self:Empresas):CNPJ      := SPED001->CNPJ
+				Atail(Self:Empresas):CPF       := SPED001->CPF
+				Atail(Self:Empresas):IE        := SPED001->IE
+				Atail(Self:Empresas):UF        := SPED001->UF
+				Atail(Self:Empresas):INDSITESP := SPED001->INDSITESP
+				Atail(Self:Empresas):ID_MATRIZ := SPED001->ID_MATRIZ
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³Recupera os dados cadatrais                                             ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				dbSelectArea("SPED001A")
+				BeginSql Alias "SQLSPED001A"	
+					SELECT MAX(DTULTALT) DTULTALT
+					FROM SPED001A
+					WHERE 
+					ID_ENT = %Exp:SPED001->ID_ENT% AND 	%notdel%
+				EndSql				
+				TcSetField("SQLSPED001A","DTULTALT","D",8,0)
+				dData := DTULTALT				
+				SQLSPED001A->(dbCloseArea())
+				
+				
+				dbSelectArea("SPED001A")
+				dbSetOrder(1)
+				If MsSeek(SPED001->ID_ENT+DTOS(dData))
+								
+					Atail(Self:Empresas):COD_MUN := SPED001A->COD_MUN
+					Atail(Self:Empresas):COD_PAIS:= SPED001A->COD_PAIS
+					Atail(Self:Empresas):IM      := SPED001A->IM
+					Atail(Self:Empresas):SUFRAMA := SPED001A->SUFRAMA
+					Atail(Self:Empresas):NIT     := SPED001A->NIT
+					Atail(Self:Empresas):NIRE    := SPED001A->NIRE
+					Atail(Self:Empresas):DTRE    := SPED001A->DTRE
+					Atail(Self:Empresas):NOME    := SPED001A->NOME
+					Atail(Self:Empresas):FANTASIA:= SPED001A->FANTASIA
+					Atail(Self:Empresas):CEP     := SPED001A->CEP
+					Atail(Self:Empresas):ENDERECO:= SPED001A->ENDER
+					Atail(Self:Empresas):NUM     := SPED001A->NUM
+					Atail(Self:Empresas):COMPL   := SPED001A->COMPL
+					Atail(Self:Empresas):BAIRRO  := SPED001A->BAIRRO
+					Atail(Self:Empresas):MUN     := SPED001A->MUN
+					Atail(Self:Empresas):CEP_CP  := SPED001A->CEP_CP
+					Atail(Self:Empresas):CP      := SPED001A->CP
+					Atail(Self:Empresas):DDD     := SPED001A->DDD
+					Atail(Self:Empresas):FONE    := SPED001A->FONE
+					Atail(Self:Empresas):FAX     := SPED001A->FAX
+					Atail(Self:Empresas):EMAIL   := SPED001A->EMAIL
+				EndIf
+			EndIf
+			dbSelectArea("SPED001")
+			DbSkip()				
+		EndDo
+		If Empty(Self:Empresas)
+			SetSoapFault("TOTVS SPED Services"+CRLF+;
+								"CNPJ:"+Self:CNPJ+;
+								"CPF:"+Self:CPF+;
+								"IE:"+Self:IE+;
+								"UF:"+Self:UF,;
+								"006 - Empresa não registrada.")
+			lRetorno := .F.
+		EndIf
+	EndIf
+Else
+	If Select("SPED000")==0
+		SetSoapFault("TOTVS SPED Services","Bad configuration")
+	Else	
+		SetSoapFault("TOTVS SPED Services","Invalid Token")
+	EndIf
+	lRetorno := .F.
+EndIf
+Return(FinishSped(lRetorno))
+
+WSMETHOD AdmParticipantes WSRECEIVE USERTOKEN,Participante WSSEND ID_PART WSSERVICE SPEDADM
+
+Local lRetorno := .T.
+Local nX       := 0
+Private cVar := ""
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Inicializa o ambiente                                                   ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+InitSped()
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Parametros                                                              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If Self:UserToken == "TOTVS" .And. Select("SPED000")<>0
+	Self:Participante:CNPJ   := PadR(Self:Participante:CNPJ,Len(SPED002->CNPJ))
+	Self:Participante:CPF    := PadR(Self:Participante:CPF,Len(SPED002->CPF))
+	Self:Participante:IE     := PadR(Self:Participante:IE,Len(SPED002->IE))
+	Self:Participante:UF     := PadR(Self:Participante:UF,Len(SPED002->UF))
+	Self:Participante:COD_REL:= PadR(Self:Participante:COD_REL,Len(SPED002->COD_REL))
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Analisa se os dados enviados estao corretos                             ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If lRetorno .And. (Empty(Self:Participante:CNPJ) .And. Empty(Self:Participante:CPF))
+		SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:Participante:CNPJ+;
+					"CPF:"+Self:Participante:CPF+;
+					"IE:"+Self:Participante:IE+;
+					"UF:"+Self:Participante:UF,;
+					"001 - CNPJ e CPF em branco")
+		lRetorno := .F.
+	EndIf	
+	If lRetorno .And. !Empty(Self:Participante:CNPJ) .And. (Len(Self:Participante:CNPJ)<=11 .Or. !CGC(Self:Participante:CNPJ,"cVar",.F.))
+		SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:Participante:CNPJ+;
+					"CPF:"+Self:Participante:CPF+;
+					"IE:"+Self:Participante:IE+;
+					"UF:"+Self:Participante:UF,;
+					"002 - CNPJ invalido")
+		lRetorno := .F.
+	EndIf
+	If lRetorno .And. !Empty(Self:Participante:CPF) .And. (Len(Self:Participante:CPF)>11 .Or. !CGC(Self:Participante:CPF,"cVar",.F.))
+		SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:Participante:CNPJ+;
+					"CPF:"+Self:Participante:CPF+;
+					"IE:"+Self:Participante:IE+;
+					"UF:"+Self:Participante:UF,;
+					"003 - CPF invalido")
+		lRetorno := .F.
+	EndIf
+	If lRetorno .And. (Empty(Self:Participante:UF) .Or. aScan(GetUFCode(),{|x| x[1] == Self:Participante:UF})==0)
+		SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:Participante:CNPJ+;
+					"CPF:"+Self:Participante:CPF+;
+					"IE:"+Self:Participante:IE+;
+					"UF:"+Self:Participante:UF,;
+					"004 - UF invalida")
+		lRetorno := .F.
+	EndIf
+	If lRetorno .And. !Empty(Self:Participante:IE) .And. !Empty(Self:Participante:UF)
+		If !IE(Self:Participante:IE,Self:Participante:UF,.F.)
+			SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:Participante:CNPJ+;
+					"CPF:"+Self:Participante:CPF+;
+					"IE:"+Self:Participante:IE+;
+					"UF:"+Self:Participante:UF,;
+					"005 - IE invalida")
+			lRetorno := .F.
+		EndIf
+	EndIf
+	If lRetorno .And. Empty(Self:Participante:COD_MUN)
+		SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:Participante:CNPJ+;
+					"CPF:"+Self:Participante:CPF+;
+					"IE:"+Self:Participante:IE+;
+					"UF:"+Self:Participante:UF,;
+					"006 - Codigo do municipio não preenchido")
+		lRetorno := .F.
+	EndIf
+	If lRetorno .And. Empty(Self:Participante:COD_PAIS)
+		SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:Participante:CNPJ+;
+					"CPF:"+Self:Participante:CPF+;
+					"IE:"+Self:Participante:IE+;
+					"UF:"+Self:Participante:UF,;
+					"007 - Codigo do pais não preenchido")
+		lRetorno := .F.
+	EndIf	
+	If lRetorno .And. Empty(Self:Participante:NOME)
+		SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:Participante:CNPJ+;
+					"CPF:"+Self:Participante:CPF+;
+					"IE:"+Self:Participante:IE+;
+					"UF:"+Self:Participante:UF,;
+					"008 - Nome empresarial não preenchido")
+		lRetorno := .F.
+	EndIf
+	If lRetorno .And. Empty(Self:Participante:CEP)
+		SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:Participante:CNPJ+;
+					"CPF:"+Self:Participante:CPF+;
+					"IE:"+Self:Participante:IE+;
+					"UF:"+Self:Participante:UF,;
+					"009 - CEP não preenchido")
+		lRetorno := .F.
+	EndIf
+	If lRetorno .And. Empty(Self:Participante:ENDERECO)
+		SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:Participante:CNPJ+;
+					"CPF:"+Self:Participante:CPF+;
+					"IE:"+Self:Participante:IE+;
+					"UF:"+Self:Participante:UF,;
+					"011 - Logradouro não preenchido")
+		lRetorno := .F.
+	EndIf
+	If lRetorno 
+		If !Empty(Self:Participante:ID_ENT)
+			dbSelectArea("SPED001")
+			dbSetOrder(1)
+			If !MsSeek(Self:Participante:ID_ENT)
+				SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:Participante:CNPJ+;
+					"CPF:"+Self:Participante:CPF+;
+					"IE:"+Self:Participante:IE+;
+					"UF:"+Self:Participante:UF,;
+					"012 - Codigo de entidade invalido")
+				lRetorno := .F.
+			EndIf
+		Else
+			SetSoapFault("TOTVS SPED Services"+CRLF+;
+					"CNPJ:"+Self:Participante:CNPJ+;
+					"CPF:"+Self:Participante:CPF+;
+					"IE:"+Self:Participante:IE+;
+					"UF:"+Self:Participante:UF,;
+					"013 - Codigo de entidade em branco")
+			lRetorno := .F.		
+		EndIf
+	EndIf
+	If lRetorno
+		Begin Transaction
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Verifica a operacao                                                     ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ		
+			dbSelectArea("SPED002")
+			dbSetOrder(2)
+			If MsSeek(Self:Participante:ID_ENT+Self:Participante:CNPJ+Self:Participante:CPF+Self:Participante:IE+Self:Participante:UF+Self:Participante:COD_REL)
+				RecLock("SPED002",.F.)
+			Else
+				dbSelectArea("SPED002")
+				dbSetOrder(2)
+				If MsSeek(Self:Participante:ID_ENT+Self:Participante:CNPJ+Self:Participante:CPF+Self:Participante:IE+Self:Participante:UF)
+					While !Eof() .And. SPED002->ID_ENT ==  Self:Participante:ID_ENT .And.;
+							SPED002->CNPJ == Self:Participante:CNPJ .And.;
+							SPED002->CPF == Self:Participante:CPF .And.;
+							SPED002->IE == Self:Participante:IE .And.;
+							SPED002->UF == Self:Participante:UF
+							
+						If Empty(SPED002->DTFIM)
+							RecLock("SPED002",.F.)
+							SPED002->DTFIM := Self:Participante:DTINI--
+							MsUnLock()
+						EndIf							
+						dbSelectArea("SPED002")
+						dbSkip()
+				    EndDo
+				EndIf
+				RecLock("SPED002",.T.)
+				SPED002->CNPJ     := Self:Participante:CNPJ
+				SPED002->CPF      := Self:Participante:CPF
+				SPED002->IE       := Self:Participante:IE
+				SPED002->UF       := Self:Participante:UF
+				SPED002->COD_REL  := Self:Participante:COD_REL
+			EndIf
+			SPED002->ID_ENT  := Self:Participante:ID_ENT
+			SPED002->ID_PART:= StrZero(SPED002->(RecNo()),6,0)
+			SPED002->DTINI   := Self:Participante:DTINI
+			SPED002->DTFIM   := Self:Participante:DTFIM
+			
+			dData := Date()
+
+			dbSelectArea("SPED002A")
+			dbSetOrder(1)
+			If MsSeek(SPED002->ID_ENT+SPED002->ID_PART+DTOS(dData))
+				RecLock("SPED002A",.F.)
+			Else
+				RecLock("SPED002A",.T.)
+			EndIf
+			SPED002A->ID_ENT  := SPED002->ID_ENT
+			SPED002A->ID_PART := SPED002->ID_PART
+			SPED002A->DTULTALT:= dData
+			SPED002A->NOME    := Self:Participante:NOME 
+			SPED002A->NIT     := Self:Participante:NIT
+			SPED002A->IE_ST   := Self:Participante:IE_ST
+			SPED002A->IM      := Self:Participante:IM 
+			SPED002A->SUFRAMA := Self:Participante:SUFRAMA
+			SPED002A->DDD     := Self:Participante:DDD 
+			SPED002A->FONE    := Self:Participante:FONE 
+			SPED002A->FAX     := Self:Participante:FAX
+
+			dbSelectArea("SPED002A")
+
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Verifica se os dados de localizacao foram alterados                     ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			dbSelectArea("SPED002B")
+			dbSetOrder(1)
+			If MsSeek(SPED002->ID_ENT+SPED002->ID_PART+DTOS(dData))
+				RecLock("SPED002B",.F.)
+			Else
+				RecLock("SPED002B",.T.)
+			EndIf
+			SPED002B->ID_ENT  := SPED002->ID_ENT
+			SPED002B->ID_PART := SPED002->ID_PART
+			SPED002B->DTULTALT:= dData
+			SPED002B->COD_MUN := Self:Participante:COD_MUN 
+			SPED002B->COD_PAIS:= Self:Participante:COD_PAIS
+			SPED002B->CEP     := Self:Participante:CEP 
+			SPED002B->ENDER   := Self:Participante:ENDERECO 
+			SPED002B->NUM     := Self:Participante:NUM 
+			SPED002B->COMPL   := Self:Participante:COMPL 
+			SPED002B->BAIRRO  := Self:Participante:BAIRRO 
+			SPED002B->MUN     := Self:Participante:MUN
+			SPED002B->CEP_CP  := Self:Participante:CEP_CP 
+			SPED002B->CP      := Self:Participante:CP
+
+			dbSelectArea("SPED001B")
+
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Preenche a variavel de retorno do WS                                    ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			Self:ID_PART := SPED002->ID_PART
+
+		End Transaction
+	EndIf
+Else
+	If Select("SPED000")==0
+		SetSoapFault("TOTVS SPED Services","Bad configuration")
+	Else	
+		SetSoapFault("TOTVS SPED Services","Invalid Token")
+	EndIf
+	lRetorno := .F.
+EndIf
+Return(FinishSped(lRetorno))
+
+WSMETHOD AdmSignatarios WSRECEIVE USERTOKEN,Signatario WSSEND ID_PART WSSERVICE SPEDADM
+
+Local lRetorno := .T.
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Inicializa o ambiente                                                   ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+InitSped()
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Parametros                                                              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If Self:UserToken == "TOTVS" .And. Select("SPED000")<>0
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Analisa se os dados enviados estao corretos                             ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If lRetorno 
+		If !Empty(Self:Signatario:ID_ENT)
+			dbSelectArea("SPED001")
+			dbSetOrder(1)
+			If !MsSeek(Self:Signatario:ID_ENT)
+				SetSoapFault("TOTVS SPED Services","001 - Codigo de entidade invalido")
+				lRetorno := .F.
+			EndIf
+		Else
+			SetSoapFault("TOTVS SPED Services",	"002 - Codigo de entidade em branco")
+			lRetorno := .F.		
+		EndIf
+	EndIf
+	If lRetorno 
+		dbSelectArea("SPED002")
+		dbSetOrder(1)
+		If !MsSeek(Self:Signatario:ID_ENT+Self:Signatario:ID_PART)
+ 			SetSoapFault("TOTVS SPED Services","003 - Codigo do participante invalido")
+			lRetorno := .F.
+		EndIf
+	EndIf
+	If lRetorno
+		Begin Transaction
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Verifica a operacao                                                     ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ		
+		dbSelectArea("SPED002C")
+		dbSetOrder(1)
+		If MsSeek(Self:Signatario:ID_ENT+Self:Signatario:ID_PART)
+			RecLock("SPED002C",.F.)
+		Else
+			RecLock("SPED002C",.T.)
+		EndIf
+
+		SPED002C->ID_ENT  := Self:Signatario:ID_ENT
+		SPED002C->ID_PART := Self:Signatario:ID_PART
+		SPED002C->QUALIF  := Self:Signatario:IDENT_QUALIF
+		SPED002C->CODASSIN:= Self:Signatario:COD_ASSIN
+		SPED002C->CRC     := Self:Signatario:CRC
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Preenche a variavel de retorno do WS                                    ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		Self:ID_PART := SPED002C->ID_PART
+
+		End Transaction
+	ENDIF
+Else
+	If Select("SPED000")==0
+		SetSoapFault("TOTVS SPED Services","Bad configuration")
+	Else	
+		SetSoapFault("TOTVS SPED Services","Invalid Token")
+	EndIf
+	lRetorno := .F.
+EndIf
+
+Return(FinishSped(lRetorno))
+
+WSMETHOD Admclear WSRECEIVE USERTOKEN, ID_ENT WSSEND MSG WSSERVICE SPEDADM
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Inicializa o ambiente                                                   ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+InitSped()
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Parametros                                                              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If Self:UserToken == "TOTVS" .And. Select( "SPED000" )<>0
+
+	Begin Transaction
+
+	IF TcSqlExec( "DELETE FROM SPED002 WHERE SPED002.ID_ENT = '" + Self:ID_ENT + "'" ) <> 0
+		SetSoapFault("TOTVS SPED Services: SPED002 ",TcSqlError())
+		MSG := "Erro ao limpar o SPED002"
+		Return(FinishSped(.F.))
+	Endif
+
+	IF TcSqlExec( "DELETE FROM SPED002A WHERE SPED002A.ID_ENT = '" + Self:ID_ENT + "'" ) <> 0
+		SetSoapFault("TOTVS SPED Services: SPED002A ",TcSqlError())
+		MSG := "Erro ao limpar o SPED002A"
+		Return(FinishSped(.F.))
+	Endif
+
+	IF TcSqlExec( "DELETE FROM SPED002B WHERE SPED002B.ID_ENT = '" + Self:ID_ENT + "'" ) <> 0
+		SetSoapFault("TOTVS SPED Services: SPED002B ",TcSqlError())
+		MSG := "Erro ao limpar o SPED002B"
+		Return(FinishSped(.F.))
+	Endif
+
+	IF TcSqlExec( "DELETE FROM SPED002C WHERE SPED002C.ID_ENT = '" + Self:ID_ENT + "'" ) <> 0
+		SetSoapFault("TOTVS SPED Services: SPED002C ",TcSqlError())
+		MSG := "Erro ao limpar o SPED002C"
+		Return(FinishSped(.F.))
+	Endif
+
+	IF TcSqlExec( "DELETE FROM SPED100 WHERE SPED100.ID_ENT = '" + Self:ID_ENT + "'" ) <> 0
+		SetSoapFault("TOTVS SPED Services: SPED100 ",TcSqlError())
+		MSG := "Erro ao limpar a tabela SPED100."
+		Return(FinishSped(.F.))
+	Endif
+
+	IF TcSqlExec( "DELETE FROM SPED100A WHERE SPED100A.ID_ENT = '" + Self:ID_ENT + "'" ) <> 0
+		SetSoapFault("TOTVS SPED Services: SPED100A ",TcSqlError())
+		MSG :="Erro ao limpar a tabela SPED100A."
+		Return(FinishSped(.F.))
+	Endif
+	
+	IF TcSqlExec( "DELETE FROM SPED110 WHERE SPED110.ID_ENT = '" + Self:ID_ENT + "'" ) <> 0
+		SetSoapFault("TOTVS SPED Services: SPED110 ",TcSqlError())
+		MSG :="Erro ao limpar a tabela SPED110."
+		Return(FinishSped(.F.))
+	Endif
+
+	IF TcSqlExec( "DELETE FROM SPED120 WHERE SPED120.ID_ENT = '" + Self:ID_ENT + "'" ) <> 0
+		SetSoapFault("TOTVS SPED Services: SPED120 ",TcSqlError())
+		MSG := "Erro ao limpar a tabela SPED120."
+		Return(FinishSped(.F.))
+	Endif
+
+	IF TcSqlExec( "DELETE FROM SPED140 WHERE SPED140.ID_ENT = '" + Self:ID_ENT + "'" ) <> 0
+		SetSoapFault("TOTVS SPED Services: SPED140 ",TcSqlError())
+		MSG := "Erro ao limpar a tabela SPED140."
+		Return(FinishSped(.F.))
+	Endif
+
+	IF TcSqlExec( "DELETE FROM SPED130 WHERE SPED130.ID_ENT = '" + Self:ID_ENT + "'" ) <> 0
+		SetSoapFault("TOTVS SPED Services: SPED130 ",TcSqlError())
+		MSG := "Erro ao limpar a tabela SPED130."
+		Return(FinishSped(.F.))
+	Endif
+
+	IF TcSqlExec( "DELETE FROM SPED200 WHERE SPED200.ID_ENT = '" + Self:ID_ENT + "'" ) <> 0
+		SetSoapFault("TOTVS SPED Services: SPED200 ",TcSqlError())
+		MSG :="TOTVS SPED Services"
+		Return(FinishSped(.F.))
+	Endif
+
+	IF TcSqlExec( "DELETE FROM SPED210 WHERE SPED210.ID_ENT = '" + Self:ID_ENT + "'" ) <> 0
+		SetSoapFault("TOTVS SPED Services: SPED210 ",TcSqlError())
+		MSG :="TOTVS SPED Services"
+		Return(FinishSped(.F.))
+	Endif
+
+	End Transaction
+Endif
+	
+Return(FinishSped(.T.))
+
+

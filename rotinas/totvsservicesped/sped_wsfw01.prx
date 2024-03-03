@@ -1,0 +1,119 @@
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "APWEBSRV.CH"
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Definicao das estruturas do Web Services                                ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+WSSTRUCT SPED_GENERICPARAMETER 
+	WSDATA Variable    AS STRING
+	WSDATA Value       AS STRING
+ENDWSSTRUCT
+
+WSSTRUCT SPED_PARAMETERS
+	WSDATA Info       AS ARRAY OF SPED_GENERICPARAMETER
+ENDWSSTRUCT
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Definicao do Web Service                                                ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+WSSERVICE SPEDLAYOUTTAX ;
+	DESCRIPTION "Serviço genérico para exportação de informaçoes fiscais baseadas em xml "  ;
+	NAMESPACE "http://webservices.totvs.com.br/spedlayouttax.apw"
+	
+WSDATA USERTOKEN            AS String
+WSDATA Version              AS String
+WSDATA MSG                  AS String
+WSDATA IDTHREAD             AS String
+WSDATA FileLayOut           AS String
+WSDATA FileOut              AS String
+WSDATA PARAMS               AS SPED_PARAMETERS
+
+//WSMETHOD LayOut            DESCRIPTION "Serviço de leitura dos layout disponveis em xml"
+//WSMETHOD LayOutRegisters   DESCRIPTION "Serviço de leitura dos registros das informacoes fiscais baseadas em xml"
+WSMETHOD Status              DESCRIPTION "Serviço de status de processamento das informacoes fiscais baseadas em xml"
+WSMETHOD Export              DESCRIPTION "Serviço de exportacao das informacoes fiscais baseadas em xml"
+
+ENDWSSERVICE
+
+WSMETHOD Export WSRECEIVE USERTOKEN,FileLayOut,Version,Params,FileOut WSSEND IDTHREAD WSSERVICE SPEDLAYOUTTAX
+
+Local cVar     := ""
+Local lRetorno := .T.
+Local nX       := 0
+Local cDir        := IIf(IsSrvUnix(),"/", "\")
+
+If ::UserToken == "TOTVS"
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Verifica se o layout existe                                             ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If File(cDir+::FileLayOut)
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Cria o objeto de parametros                                             ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ			
+		cVar := "<Param>"
+		For nX := 1 To Len(::Params:Info)
+			cVar += "<"+::Params:Info[nX]:Variable+">
+			cVar += ::Params:Info[nX]:Value
+			cVar += "</"+::Params:Info[nX]:Variable+">
+		Next nX
+		cVar += "</Param>"
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Executa a classe parametros                                             ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		::IDTHREAD := CriaTrab(,.F.)			
+		StartJob("TaxExport",GetEnvServer(),.F.,::IDTHREAD,cVar,::FileLayOut,::Version,::FileOut)	
+	Else
+		SetSoapFault("TOTVS SPED Services","001 - LayOut não encontrado")
+		lRetorno:= .F.
+	EndIf
+Else
+	SetSoapFault("TOTVS SPED Services","Invalid Token")
+	lRetorno := .F.
+EndIf
+Return(FinishSped(lRetorno))
+
+Function TaxExport(cIDThread,cVar,cLayOut,cVersion,cFile)
+
+Local oLayOut
+
+PRIVATE lMsHelpAuto:=.t.
+PRIVATE oParam
+
+MemoWrite(cIDThread+".MSG","Iniciando...")
+
+InitSped()
+			
+oLayOut := TLayOutTAX():New(cLayOut)
+oLayOut:ReadLayOut(cVersion)
+oLayOut:cSaveFile     := cFile
+oLayOut:cMsgOutPutFile:= cIDThread+".MSG"
+
+oParam := XmlParser(cVar,"_","","")
+oParam := oParam:_Param
+
+oLayOut:Execute()
+
+Return(FinishSped(.T.))
+
+
+WSMETHOD Status WSRECEIVE USERTOKEN,IDTHREAD WSSEND MSG WSSERVICE SPEDLAYOUTTAX
+
+Local lRetorno := .T.
+
+DEFAULT ::MSG := ""
+
+If ::UserToken == "TOTVS"
+	If File(::IDTHREAD+".MSG")
+		::MSG := MemoRead(::IDTHREAD+".MSG")
+	Else
+		SetSoapFault("TOTVS SPED Services","File not found")
+		lRetorno := .F.		
+    EndIf
+Else
+	SetSoapFault("TOTVS SPED Services","Invalid Token")
+	lRetorno := .F.
+EndIf
+
+Return(lRetorno)
+

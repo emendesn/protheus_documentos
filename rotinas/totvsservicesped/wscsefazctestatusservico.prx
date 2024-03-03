@@ -1,0 +1,97 @@
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "APWEBSRV.CH"
+
+/* ===============================================================================
+WSDL Location    \wsdl\cteStatusServico.html
+Gerado em        11/19/08 14:40:15
+Observações      Código-Fonte gerado por ADVPL WSDL Client 1.080707
+                 Alterações neste arquivo podem causar funcionamento incorreto
+                 e serão perdidas caso o código-fonte seja gerado novamente.
+=============================================================================== */
+
+User Function _NPKQYGQ ; Return  // "dummy" function - Internal Use 
+
+/* -------------------------------------------------------------------------------
+WSDL Service WSCteStatusServico
+------------------------------------------------------------------------------- */
+
+WSCLIENT WSCteStatusServico
+
+	WSMETHOD NEW
+	WSMETHOD INIT
+	WSMETHOD RESET
+	WSMETHOD CLONE
+	WSMETHOD cteStatusServicoCT
+
+	WSDATA   _URL                      AS String
+	WSDATA	 ccteCabecMsg              AS String
+	WSDATA   ccteDadosMsg              AS string
+	WSDATA   ccteStatusServicoCTResult AS string
+
+ENDWSCLIENT
+
+WSMETHOD NEW WSCLIENT WSCteStatusServico
+::Init()
+If !FindFunction("XMLCHILDEX")
+	UserException("O Código-Fonte Client atual requer os executáveis do Protheus Build [7.00.080806P-20081117] ou superior. Atualize o Protheus ou gere o Código-Fonte novamente utilizando o Build atual.")
+EndIf
+Return Self
+
+WSMETHOD INIT WSCLIENT WSCteStatusServico
+Return
+
+WSMETHOD RESET WSCLIENT WSCteStatusServico
+	::ccteCabecMsg              := NIL 
+	::ccteDadosMsg              := NIL 
+	::ccteStatusServicoCTResult := NIL 
+	::Init()
+Return
+
+WSMETHOD CLONE WSCLIENT WSCteStatusServico
+Local oClone := WSCteStatusServico():New()
+	oClone:_URL                      := ::_URL 
+	oClone:ccteCabecMsg              := ::ccteCabecMsg
+	oClone:ccteDadosMsg              := ::ccteDadosMsg
+	oClone:ccteConsultaCTResult      := ::ccteConsultaCTResult
+Return oClone
+
+/* -------------------------------------------------------------------------------
+WSDL Method cteStatusServicoCT of Service WSCteStatusServico
+------------------------------------------------------------------------------- */
+
+WSMETHOD cteStatusServicoCT WSSEND ccteCabecMsg,ccteDadosMsg WSRECEIVE ccteStatusServicoCTResult WSCLIENT WSCteStatusServico
+Local cSoap    := ""
+Local oXmlRet
+Local nX       := 0
+Local nY       := 0
+Local cPrefixo := ""
+
+BEGIN WSMETHOD
+
+cSoap += '<cteDadosMsg xmlns="http://www.portalfiscal.inf.br/cte/wsdl/CteStatusServico">'
+cSoap += ::ccteDadosMsg
+cSoap += "</cteDadosMsg>"
+
+oXmlRet := SvcSoapCall(	Self,cSoap,;
+	"http://www.portalfiscal.inf.br/cte/wsdl/CteStatusServico/cteStatusServicoCT",; 
+	"DOCUMENTSOAP12","http://www.portalfiscal.inf.br/cte/wsdl/CteStatusServico",::ccteCabecMsg,,; 
+	"https://homologacao.nfe.fazenda.sp.gov.br/cteWEB/services/cteStatusServico.asmx")
+
+::Init()
+::ccteStatusServicoCTResult        :=  Upper(XMLSaveStr(WSAdvValue( oXmlRet,"_CTESTATUSSERVICOCTRESULT:_RETCONSSTATSERVCTE","string",NIL,NIL,NIL,NIL,NIL,NIL),.F.))
+If Empty(::ccteStatusServicoCTResult)
+	//--------------------------------------------------
+	//Procura o namespace criado pela SEF
+	//--------------------------------------------------
+	cXML := Upper(XMLSaveStr(oxmlret,.F.))
+	nX   := At('CTESTATUSSERVICOCTRESULT',cXml)-1
+	nY   := Rat("<",substr(Upper(XMLSaveStr(oxmlret,.F.)),1,nX))+1
+	cPrefixo := SubStr(cXml,nY,nX-nY)
+	If !Empty(cPrefixo)
+		::ccteStatusServicoCTResult := WSAdvValue( oXmlRet,"_"+cPrefixo+"_CTESTATUSSERVICOCTRESULT:_"+cPrefixo+"_RETCONSSTATSERVCTE","string",NIL,NIL,NIL,NIL,NIL) 
+	EndIf
+EndIf
+
+END WSMETHOD
+oXmlRet := NIL
+Return .T.

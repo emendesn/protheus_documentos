@@ -1,0 +1,123 @@
+<% 
+Local nX    := 0
+Local nY    := 0
+Local aInfo := {}
+Local oWs := WSNFESBRA():NEW()
+oWs:cUSERTOKEN := "TOTVS"
+WsChgURL(@oWs,"NFESBRA.APW") 
+If !oWs:MonitorStatusSefaz()
+	Return "Tente novamente..."
+Else
+	For nX := 1 To Len(ows:OWSMONITORSTATUSSEFAZRESULT:OWSMONITORONLINESEFAZ)
+		nY := aScan(aInfo,{|x| x[1] == ows:OWSMONITORSTATUSSEFAZRESULT:OWSMONITORONLINESEFAZ[nX]:CUFORIGEM})
+		If nY == 0
+			aadd(aInfo,{"","","","",0,"","",0})
+			nY := Len(aInfo)
+		EndIf		
+		aInfo[nY][1] := ows:OWSMONITORSTATUSSEFAZRESULT:OWSMONITORONLINESEFAZ[nX]:CUFORIGEM
+		aInfo[nY][2] := ows:OWSMONITORSTATUSSEFAZRESULT:OWSMONITORONLINESEFAZ[nX]:CUFRESPOSTA
+		If ows:OWSMONITORSTATUSSEFAZRESULT:OWSMONITORONLINESEFAZ[nX]:NTEMPOMEDIOSEF == Nil
+			ows:OWSMONITORSTATUSSEFAZRESULT:OWSMONITORONLINESEFAZ[nX]:NTEMPOMEDIOSEF := 0
+		EndIf
+		If ows:OWSMONITORSTATUSSEFAZRESULT:OWSMONITORONLINESEFAZ[nX]:CSUGESTAO == Nil
+			ows:OWSMONITORSTATUSSEFAZRESULT:OWSMONITORONLINESEFAZ[nX]:CSUGESTAO := ""
+		EndIf
+		If ows:OWSMONITORSTATUSSEFAZRESULT:OWSMONITORONLINESEFAZ[nX]:NAMBIENTE == 1
+			aInfo[nY][3] := EncodeUtf8(ows:OWSMONITORSTATUSSEFAZRESULT:OWSMONITORONLINESEFAZ[nX]:CSTATUSCODIGO+"-"+ows:OWSMONITORSTATUSSEFAZRESULT:OWSMONITORONLINESEFAZ[nX]:CSTATUSMENSAGEM)
+			aInfo[nY][4] := EncodeUtf8(ows:OWSMONITORSTATUSSEFAZRESULT:OWSMONITORONLINESEFAZ[nX]:CSUGESTAO)
+			aInfo[nY][5] := ows:OWSMONITORSTATUSSEFAZRESULT:OWSMONITORONLINESEFAZ[nX]:NTEMPOMEDIOSEF
+		Else
+			aInfo[nY][6] := EncodeUtf8(ows:OWSMONITORSTATUSSEFAZRESULT:OWSMONITORONLINESEFAZ[nX]:CSTATUSCODIGO+"-"+ows:OWSMONITORSTATUSSEFAZRESULT:OWSMONITORONLINESEFAZ[nX]:CSTATUSMENSAGEM)
+			aInfo[nY][7] := EncodeUtf8(ows:OWSMONITORSTATUSSEFAZRESULT:OWSMONITORONLINESEFAZ[nX]:CSUGESTAO)			
+			aInfo[nY][8] := ows:OWSMONITORSTATUSSEFAZRESULT:OWSMONITORONLINESEFAZ[nX]:NTEMPOMEDIOSEF
+		EndIf				
+	Next nX
+EndIf
+%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Untitled Document</title>
+<style type="text/css">
+<!--
+body {
+	margin-left: 0px;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+}
+.style1 {
+	color: #FFFFFF;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 24px;
+	font-style: italic;
+}
+.style9 {color: #FFFFFF; font-weight: bold; font-family: Arial, Helvetica, sans-serif; font-size: 12px; }
+.style10 {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 9px;
+}
+.style11 {color: #466385}
+-->
+</style></head>
+
+<body>
+<table width="100%" border="0" cellpadding="0" cellspacing="0" bordercolor="0">
+  <tr>
+    <td height="60" bgcolor="#466385"><div align="center"><span class="style1"><strong>Monitor</strong> SEFAZ</span></div></td>
+  </tr>
+  <tr>
+    <td height="12" bgcolor="#566d8c"></td>
+  </tr>
+  <tr>
+    <td height="8" bgcolor="#8597af"></td>
+  </tr>
+   <tr>
+    <td height="2" bgcolor="#e3e7f0"></td>
+  </tr>
+  <tr>
+    <td height="400" valign="top" bgcolor="#e3e7f0"><table width="100%" border="1" cellpadding="5" cellspacing="0" bordercolor="#E3E7F0" bgcolor="#FFFFFF">
+      <tr>
+        <td bgcolor="#9faec3" colspan=2><div align="center" class="style9">UF</div></td>
+        <td bgcolor="#9faec3" colspan=3><div align="center" class="style9"><%=EncodeUTF8("Homologação")%></div></td>
+        <td bgcolor="#9faec3" colspan=3><div align="center" class="style9"><%=EncodeUTF8("Produção")%></div></td>
+      </tr>
+      <tr>
+        <td bgcolor="#9faec3"><div align="center" class="style9">Origem</div></td>
+        <td bgcolor="#9faec3"><div align="center" class="style9">Resposta</div></td>
+        <td bgcolor="#9faec3"><div align="center" class="style9">Mensagem</div></td>
+        <td bgcolor="#9faec3"><div align="center" class="style9"><%=EncodeUTF8("Recomendação")%></div></td>
+        <td bgcolor="#9faec3"><div align="center" class="style9">T.Espera</div></td>
+        <td bgcolor="#9faec3"><div align="center" class="style9">Mensagem</div></td>
+        <td bgcolor="#9faec3"><div align="center" class="style9"><%=EncodeUTF8("Recomendação")%></div></td>
+        <td bgcolor="#9faec3"><div align="center" class="style9">T.Espera</div></td>        
+      </tr>      
+      <%For nX := 1 To Len(aInfo)%>
+      <tr>
+        <td><div align="center" class="style11"><%=aInfo[nX][1]%></div></td>
+        <td><div align="center" class="style11"><%=aInfo[nX][1]%></div></td>
+        <td background-color=<%=IIF(aInfo[nX][5]==0,"#DCDCDC","#FFFFFF")%>><div align="center" class="style11"><%=aInfo[nX][3]%></div></td>
+        <td background-color=<%=IIF(aInfo[nX][5]==0,"#DCDCDC","#FFFFFF")%>><div align="center" class="style11"><%=aInfo[nX][4]%></div></td>
+        <td background-color=<%=IIF(aInfo[nX][5]==0,"#DCDCDC","#FFFFFF")%>><div align="center" class="style11"><%=aInfo[nX][5]%></div></td>
+        <td background-color=<%=IIF(aInfo[nX][8]==0,"#DCDCDC","#FFFFFF")%>><div align="center" class="style11"><%=aInfo[nX][6]%></div></td>
+        <td background-color=<%=IIF(aInfo[nX][8]==0,"#DCDCDC","#FFFFFF")%>><div align="center" class="style11"><%=aInfo[nX][7]%></div></td>
+        <td background-color=<%=IIF(aInfo[nX][8]==0,"#DCDCDC","#FFFFFF")%>><div align="center" class="style11"><%=aInfo[nX][8]%></div></td>
+      </tr>
+      <% Next nX%>
+    </table></td>
+  </tr>
+    <tr>
+	  <td height="3" bgcolor="#dee3ed"></td>
+  </tr>
+  <tr>
+    <td height="30"><div align="center" class="style10 style11">© Powered by Totvs SPED Servicesé</div></td>
+  </tr>
+  </tr>
+    <tr>
+	  <td height="1" bgcolor="#dee3ed"></td>
+  </tr>
+
+</table>
+</body>
+</html>

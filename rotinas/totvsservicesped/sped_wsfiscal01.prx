@@ -1,0 +1,632 @@
+#INCLUDE "PROTHEUS.CH"                                    
+#INCLUDE "APWEBSRV.CH"
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Definicao das estruturas do Web Services                                ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Estrutura generica com CODIGO e DESCRICAO para ³
+//³ posteriores utilizacoes.                      ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+WSSTRUCT STR_GENCODDESC
+	WSDATA CODIGO      				 		AS STRING
+	WSDATA DESCRICAO   				 		AS STRING
+ENDWSSTRUCT
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Estrutura base para complementar algumas informacoes nao obrigatorias ³
+//³ ao registro de identificacao do item.                                ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+WSSTRUCT STR_COMPLITEM
+	WSDATA CODIGO					  		AS STRING
+	WSDATA CODSERV					  		AS INTEGER									OPTIONAL
+	WSDATA CODANP					  		AS STRING									OPTIONAL
+	WSDATA CODANT							AS STRING									OPTIONAL
+	WSDATA ALIQICMS							AS FLOAT
+ENDWSSTRUCT
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Estrutura base dos fatores de conversao das unidades de   ³
+//³ medidas do item (produto/servicos)                       ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+WSSTRUCT STR_CONVUM
+	WSDATA CODIGO					  		AS STRING
+	WSDATA UM								AS STRING
+	WSDATA FATOR							AS FLOAT
+ENDWSSTRUCT
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Estrutura base de identificacao do item (produto/servicos).³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+WSSTRUCT STR_IDENTITEM
+	WSDATA CODIGO					  		AS STRING
+	WSDATA DESCRICAO				  		AS STRING
+	WSDATA COD_BAR			  	   			AS STRING
+	WSDATA UM_EST					  		AS STRING
+	WSDATA TIPO						  		AS INTEGER	//00=MERCADORIA PARA REVENDA, 01=MATERIA-PRIMA, 02=EMBALAGEM, 03=PRODUTO EM PROCESSO, 04=PRODUTO ACABADO, 05=SUBPRODUTO, 06=PRODUTO INTERMEDIARIO, 07=MATERIAL DE USO/CONSUMO, 08=ATIVO IMOBILIZADO, 09=SERVICOS, 10=OUTROS INSUMOS, 99=OUTRAS
+	WSDATA COD_NCM					  		AS STRING
+	WSDATA COD_EXTIPI				  		AS STRING
+	WSDATA DT_INIUTI						AS DATE
+ENDWSSTRUCT
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Array de estrutura de identificacao do item (produto/servicos).³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+WSSTRUCT SPED_IDENTITEM
+	WSDATA ID_ENT							AS STRING
+	WSDATA IDENTITEM				   		AS ARRAY OF STR_IDENTITEM
+ENDWSSTRUCT
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Array de estruturas de informacoes complementares ao registro de³
+//³ identificacao do item.                                         ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+WSSTRUCT SPED_COMPLITEM
+	WSDATA ID_ENT							AS STRING
+	WSDATA COMPLITEM						AS ARRAY OF STR_COMPLITEM
+ENDWSSTRUCT
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//|Array de estruturas dos fatores de conversao das unidades ³
+//³ de medidas do item (produto/servicos)                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+WSSTRUCT SPED_CONVUM
+	WSDATA ID_ENT							AS STRING
+	WSDATA CONVUM							AS ARRAY OF STR_CONVUM
+ENDWSSTRUCT 
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Array de estrutura da identificacao das unidade de medidas dos itens.³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+WSSTRUCT SPED_UM
+	WSDATA ID_ENT							AS STRING
+	WSDATA UM	      			  			AS ARRAY OF STR_GENCODDESC
+ENDWSSTRUCT
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Array de estruturra da tabela de natureza da operacao/prestacao.³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+WSSTRUCT SPED_NATOPER
+	WSDATA ID_ENT							AS STRING
+	WSDATA NATOPER					 		AS ARRAY OF STR_GENCODDESC
+ENDWSSTRUCT 
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Array de estruturra da tabela de informacao complementar do³
+//|   documento fiscal.                                       ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+WSSTRUCT SPED_INFCOMPL
+	WSDATA ID_ENT							AS STRING
+	WSDATA INFCOMPL					  		AS ARRAY OF STR_GENCODDESC
+ENDWSSTRUCT
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Array de estruturra da tabela de observacoes do lancamento ³
+//|   fiscal.                                                 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+WSSTRUCT SPED_OBSLANCFIS
+	WSDATA ID_ENT							AS STRING
+	WSDATA OBSLANCFIS						AS ARRAY OF STR_GENCODDESC
+ENDWSSTRUCT
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Definicao do WEB SERVICE.³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+WSSERVICE SPEDFISCALENTIDADES ;
+	DESCRIPTION "<b>Serviço genérico de administração do Sped Fiscal.</b><br><br>Este serviço permite a administração das tabelas de cadastro do Sped Fiscal."  ;
+	NAMESPACE "http://webservices.totvs.com.br/spedfiscalentidades.apw"
+	
+	WSDATA USERTOKEN       				     		AS STRING
+	WSDATA RETORNO        				     		AS STRING
+	
+	WSDATA UM										AS SPED_UM
+	WSDATA IDENTITEM								AS SPED_IDENTITEM
+	WSDATA COMPLITEM								AS SPED_COMPLITEM
+	WSDATA CONVUM									AS SPED_CONVUM
+	WSDATA NATOPER									AS SPED_NATOPER
+	WSDATA INFCOMPL									AS SPED_INFCOMPL
+	WSDATA OBSLANCFIS								AS SPED_OBSLANCFIS
+	
+	WSMETHOD FIS_UM 					   			DESCRIPTION "<b>Método de administração do cadastro de unidades de medidas do Sped Fiscal.</b><br><br>Este método deve ser utilizado para informar ao Sped Fiscal as informações de identificação das unidades de medidas do movimento de um determinado período."
+	WSMETHOD FIS_IDENTITEM 		  					DESCRIPTION "<b>Método de administração do cadastro de identificacao do item do Sped Fiscal.</b><br><br>Este método deve ser utilizado para informar ao Sped Fiscal as principais informações cadastrais solicitadas em suas especificações para controle das informações do item (mercadoria/serviço) do movimento em um determinado período. "
+	WSMETHOD FIS_CMPIDENTITEM						DESCRIPTION	"<b>Método de administração dos complementos do cadastro de identificacao do item do Sped Fiscal.</b><br><br>Este método deve ser utilizado para informar ao Sped Fiscal os complementos das informaçoes cadastrais da identificação item enviado através do serviço IDENTITEM (nesta página). Neste método devemos enviar o código do item e os complementos necessários para atualizar o respectivo cadastro. Os complementos podem ser: <br>- Código do Serviço, caso seja um item relacionado a prestação de serviço;<br>- Código do combustível (conforme tabela publicada pela ANP), caso seja uma comercialização de combustível;<br>- Código do item anteior (no caso de haver alteração do item);<br>- Alíquota de ICMS aplicável ao item nas operações interestaduais.<br><br>Observação:<br>Para que seja mantido um histórico dos itens anteriores, deve-se sempre enviar o novo item utilizando o serviço FIS_IDENTITEM e utilizar este serviço para fazer a amarração através do campo 'CODANT', informando o código do produto anterior."
+	WSMETHOD FIS_CONVUM								DESCRIPTION	"<b>Método de administração dos fatores de conversão das unidades de medidas dos itens do cadastro de identificacao do item do Sped Fiscal.</b><br><br>Este método deve ser utilizado para informar ao Sped Fiscal as unidades de medidas e os fatores de conversão dos itens enviados através do serviço IDENTITEM (nesta página); por não se tratar de informações obrigatórias ao item, pode-se utilizar este serviço para complementar as respectivas informações ao item."
+	WSMETHOD FIS_NATOPER 			  	  			DESCRIPTION "<b>Método de administração do cadastro de naturezas da operação do Sped Fiscal.</b><br><br>Este método deve ser utilizado para informar ao Sped Fiscal as informações cadastrais solicitadas em suas especificações para relacionar as naturezas das operações de um determinado período. Esta natureza de operação é determinada pelo próprio contribuinte em seu estabelecimento conforme sua regra de negócio."
+	WSMETHOD FIS_INFCOMPL 	  		   				DESCRIPTION "<b>Método de administração do cadastro de informações complementares do documento para o Sped Fiscal.</b><br><br>Este método deve ser utilizado para informar ao Sped Fiscal a espécie de normas legais, poder normativo, número, capitulação, data e demais referências pertinentes com indicação referentes ao tributo."
+	WSMETHOD FIS_OBSLANCFIS  						DESCRIPTION "<b>Método de administração do cadastro de observaçoes do documento para o Sped Fiscal.</b><br><br>Este método deve ser utilizado para informar ao Sped Fiscal as observações vinculadas ao lançamento fiscal do documento."
+ENDWSSERVICE
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Este metodo deve ser utilizado para informar ao Sped Fiscal os complementos das                            ³
+//³  informacoes cadastrais da identificacao item enviado atraves do servico                                  ³
+//³  FIS_IDENTITEM (abaixo). Neste metodo devemos enviar o codigo do item e os complementos necessarios para  ³
+//³  atualizar o respectivo cadastro. Os complementos podem ser:                                              ³
+//³- Codigo do Servico, caso seja um item relacionado a prestacao de servico;                                 ³
+//³- Codigo do combustivel (conforme tabela publicada pela ANP), caso seja uma comercializacao de combustivel;³
+//³- Codigo do item anteior (no caso de haver alteracao do item).                                             ³
+//|- Aliquota de ICMS padrao do item.                                                                         |
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+WSMETHOD FIS_CMPIDENTITEM WSRECEIVE USERTOKEN,COMPLITEM WSSEND RETORNO WSSERVICE SPEDFISCALENTIDADES
+Local	lRetorno	:=	.T.
+Local	nX			:=	0
+Local	lCodBranco	:=	.F.
+Local	lAtualizou	:=	.F.
+Local	lNaoEnc		:=	.F.
+
+InitSped()
+
+If Self:UserToken == "TOTVS"
+	If Len(Self:COMPLITEM:COMPLITEM)>0
+		If !Empty(Self:COMPLITEM:ID_ENT)
+			For nX := 1 To Len(Self:COMPLITEM:COMPLITEM)
+			
+				If !Empty(Self:COMPLITEM:COMPLITEM[nX]:CODIGO)
+				
+					dbSelectArea("SPED004")
+					dbSetOrder(1)         
+					If MsSeek(PadR(Self:COMPLITEM:ID_ENT,Len(SPED004->ID_ENT))+;
+						PadR(Self:COMPLITEM:COMPLITEM[nX]:CODIGO,Len(SPED004->CODITE)))
+		
+						Begin Transaction
+		
+						RecLock("SPED004",.F.)
+						SPED004->CODSERV	:=	Self:COMPLITEM:COMPLITEM[nX]:CODSERV
+						SPED004->CODANP		:=	Self:COMPLITEM:COMPLITEM[nX]:CODANP
+						SPED004->ID_ANTE	:=	Self:COMPLITEM:COMPLITEM[nX]:CODANT
+						SPED004->ALQICM		:=	Self:COMPLITEM:COMPLITEM[nX]:ALIQICMS
+						MsUnLock()
+						FkCommit()
+			
+						End Transaction
+						
+						lAtualizou	:=	.T.
+					Else
+						lNaoEnc	:=	.T.
+					EndIf
+				Else
+					lCodBranco	:=	.T.
+				EndIf
+			Next nX
+
+			Self:RETORNO	:=	""			
+			If lAtualizou
+				Self:RETORNO	+=	"Atualização das informações efetuadas com sucesso."
+			EndIF
+			If lCodBranco
+				Self:RETORNO	+=	"Alguns itens não foram enviados por estarem com um campo chave em branco. (CODIGO)"
+			EndIf
+			If lNaoEnc
+				Self:RETORNO	+=	"Alguns itens não foram encontrados para serem atualizados."
+			EndIf
+		Else
+			Self:RETORNO	:=	"ID da entidade em branco. (ID_ENT)"
+			SetSoapFault("TOTVS SPED Services",Self:RETORNO)
+			lRetorno := .F.
+		EndIf
+	Else
+		Self:RETORNO	:=	"Atualização não efetuada, pois não possui movimento para este serviço."
+		SetSoapFault("TOTVS SPED Services",Self:RETORNO)
+		lRetorno := .F.
+	EndIf
+Else
+	Self:RETORNO	:=	"Invalid Token."
+	SetSoapFault("TOTVS SPED Services",Self:RETORNO)
+	lRetorno := .F.
+EndIf
+Return(FinishSped(lRetorno))
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Este metodo deve ser utilizado para informar ao Sped Fiscal as unidades de medidas       ³
+//³  e os fatores de conversao dos itens enviados atraves do servico FIS_IDENTITEM (abaixo);³
+//³  por nao se tratar de informacoes obrigatorias ao item, pode-se utilizar este servico   ³
+//³  para complementar as respectivas informacoes ao item.                                  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+WSMETHOD FIS_CONVUM WSRECEIVE USERTOKEN,CONVUM WSSEND RETORNO WSSERVICE SPEDFISCALENTIDADES
+Local	lRetorno	:=	.T.
+Local	nX			:=	0
+Local	lCodBranco	:=	.F.
+Local	lAtualizou	:=	.F.
+
+InitSped()
+
+If Self:UserToken == "TOTVS"
+	If Len(Self:CONVUM:CONVUM)>0
+		If !Empty(Self:CONVUM:ID_ENT)
+			dbSelectArea("SPED004A")
+			dbSetOrder(1) 
+			For nX := 1 To Len(Self:CONVUM:CONVUM)
+			
+				If !Empty(Self:CONVUM:CONVUM[nX]:CODIGO)  
+				
+					Begin Transaction
+					  
+					If MsSeek(PadR(Self:CONVUM:ID_ENT,Len(SPED004A->ID_ENT))+;
+						PadR(Self:CONVUM:CONVUM[nX]:CODIGO,Len(SPED004A->CODITE)))
+						RecLock("SPED004A",.F.)
+					Else
+						RecLock("SPED004A",.T.)
+					EndIf
+					SPED004A->ID_ENT	:=	PadR(Self:CONVUM:ID_ENT,Len(SPED004A->ID_ENT))
+					SPED004A->CODITE	:=	PadR(Self:CONVUM:CONVUM[nX]:CODIGO,Len(SPED004A->CODITE))
+					SPED004A->UM		:=	Self:CONVUM:CONVUM[nX]:UM
+					SPED004A->FCONV		:=	Self:CONVUM:CONVUM[nX]:FATOR
+					MsUnLock()
+					FkCommit()
+		
+					End Transaction
+					
+					lAtualizou	:=	.T.
+				Else
+					lCodBranco	:=	.T.
+				EndIf
+						
+			Next nI
+		
+			Self:RETORNO	:=	""			
+			If lAtualizou
+				Self:RETORNO	+=	"Atualização das informações efetuadas com sucesso."
+			EndIF
+			If lCodBranco
+				Self:RETORNO	+=	"Alguns itens não foram enviados por estarem com um campo chave em branco. (CODIGO)"
+			EndIf
+		Else
+			Self:RETORNO	:=	"ID da entidade em branco. (ID_ENT)"
+			SetSoapFault("TOTVS SPED Services",Self:RETORNO)
+			lRetorno := .F.			
+		EndIf
+	Else
+		Self:RETORNO	:=	"Atualização não efetuada, pois não possui movimento para este serviço."
+		SetSoapFault("TOTVS SPED Services",Self:RETORNO)
+		lRetorno := .F.				
+	EndIf
+Else
+	Self:RETORNO	:=	"Invalid Token."
+	SetSoapFault("TOTVS SPED Services",Self:RETORNO)
+	lRetorno := .F.
+EndIf
+Return(FinishSped(lRetorno))
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Este metodo deve ser utilizado para informar ao Sped Fiscal as informacoes ³
+//³  de identificacao das unidades de medidas do movimento de um determinado  ³
+//³  periodo.                                                                 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+WSMETHOD FIS_UM WSRECEIVE USERTOKEN,UM WSSEND RETORNO WSSERVICE SPEDFISCALENTIDADES
+Local	lRetorno	:=	.T.
+Local	nX			:=	0
+Local	lCodBranco	:=	.F.
+Local	lAtualizou	:=	.F.
+
+InitSped()
+
+If Self:UserToken == "TOTVS"
+	If Len(Self:UM:UM)>0	
+		If !Empty(Self:UM:ID_ENT)
+			dbSelectArea("SPED003")
+			dbSetOrder(1)         
+			For nX := 1 To Len(Self:UM:UM)
+			
+				If !Empty(Self:UM:UM[nX]:CODIGO)
+				
+					Begin Transaction
+				
+						If MsSeek(PadR(Self:UM:ID_ENT,Len(SPED003->ID_ENT))+;
+							PadR(Self:UM:UM[nX]:CODIGO,Len(SPED003->CODUM)))
+							RecLock("SPED003",.F.)
+						Else
+							RecLock("SPED003",.T.)
+						EndIf
+						SPED003->ID_ENT	:=	PadR(Self:UM:ID_ENT,Len(SPED003->ID_ENT))
+						SPED003->CODUM	:=	PadR(Self:UM:UM[nX]:CODIGO,Len(SPED003->CODUM))
+						SPED003->DESCR	:=	Self:UM:UM[nX]:DESCRICAO
+						MsUnLock()
+						FkCommit()
+		
+					End Transaction
+					
+					lAtualizou	:=	.T.
+				Else
+					lCodBranco	:=	.T.
+				EndIf
+	
+			Next nX
+			
+			Self:RETORNO	:=	""			
+			If lAtualizou
+				Self:RETORNO	+=	"Atualização das informações efetuadas com sucesso."
+			EndIF
+			If lCodBranco
+				Self:RETORNO	+=	"Alguns itens não foram enviados por estarem com um campo chave em branco. (CODIGO)"
+			EndIf
+		Else
+			Self:RETORNO	:=	"ID da entidade em branco. (ID_ENT)"
+			SetSoapFault("TOTVS SPED Services",Self:RETORNO)
+			lRetorno := .F.			
+		EndIf
+	Else
+		Self:RETORNO	:=	"Atualização não efetuada, pois não possui movimento para este serviço."
+		SetSoapFault("TOTVS SPED Services",Self:RETORNO)
+		lRetorno := .F.
+	EndIf
+Else
+	Self:RETORNO	:=	"Invalid Token."
+	SetSoapFault("TOTVS SPED Services",Self:RETORNO)
+	lRetorno := .F.
+EndIf     
+Return(FinishSped(lRetorno))
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Este metodo deve ser utilizado para informar ao Sped Fiscal as principais ³
+//³  informacoes cadastrais solicitadas em suas especificacoes para controle ³
+//³  das informacoes do item (mercadoria/servico) do movimento em um         ³
+//³  determinado período.                                                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+WSMETHOD FIS_IDENTITEM WSRECEIVE USERTOKEN,IDENTITEM WSSEND RETORNO WSSERVICE SPEDFISCALENTIDADES
+Local	lRetorno	:=	.T.
+Local	nX			:=	0
+Local	lCodBranco	:=	.F.
+Local	lAtualizou	:=	.F.
+
+InitSped()
+
+If AllTrim(::UserToken) == "TOTVS"
+	If Len(Self:IDENTITEM:IDENTITEM)>0
+		If !Empty(Self:IDENTITEM:ID_ENT)
+			dbSelectArea("SPED004")
+			dbSetOrder(1)         
+			For nX := 1 To Len(Self:IDENTITEM:IDENTITEM)
+
+				If !Empty(Self:IDENTITEM:IDENTITEM[nX]:CODIGO)
+			
+					Begin Transaction
+					
+						If MsSeek(PadR(Self:IDENTITEM:ID_ENT,Len(SPED004->ID_ENT))+;
+							PadR(Self:IDENTITEM:IDENTITEM[nX]:CODIGO,Len(SPED004->CODITE)))
+							RecLock("SPED004",.F.)
+						Else
+							RecLock("SPED004",.T.)
+						EndIf
+						SPED004->ID_ENT		:=	PadR(Self:IDENTITEM:ID_ENT,Len(SPED004->ID_ENT))
+						SPED004->CODITE		:=	PadR(Self:IDENTITEM:IDENTITEM[nX]:CODIGO,Len(SPED004->CODITE))
+						SPED004->DESCR		:=	Self:IDENTITEM:IDENTITEM[nX]:DESCRICAO
+						SPED004->COD_BAR	:=	Self:IDENTITEM:IDENTITEM[nX]:COD_BAR
+						SPED004->UM			:=	Self:IDENTITEM:IDENTITEM[nX]:UM_EST
+						SPED004->TIPO		:=	Self:IDENTITEM:IDENTITEM[nX]:TIPO
+						SPED004->NCM		:=	Self:IDENTITEM:IDENTITEM[nX]:COD_NCM
+						SPED004->EX_TIPI	:=	Self:IDENTITEM:IDENTITEM[nX]:COD_EXTIPI
+						SPED004->DTINI		:=	Self:IDENTITEM:IDENTITEM[nX]:DT_INIUTI
+						MsUnLock()
+						FkCommit()
+						
+					End Transaction
+					
+					lAtualizou	:=	.T.
+				Else
+					lCodBranco	:=	.T.
+				EndIf
+	
+			Next nX
+			
+			Self:RETORNO	:=	""			
+			If lAtualizou
+				Self:RETORNO	+=	"Atualização das informações efetuadas com sucesso."
+			EndIF
+			If lCodBranco
+				Self:RETORNO	+=	"Alguns itens não foram enviados por estarem com um campo chave em branco. (CODIGO)"
+			EndIf
+		Else		
+			Self:RETORNO	:=	"ID da entidade em branco. (ID_ENT)"
+			SetSoapFault("TOTVS SPED Services",Self:RETORNO)
+			lRetorno := .F.			
+		EndIf
+	Else
+		Self:RETORNO	:=	"Atualização não efetuada, pois não possui movimento para este serviço."
+		SetSoapFault("TOTVS SPED Services",Self:RETORNO)
+		lRetorno := .F.		
+	EndIf
+Else
+	Self:RETORNO	:=	"Invalid Token."
+	SetSoapFault("TOTVS SPED Services","Invalid Token")
+	lRetorno := .F.
+EndIf
+Return(FinishSped(lRetorno))
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Este metodo deve ser utilizado para informar ao Sped Fiscal as informacoes cadastrais ³
+//³  solicitadas em suas especificacoes para relacionar as naturezas das operacoes de    ³
+//³  um determinado periodo. Esta natureza de operacao eh determinada pelo proprio       ³
+//³  contribuinte em seu estabelecimento conforme sua regra de negocio.                  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+WSMETHOD FIS_NATOPER WSRECEIVE USERTOKEN,NATOPER WSSEND RETORNO WSSERVICE SPEDFISCALENTIDADES
+Local	lRetorno	:=	.T.
+Local	nX			:=	0
+Local	lCodBranco	:=	.F.
+Local	lAtualizou	:=	.F.
+
+InitSped()
+
+If Self:UserToken == "TOTVS"
+	If Len(Self:NATOPER:NATOPER)>0
+		If !Empty(Self:NATOPER:ID_ENT)
+			dbSelectArea("SPED005")
+			dbSetOrder(1) 
+			For nX := 1 To Len(Self:NATOPER:NATOPER)
+			
+				If !Empty(Self:NATOPER:NATOPER[nX]:CODIGO)
+				
+					Begin Transaction
+					
+						If MsSeek(PadR(Self:NATOPER:ID_ENT,Len(SPED005->ID_ENT))+;
+							PadR(Self:NATOPER:NATOPER[nX]:CODIGO,Len(SPED005->CODNAT)))
+							RecLock("SPED005",.F.)
+						Else
+							RecLock("SPED005",.T.)
+						EndIf
+						SPED005->ID_ENT	:=	PadR(Self:NATOPER:ID_ENT,Len(SPED005->ID_ENT))
+						SPED005->CODNAT	:=	PadR(Self:NATOPER:NATOPER[nX]:CODIGO,Len(SPED005->CODNAT))
+						SPED005->DESCR	:=	Self:NATOPER:NATOPER[nX]:DESCRICAO
+						MsUnLock()
+						FkCommit()
+						
+					End Transaction
+
+					lAtualizou	:=	.T.
+				Else
+					lCodBranco	:=	.T.
+				EndIf
+								
+			Next nX
+		    
+			Self:RETORNO	:=	""			
+			If lAtualizou
+				Self:RETORNO	+=	"Atualização das informações efetuadas com sucesso."
+			EndIF
+			If lCodBranco
+				Self:RETORNO	+=	"Alguns itens não foram enviados por estarem com um campo chave em branco. (CODIGO)"
+			EndIf
+		Else
+			Self:RETORNO	:=	"ID da entidade em branco. (ID_ENT)"
+			SetSoapFault("TOTVS SPED Services",Self:RETORNO)
+			lRetorno := .F.			
+		EndIf
+	Else
+		Self:RETORNO	:=	"Atualização não efetuada, pois não possui movimento para este serviço."	
+		SetSoapFault("TOTVS SPED Services",Self:RETORNO)
+		lRetorno := .F.
+	EndIf
+Else
+	Self:RETORNO	:=	"Invalid Token."
+	SetSoapFault("TOTVS SPED Services",Self:RETORNO)
+	lRetorno := .F.
+EndIf
+Return(FinishSped(lRetorno))
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Este metodo deve ser utilizado para informar ao Sped Fiscal a especie   ³
+//³  de normas legais, poder normativo, numero, capitulacao, data e demais ³
+//³  referencias pertinentes com indicacao referentes ao tributo.          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+WSMETHOD FIS_INFCOMPL WSRECEIVE USERTOKEN,INFCOMPL WSSEND RETORNO WSSERVICE SPEDFISCALENTIDADES
+Local	lRetorno	:=	.T.
+Local	nX			:=	0
+Local	lCodBranco	:=	.F.
+Local	lAtualizou	:=	.F.
+
+InitSped()
+
+If Self:UserToken == "TOTVS"
+	If Len(Self:INFCOMPL:INFCOMPL)>0
+		If Empty(Self:INFCOMPL:ID_ENT)
+			dbSelectArea("SPED006")
+			dbSetOrder(1) 
+			For nX := 1 To Len(Self:INFCOMPL:INFCOMPL)
+			
+				If !Empty(Self:INFCOMPL:INFCOMPL[nX]:CODIGO)
+				
+					Begin Transaction
+				
+						If MsSeek(PadR(Self:INFCOMPL:ID_ENT,Len(SPED006->ID_ENT))+;
+							PadR(Self:INFCOMPL:INFCOMPL[nX]:CODIGO,Len(SPED006->CODINF)))
+							RecLock("SPED006",.F.)
+						Else
+							RecLock("SPED006",.T.)
+						EndIf
+						SPED006->ID_ENT	:=	PadR(Self:INFCOMPL:ID_ENT,Len(SPED006->ID_ENT))
+						SPED006->CODINF	:=	PadR(Self:INFCOMPL:INFCOMPL[nX]:CODIGO,Len(SPED006->CODINF))
+						SPED006->DESCR	:=	Self:INFCOMPL:INFCOMPL[nX]:DESCRICAO
+						MsUnLock()
+						FkCommit()
+				
+					End Transaction
+
+					lAtualizou	:=	.T.
+				Else
+					lCodBranco	:=	.T.
+				EndIf
+								
+			Next nX
+			
+			Self:RETORNO	:=	""			
+			If lAtualizou
+				Self:RETORNO	+=	"Atualização das informações efetuadas com sucesso."
+			EndIF
+			If lCodBranco
+				Self:RETORNO	+=	"Alguns itens não foram enviados por estarem com um campo chave em branco. (CODIGO)"
+			EndIf
+		Else
+			Self:RETORNO	:=	"ID da entidade em branco. (ID_ENT)"
+			SetSoapFault("TOTVS SPED Services",Self:RETORNO)
+			lRetorno := .F.			
+		EndIf
+	Else
+		Self:RETORNO	:=	"Atualização não efetuada, pois não possui movimento para este serviço."	
+		SetSoapFault("TOTVS SPED Services",Self:RETORNO)
+		lRetorno := .F.		
+	EndIf
+Else
+	Self:RETORNO	:=	"Invalid Token."	
+	SetSoapFault("TOTVS SPED Services",Self:RETORNO)
+	lRetorno := .F.
+EndIf
+Return(FinishSped(lRetorno))
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Este metodo deve ser utilizado para informar ao Sped Fiscal as observacoes³
+//³  vinculadas ao lancamento fiscal do documento.                           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+WSMETHOD FIS_OBSLANCFIS WSRECEIVE USERTOKEN,OBSLANCFIS WSSEND RETORNO WSSERVICE SPEDFISCALENTIDADES
+Local	lRetorno	:=	.T.
+Local	nX			:=	0
+Local	lCodBranco	:=	.F.
+Local	lAtualizou	:=	.F.
+
+InitSped()
+
+If Self:UserToken == "TOTVS"
+	If Len(Self:OBSLANCFIS:OBS_LANCFIS)>0
+		If !Empty(Self:OBSLANCFIS:ID_ENT)
+			dbSelectArea("SPED007")
+			dbSetOrder(1) 
+			For nX := 1 To Len(Self:OBSLANCFIS:OBS_LANCFIS)
+			
+				If !Empty(Self:OBSLANCFIS:OBS_LANCFIS[nX]:CODIGO)
+				
+					Begin Transaction
+					
+						If MsSeek(PadR(Self:OBSLANCFIS:ID_ENT,Len(SPED007->ID_ENT))+;
+							PadR(Self:OBSLANCFIS:OBS_LANCFIS[nX]:CODIGO,Len(SPED007->CODOBS)))
+							RecLock("SPED007",.F.)
+						Else
+							RecLock("SPED007",.T.)
+						EndIf
+						SPED007->ID_ENT	:=	PadR(Self:OBSLANCFIS:ID_ENT,Len(SPED007->ID_ENT))
+						SPED007->CODOBS	:=	PadR(Self:OBSLANCFIS:OBS_LANCFIS[nX]:CODIGO,Len(SPED007->CODOBS))
+						SPED007->DESCR	:=	Self:OBSLANCFIS:OBS_LANCFIS[nX]:DESCRICAO
+						MsUnLock()
+						FkCommit()
+						
+					End Transaction
+				
+					lAtualizou	:=	.T.
+				Else
+					lCodBranco	:=	.T.
+				EndIf
+			Next nX
+			
+			Self:RETORNO	:=	""			
+			If lAtualizou
+				Self:RETORNO	+=	"Atualização das informações efetuadas com sucesso."
+			EndIF
+			If lCodBranco
+				Self:RETORNO	+=	"Alguns itens não foram enviados por estarem com um campo chave em branco. (CODIGO)"
+			EndIf
+		Else
+			Self:RETORNO	:=	"ID da entidade em branco. (ID_ENT)"
+			SetSoapFault("TOTVS SPED Services",Self:RETORNO)
+			lRetorno := .F.			
+		EndIf
+	Else
+		Self:RETORNO	:=	"Atualização não efetuada, pois não possui movimento para este serviço."
+		SetSoapFault("TOTVS SPED Services",Self:RETORNO)
+		lRetorno := .F.		
+	EndIf
+Else
+	Self:RETORNO	:=	"Invalid Token."
+	SetSoapFault("TOTVS SPED Services",Self:RETORNO)
+	lRetorno := .F.
+EndIf
+Return(FinishSped(lRetorno))
+

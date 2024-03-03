@@ -1,0 +1,941 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LayOutTax version="1.0">
+	<description>
+		<name>SPED - Escrituracao Contabil Digital</name>
+		<destination>A todas as empresas usuarias de sistema de escrituracao contabil digital' </destination>
+		<object>Permitir que as empresas intimadas apresentem dados relativos aos seus negocios e/ou atividades economicas. </object>
+		<delivery>As informacoes serao apresentadas pelas pessoas juridicas quando solicitadas pelo fisco ou orgao regulador de setor</delivery>
+		<layoutsystem>Sped Contabil</layoutsystem>
+		<comment>Para maiores informacoes consulte: http://www.receita.fazenda.gov.br/Sped/Default.htm </comment>
+	</description>
+	<layout version="Vesao em homologacao">
+	<initiating>
+		<instruction>_SetOwnerPrvt("aTotal",.T.)</instruction>
+		<instruction>aTotal:=Array(20)</instruction>
+		<instruction>aTotal[20]:=1</instruction>
+		<instruction>aTotal[19]:=1</instruction>
+		<instruction>aTotal[18]:=1</instruction>
+		<instruction>aTotal[17]:=1</instruction>
+		<instruction>aTotal[16]:=0</instruction>
+		<instruction>aTotal[15]:={}</instruction>
+		<instruction>aTotal[11]:=1</instruction>
+	</initiating>
+	<registers>                                                                                                                     
+		<register id='0000' description='Identificacao da Entidade'>
+			<lines Delimited='|' NumericNull='T' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<fields>
+					<field name='REG'        type='C' size='004' dec='0' instruction='"0000"'></field>
+					<field name='LECD'       type='C' size='004' dec='0' instruction='"LECD"'></field>
+				 	<field name='DT_INI'     type='D' size='008' dec='0' instruction='STOD(oParam:_DT_INI:TEXT)'></field>
+				 	<field name='DT_FIM'     type='D' size='008' dec='0' instruction='STOD(oParam:_DT_FIM:TEXT)'></field>
+					<field name='NOME'       type='C' size='000' dec='0' instruction='SPED001A->NOME'></field>
+					<field name='CNPJ'       type='C' size='014' dec='0' instruction='SPED001->CNPJ'></field>
+					<field name='UF'         type='C' size='002' dec='0' instruction='SPED001->UF'></field>
+					<field name='IE'         type='C' size='000' dec='0' instruction='SPED001->IE'></field>
+					<field name='COD_MUN'    type='C' size='007' dec='0' instruction='SPED001A->COD_MUN'></field>
+					<field name='IM'         type='C' size='000' dec='0' instruction='SPED001A->IM'></field>
+					<field name='IND_SIT_ES' type='C' size='001' dec='0' instruction='SPED001->INDSITESP'></field>	
+				</fields>
+				<count>
+				<instruction>aTotal[20]++</instruction>
+				<instruction>Eval({||cReg := "0000",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+			</lines>
+		</register>
+		<register id='0001' description='Abertura do bloco 0'>
+			<lines Delimited='|' NumericNull='T' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<fields>
+					<field name='REG'        type='C' size='004' dec='0' instruction='"0001"'></field>
+					<field name='IND_DAD'    type='C' size='001' dec='0' instruction='"0"'></field>
+				</fields>
+				<count>
+				<instruction>aTotal[20]++</instruction>
+				<instruction>Eval({||cReg := "0001",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+			</lines>
+			</register>
+			<register id='0007' description='Outras inscricoes cadastrais do empresario ou sociedade empresaria'>
+			<superior>0001</superior>
+			<table>SPED001B</table>
+			<initiating>
+				<instruction>dbSelectArea("SPED001B")</instruction>
+				<instruction>dbSetOrder(1)</instruction>
+				<instruction>MsSeek(SPED001->ID_ENT)</instruction>
+			</initiating>	
+			<lines Delimited='|' NumericNull='T' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<initiating>
+					<instruction>SPED001->ID_ENT==SPED001B->ID_ENT</instruction>
+				</initiating>
+				<fields>
+					<field name='REG'         type='C' size='004' dec='0' instruction='"0007"'></field>
+					<field name='COD_ENT_REF' type='C' size='002' dec='0' instruction='SPED001B->ENT_REF'></field>
+					<field name='COD_INSCR'   type='C' size='000' dec='0' instruction='SPED001B->INSCR'></field>
+				</fields>
+				<count>
+				<instruction>aTotal[20]++</instruction>
+				<instruction>Eval({||cReg := "0007",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+			</lines>
+		</register>
+		<register id='0020' description='Escrituracao contabil descentralizada'>
+			<superior>0001</superior>
+			<table>SPED001</table>
+			<initiating>
+				<instruction>aTotal[01]:=SPED001->ID_ENT</instruction>
+				<instruction>aTotal[02]:=SPED001->ID_MATRIZ</instruction>
+				<instruction>dbSelectArea("SPED001")</instruction>
+				<instruction>IIF(!Empty(aTotal[02]),dbSetOrder(3),dbSetOrder(1))</instruction>
+				<instruction>MsSeek(IIF(!Empty(aTotal[02]),aTotal[02],aTotal[01]))</instruction>
+			</initiating>	
+			<lines Delimited='|' NumericNull='F' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<initiating>
+					<instruction>IIF(Empty(aTotal[02]),SPED001->ID_MATRIZ==aTotal[01],SPED001->ID_ENT==aTotal[02])</instruction>
+					<instruction><![CDATA[SpedQuery({"SPED001A","001A"},1,"ID_ENT='"+SPED001->ID_ENT+"' AND DTULTALT=(SELECT MAX(DTULTALT) FROM SPED001A WHERE ID_ENT = '"+SPED001->ID_ENT+"' AND DTULTALT<='"+oParam:_DT_FIM:TEXT+"')")]]></instruction>
+				</initiating>
+				<fields>
+					<field name='REG'         type='C' size='004' dec='0' instruction='"0020"'></field>
+					<field name='IND_DEC'     type='N' size='001' dec='0' instruction='IIF(Empty(aTotal[02]),0,1)'></field>
+					<field name='CNPJ'        type='C' size='014' dec='0' instruction='SPED001->CNPJ'></field>
+					<field name='UF'          type='C' size='002' dec='0' instruction='SPED001->UF'></field>
+					<field name='IE'          type='C' size='000' dec='0' instruction='SPED001->IE'></field>
+					<field name='COD_MUN'     type='N' size='007' dec='0' instruction='001A->COD_MUN'></field>
+					<field name='IM'          type='C' size='000' dec='0' instruction='001A->IM'></field>
+					<field name='NIRE'        type='N' size='011' dec='0' instruction='001A->NIRE'></field>
+				</fields>
+				<count>
+				<instruction>aTotal[20]++</instruction>
+				<instruction>Eval({||cReg := "0020",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+				<finishing>
+					<instruction><![CDATA[SpedQuery({"SPED001A","001A"},2)]]></instruction>
+				</finishing>
+			</lines>
+			<finishing>
+				<instruction>dbSelectArea("SPED001")</instruction>
+				<instruction>dbSetOrder(1)</instruction>
+				<instruction>MsSeek(aTotal[01])</instruction>
+			</finishing>
+		</register>
+		<register id='0150' description='Tabela de cadastro do participante'>
+			<superior>0001</superior>
+			<table>TMPSPED002</table>
+			<initiating>
+				<instruction>dbSelectArea("SPED002")</instruction>
+				<instruction><![CDATA[SpedQuery({"SPED002","TMPSPED002"},1,"ID_ENT='"+SPED001->ID_ENT+"' AND COD_REL<>'"+Space(Len(SPED002->COD_REL))+"'")]]></instruction>
+			</initiating>
+			<lines Delimited='|' NumericNull='T' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<initiating>
+					<instruction><![CDATA[SpedQuery({"SPED002A","TMPSPED002A"},1,"ID_ENT='"+SPED001->ID_ENT+"'")]]></instruction>
+					<instruction><![CDATA[SpedQuery({"SPED002B","TMPSPED002B"},1,"ID_ENT='"+SPED001->ID_ENT+"'")]]></instruction>
+				</initiating>			
+				<fields>
+					<field name='REG'         type='C' size='004' dec='0' instruction='"0150"'></field>
+					<field name='COD_PART'    type='C' size='000' dec='0' instruction='TMPSPED002->ID_ENT+TMPSPED002->ID_PART'></field>
+					<field name='NOME'        type='C' size='000' dec='0' instruction='TMPSPED002A->NOME'></field>
+					<field name='COD_PAIS'    type='C' size='005' dec='0' instruction='TMPSPED002B->COD_PAIS'></field>
+					<field name='CNPJ'        type='C' size='014' dec='0' instruction='TMPSPED002->CNPJ'></field>
+					<field name='CPF'         type='C' size='011' dec='0' instruction='TMPSPED002->CPF'></field>
+					<field name='NIT'         type='C' size='011' dec='0' instruction='TMPSPED002A->NIT'></field>
+					<field name='UF'          type='C' size='002' dec='0' instruction='TMPSPED002->UF'></field>
+					<field name='IE'          type='C' size='000' dec='0' instruction='TMPSPED002->IE'></field>
+					<field name='IE_ST'       type='C' size='000' dec='0' instruction='TMPSPED002A->IE_ST'></field>
+					<field name='COD_MUN'     type='N' size='007' dec='0' instruction='TMPSPED002B->COD_MUN'></field>
+					<field name='IM'          type='C' size='000' dec='0' instruction='TMPSPED002A->IM'></field>
+					<field name='SUFRAMA'     type='C' size='009' dec='0' instruction='TMPSPED002A->SUFRAMA'></field>
+				</fields>
+				<count>
+				<instruction>aTotal[20]++</instruction>
+				<instruction>Eval({||cReg := "0150",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+				<finishing>
+					<instruction><![CDATA[SpedQuery({"SPED002A","TMPSPED002A"},2)]]></instruction>
+					<instruction><![CDATA[SpedQuery({"SPED002B","TMPSPED002B"},2)]]></instruction>
+				</finishing>
+			</lines>
+			<finishing>
+				<instruction><![CDATA[SpedQuery({"SPED002","TMPSPED002"},2)]]></instruction>
+			</finishing>
+		</register>
+		<register id='0180' description='Identificacao do relacionamento com o participante'>
+			<superior>0150</superior>
+			<lines Delimited='|' NumericNull='T' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<fields>
+					<field name='REG'        type='C' size='004' dec='0' instruction='"0180"'></field>
+					<field name='COD_REL'    type='C' size='002' dec='0' instruction='TMPSPED002->COD_REL'></field>
+					<field name='DT_INI_REL' type='D' size='008' dec='0' instruction='TMPSPED002->DTINI'></field>
+					<field name='DT_FIM_REL' type='D' size='008' dec='0' instruction='TMPSPED002->DTFIM'></field>
+				</fields>
+				<count>
+				<instruction>aTotal[20]++</instruction>
+				<instruction>Eval({||cReg := "0180",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+			</lines>
+		</register>
+		<register id='0990' description='Encerramento do Bloco 0'>
+			<lines Delimited='|' NumericNull='T' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<fields>
+					<field name='REG'        type='C' size='004' dec='0' instruction='"0990"'></field>
+					<field name='QTD_LIN_0'  type='N' size='000' dec='0' instruction='aTotal[20]'></field>
+				</fields>
+				<count>
+				<instruction>Eval({||cReg := "0990",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+			</lines>
+		</register>
+		<register id='I001' description='Abertura do bloco I'>
+			<lines Delimited='|' NumericNull='F' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<fields>
+					<field name='REG'        type='C' size='004' dec='0' instruction='"I001"'></field>
+					<field name='IND_DATA'   type='N' size='001' dec='0' instruction='0'></field>
+				</fields>
+				<count>
+				<instruction>aTotal[19]++</instruction>
+				<instruction>Eval({||cReg := "I001",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+			</lines>
+		</register>
+		<register id='I010' description='Identificacao da escrituracao contabil'>
+			<superior>I001</superior>
+			<table>SPED200</table>
+			<initiating>
+				<instruction>dbSelectArea("SPED200")</instruction>
+				<instruction>dbSetOrder(1)</instruction>
+				<instruction>SPED200->( MsSeek( SPED001->ID_ENT + Str(Val(oParam:_ORDEM:TEXT),18) + oParam:_IND_ESC:TEXT ))</instruction>
+			</initiating>
+			<lines Delimited='|' NumericNull='T' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<initiating>
+					<instruction>SPED200->ID_ENT == SPED001->ID_ENT .AND. SPED200->ORDEM == Val(oParam:_ORDEM:TEXT) .AND. SPED200->IND_ESC==oParam:_IND_ESC:TEXT</instruction>
+				</initiating>
+				<fields>
+					<field name='REG'        type='C' size='004' dec='0' instruction='"I010"'></field>
+					<field name='IND_ESC'    type='C' size='001' dec='0' instruction='SPED200->IND_ESC'></field>
+					<field name='COD_VER_LC' type='C' size='000' dec='0' instruction='"1.00"'></field>
+				</fields>
+				<count>
+				<instruction>aTotal[19]++</instruction>
+				<instruction>Eval({||cReg := "I010",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+			</lines>
+		</register>
+		<register id='I012a' description='Livros auxiliares ao diario'>
+			<superior>I010</superior>
+			<table>SPED200</table>
+			<initiating>
+				<instruction>dbSelectArea("SPED200")</instruction>
+				<instruction>aTotal[10]:=SPED200->(RecNo())</instruction>
+				<instruction>dbSetOrder(2)</instruction>
+				<instruction>MsSeek(SPED001->ID_ENT+Str(Val(oParam:_ORDEM:TEXT),18))</instruction>
+			</initiating>
+			<lines Delimited='|' NumericNull='T' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<validline>
+					<instruction>SPED200->IND_ESC$'A,Z'</instruction>
+					<instruction>SPED200->ID_ENT == SPED001->ID_ENT .AND. SPED200->ORDEMSUP == Val(oParam:_ORDEM:TEXT)</instruction>
+				</validline>
+				<fields>
+					<field name='REG'          type='C' size='004' dec='0' instruction='"I012"'></field>
+					<field name='NUM_ORD'      type='N' size='001' dec='0' instruction='SPED200->ORDEM'></field>
+					<field name='NAT_LIVR'     type='C' size='080' dec='0' instruction='SPED200->NATUREZA'></field>
+					<field name='Tipo'         type='N' size='080' dec='0' instruction='1'></field>
+					<field name='COD_HASH_AUX' type='C' size='000' dec='0' instruction='""'></field>
+				</fields>
+				<count>
+				<instruction>aTotal[19]++</instruction>
+				<instruction>Eval({||cReg := "I012",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+			</lines>
+			<finishing>
+				<instruction>dbSelectArea("SPED200")</instruction>
+				<instruction>dbSetOrder(1)</instruction>
+				<instruction>SPED200->(MsGoto(aTotal[10]))</instruction>
+			</finishing>
+		</register>
+		<register id='I012b' description='Livros auxiliares ao diario'>
+			<superior>I010</superior>
+			<table>SPED200</table>
+			<initiating>
+				<instruction>dbSelectArea("SPED200")</instruction>
+				<instruction>aTotal[10]:=SPED200->(RecNo())</instruction>
+				<instruction>aTotal[09]:=SPED200->ORDEMSUP</instruction>
+				<instruction>dbSetOrder(1)</instruction>
+				<instruction>MsSeek(SPED001->ID_ENT+STR(aTotal[09],18))</instruction>
+			</initiating>
+			<lines Delimited='|' NumericNull='T' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<validline>
+					<instruction>SPED200->IND_ESC$'R,B'</instruction>
+					<instruction>SPED200->ID_ENT == SPED001->ID_ENT .AND. SPED200->ORDEM == aTotal[09]</instruction>
+				</validline>
+				<fields>
+					<field name='REG'          type='C' size='004' dec='0' instruction='"I012"'></field>
+					<field name='NUM_ORD'      type='N' size='001' dec='0' instruction='SPED200->ORDEM'></field>
+					<field name='NAT_LIVR'     type='C' size='080' dec='0' instruction='"SPED200->NATUREZA"'></field>
+					<field name='Tipo'         type='N' size='080' dec='0' instruction='1'></field>
+					<field name='COD_HASH_AUX' type='C' size='000' dec='0' instruction='""'></field>
+				</fields>
+				<count>
+				<instruction>aTotal[19]++</instruction>
+				<instruction>Eval({||cReg := "I012",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+			</lines>
+			<finishing>
+				<instruction>dbSelectArea("SPED200")</instruction>
+				<instruction>dbSetOrder(1)</instruction>
+				<instruction>SPED200->(MsGoto(aTotal[10]))</instruction>
+			</finishing>
+		</register>
+		<register id='I015' description='Identificacao das contas da escrituracao resumida a que se refere a escrituracao auxiliar'>
+			<superior>I012a</superior>
+			<lines Delimited='|' NumericNull='T' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<fields>
+					<field name='REG'          type='C' size='004' dec='0' instruction='"I015"'></field>
+					<field name='COD_CTA_RES'  type='C' size='000' dec='0' instruction='"NAO HA CONTA ESPECIFICA"'></field>
+				</fields>
+				<count>
+				<instruction>aTotal[19]++</instruction>
+				<instruction>Eval({||cReg := "I015",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+			</lines>
+		</register>
+		<register id='I015' description='Identificacao das contas da escrituracao resumida a que se refere a escrituracao auxiliar'>
+			<superior>I012b</superior>
+			<lines Delimited='|' NumericNull='T' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<fields>
+					<field name='REG'          type='C' size='004' dec='0' instruction='"I015"'></field>
+					<field name='COD_CTA_RES'  type='C' size='000' dec='0' instruction='"VERIFICAR"'></field>
+				</fields>
+				<count>
+				<instruction>aTotal[19]++</instruction>
+				<instruction>Eval({||cReg := "I015",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+			</lines>
+		</register>
+		<register id='I030' description='Termo de abertura do livro'>
+			<superior>I010</superior>
+			<lines Delimited='|' NumericNull='T' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<fields>
+					<field name='REG'          type='C' size='004' dec='0' instruction='"I030"'></field>
+					<field name='DNRC_ABERT'   type='C' size='017' dec='0' instruction='"TERMO DE ABERTURA"'></field>
+					<field name='NUM_ORD'      type='N' size='000' dec='0' instruction='SPED200->ORDEM'></field>
+					<field name='NAT_LIVR'     type='C' size='080' dec='0' instruction='SPED200->NATUREZA'></field>
+					<field name='QTD_LIN'      type='F' size='000' dec='0' instruction='AllTrim(Str(aTotal[16],18))'></field>
+					<field name='NOME'         type='C' size='000' dec='0' instruction='SPED001A->NOME'></field>
+					<field name='NIRE'         type='N' size='011' dec='0' instruction='SPED001A->NIRE'></field>
+					<field name='CNPJ'         type='C' size='014' dec='0' instruction='SPED001->CNPJ'></field>
+					<field name='DT_ARQ'       type='D' size='008' dec='0' instruction='SPED200->DTARQ'></field>
+					<field name='DT_ARQ_CONV'  type='D' size='008' dec='0' instruction='SPED200->DTARQCONV'></field>
+					<field name='DESC_MUN'     type='C' size='000' dec='0' instruction='SPED001A->MUN'></field>
+				</fields>
+				<count>
+				<instruction>aTotal[19]++</instruction>
+				<instruction>aTotal[11]++</instruction>
+				<instruction>Eval({||cReg := "I030",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+			</lines>
+		</register>
+		<register id='I050' description='Plano de Contas'>
+			<superior>I010</superior>
+			<table>TMPSPED100A</table>
+			<initiating>
+				<instruction>dbSelectArea("SPED100")</instruction>
+				<instruction><![CDATA[SpedQuery({"SPED100A","TMPSPED100A"},1,"SPED100A.ID_ENT='"+SPED001->ID_ENT+"' AND DTULTALT <= '"+oParam:_DT_FIM:TEXT+"'",,,{"SPED100","SPED100A.ID_ENT = SPED100.ID_ENT AND SPED100A.CODCTA = SPED100.CODCTA"})]]></instruction>
+			</initiating>
+			<lines Delimited='|' NumericNull='T' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<initiating>
+					<instruction><![CDATA[SPED200->IND_ESC<>'Z']]></instruction>
+				</initiating>
+				<fields>
+					<field name='REG'          type='C' size='004' dec='0' instruction='"I050"'></field>
+					<field name='DT_ALT'       type='D' size='008' dec='0' instruction='TMPSPED100A->DTULTALT'></field>
+					<field name='COD_NAT'      type='C' size='002' dec='0' instruction='TMPSPED100A->COD_NAT'></field>
+					<field name='IND_CTA'      type='C' size='001' dec='0' instruction='TMPSPED100A->IND_CTA'></field>
+					<field name='NIVEL'        type='N' size='000' dec='0' instruction='TMPSPED100A->NIVEL'></field>
+					<field name='COD_CTA'      type='C' size='000' dec='0' instruction='TMPSPED100A->CODCTA'></field>
+					<field name='COD_CTA_SUP'  type='C' size='000' dec='0' instruction='TMPSPED100A->CODCTASUP'></field>
+					<field name='CTA'          type='C' size='000' dec='0' instruction='TMPSPED100A->DESCRI'></field>
+				</fields>
+				<count>
+				<instruction>aTotal[11]++</instruction>
+				<instruction>aTotal[19]++</instruction>
+				<instruction>Eval({||cReg := "I050",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+			</lines>
+			<finishing>
+				<instruction><![CDATA[SpedQuery({"SPED100A","TMPSPED100A"},2)]]></instruction>
+			</finishing>
+		</register>
+		<register id='I051' description='Plano de Contas Referencial'>
+			<superior>I050</superior>
+			<table>TMPSPED120</table>
+			<initiating>
+				<instruction>dbSelectArea("SPED120")</instruction>
+				<instruction><![CDATA[SpedQuery({"SPED120","TMPSPED120"},1,"ID_ENT='"+SPED001->ID_ENT+"' AND SPED120.CODCTA='"+TMPSPED100A->CODCTA+"'")]]></instruction>
+			</initiating>
+			<lines Delimited='|' NumericNull='T' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<initiating>
+					<instruction>TMPSPED100A->IND_CTA=='A'</instruction>
+				</initiating>
+				<fields>
+					<field name='REG'          type='C' size='004' dec='0' instruction='"I051"'></field>
+					<field name='COD_ENT_REF'  type='C' size='002' dec='0' instruction='TMPSPED120->COD_ENTREF'></field>
+					<field name='COD_CCUS'     type='C' size='000' dec='0' instruction='TMPSPED120->CCUSTO'></field>
+					<field name='COD_CTA_REF'  type='C' size='000' dec='0' instruction='TMPSPED120->COD_CTAREF'></field>
+				</fields>
+				<count>
+				<instruction>aTotal[11]++</instruction>
+				<instruction>aTotal[19]++</instruction>
+				<instruction>Eval({||cReg := "I051",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+			</lines>
+			<finishing>
+				<instruction><![CDATA[SpedQuery({"SPED120","TMPSPED120"},2)]]></instruction>
+			</finishing>
+		</register>
+		<register id='I052' description='Indicacao dos codigos de aglutinacao'>
+			<superior>I050</superior>
+			<table>TMPSPED140</table>
+			<initiating>
+				<instruction>dbSelectArea("SPED140")</instruction>
+				<instruction><![CDATA[SpedQuery({"SPED140","TMPSPED140"},1,"ID_ENT='"+SPED001->ID_ENT+"' AND SPED140.CODCTA='"+TMPSPED100A->CODCTA+"'")]]></instruction>
+			</initiating>
+			<lines Delimited='|' NumericNull='T' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<initiating>
+					<instruction>TMPSPED100A->IND_CTA=='A'</instruction>
+				</initiating>
+				<fields>
+					<field name='REG'          type='C' size='004' dec='0' instruction='"I052"'></field>
+					<field name='COD_CCUS'     type='C' size='000' dec='0' instruction='TMPSPED140->CCUSTO'></field>
+					<field name='COD_AGL'      type='C' size='000' dec='0' instruction='TMPSPED140->COD_AGL'></field>
+				</fields>
+				<count>
+				<instruction>aTotal[11]++</instruction>
+				<instruction>aTotal[19]++</instruction>
+				<instruction>Eval({||cReg := "I052",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+			</lines>
+			<finishing>
+				<instruction><![CDATA[SpedQuery({"SPED140","TMPSPED140"},2)]]></instruction>
+			</finishing>
+		</register>
+		<register id='I075' description='Tabela de historico padronizado'>
+			<superior>I010</superior>
+			<table>TMPSPED130</table>
+			<initiating>
+				<instruction>dbSelectArea("SPED130")</instruction>
+				<instruction><![CDATA[SpedQuery({"SPED130","TMPSPED130"},1,"ID_ENT='"+SPED001->ID_ENT+"'")]]></instruction>
+			</initiating>
+			<lines Delimited='|' NumericNull='T' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<initiating>
+					<instruction><![CDATA[SPED200->IND_ESC<>'Z']]></instruction>
+				</initiating>
+				<fields>
+					<field name='REG'          type='C' size='004' dec='0' instruction='"I075"'></field>
+					<field name='COD_HIST'     type='C' size='000' dec='0' instruction='TMPSPED130->COD_HIST'></field>
+					<field name='DESCR_HIST'   type='C' size='000' dec='0' instruction='TMPSPED130->DESCRI'></field>
+				</fields>
+				<count>
+				<instruction>aTotal[11]++</instruction>
+				<instruction>aTotal[19]++</instruction>
+				<instruction>Eval({||cReg := "I075",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+			</lines>
+			<finishing>
+				<instruction><![CDATA[SpedQuery({"SPED130","TMPSPED130"},2)]]></instruction>
+			</finishing>
+		</register>
+		<register id='I100' description='Centro de Custos'>
+			<superior>I010</superior>
+			<table>TMPSPED110A</table>
+			<initiating>
+				<instruction>dbSelectArea("SPED110")</instruction>
+				<instruction><![CDATA[SpedQuery({"SPED110A","TMPSPED110A"},1,"SPED110A.ID_ENT='"+SPED001->ID_ENT+"' AND DTULTALT <= '"+oParam:_DT_FIM:TEXT+"'",,,{"SPED110","SPED110A.ID_ENT = SPED110.ID_ENT AND SPED110A.CCUSTO = SPED110.CCUSTO"})]]></instruction>
+			</initiating>
+			<lines Delimited='|' NumericNull='T' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<initiating>
+					<instruction><![CDATA[SPED200->IND_ESC<>'Z']]></instruction>
+				</initiating>
+				<fields>
+					<field name='REG'          type='C' size='004' dec='0' instruction='"I100"'></field>
+					<field name='DT_ALT'       type='D' size='008' dec='0' instruction='TMPSPED110A->DTULTALT'></field>
+					<field name='COD_NAT'      type='C' size='000' dec='0' instruction='TMPSPED110A->CCUSTO'></field>
+					<field name='CTA'          type='C' size='000' dec='0' instruction='TMPSPED110A->DESCRI'></field>
+				</fields>
+				<count>
+				<instruction>aTotal[11]++</instruction>
+				<instruction>aTotal[19]++</instruction>
+				<instruction>Eval({||cReg := "I100",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+			</lines>
+			<finishing>
+				<instruction><![CDATA[SpedQuery({"SPED110A","TMPSPED110A"},2)]]></instruction>
+			</finishing>
+		</register>
+		<register id='I150' description='Saldos periodicos - identificacao do periodo'>
+			<superior>I010</superior>
+			<table>AGLSPED210</table>
+			<initiating>
+				<instruction>dbSelectArea("SPED210")</instruction>
+				<instruction><![CDATA[SpedQuery({"SPED210","AGLSPED210"},1,"ID_ENT='"+SPED001->ID_ENT+"' AND ORDEM = "+Str(Val(oParam:_ORDEM:TEXT),18)+" AND DTINI >= '"+oParam:_DT_INI:TEXT+"' AND DTFIM <= '"+oParam:_DT_FIM:TEXT+"'","DTINI,DTFIM",,,"DTINI,DTFIM,count(*) A","DTINI,DTFIM")]]></instruction>
+			</initiating>
+			<lines Delimited='|' NumericNull='T' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>			
+				<initiating>
+					<instruction><![CDATA[SPED200->IND_ESC<>'Z']]></instruction>
+				</initiating>
+				<fields>
+					<field name='REG'          type='C' size='004' dec='0' instruction='"I150"'           ></field>
+					<field name='DT_INI'       type='D' size='008' dec='0' instruction='AGLSPED210->DTINI'></field>
+					<field name='DT_FIN'       type='D' size='008' dec='0' instruction='AGLSPED210->DTFIM'></field>
+				</fields>
+				<count>
+				<instruction>aTotal[11]++</instruction>
+				<instruction>aTotal[19]++</instruction>
+				<instruction>Eval({||cReg := "I150",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+			</lines>
+			<finishing>
+				<instruction><![CDATA[SpedQuery({"SPED210","AGLSPED210"},2)]]></instruction>
+			</finishing>
+		</register>
+		<register id='I155' description='Saldos periodicos - identificacao do periodo'>
+			<superior>I150</superior>
+			<table>TMPSPED210</table>
+			<initiating>
+				<instruction>dbSelectArea("SPED210")</instruction>
+				<instruction><![CDATA[SpedQuery({"SPED210","TMPSPED210"},1,"ID_ENT='"+SPED001->ID_ENT+"' AND ORDEM = "+Str(Val(oParam:_ORDEM:TEXT),18)+" AND DTINI >= '"+DTOS(AGLSPED210->DTINI)+"' AND DTFIM <= '"+DTOS(AGLSPED210->DTFIM)+"' AND (VLSLDINI<>0 OR VLDEB<>0 OR VLCRED<>0 OR VLSLDFIN<>0)")]]></instruction>
+			</initiating>
+			<lines Delimited='|' NumericNull='F' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<initiating>
+					<instruction><![CDATA[SPED200->IND_ESC<>'Z']]></instruction>
+				</initiating>
+				<fields>
+					<field name='REG'          type='C' size='004' dec='0' instruction='"I155"'             ></field>
+					<field name='COD_CTA'      type='C' size='000' dec='0' instruction='TMPSPED210->CODCTA' ></field>
+					<field name='COD_CCUSTO'   type='C' size='000' dec='0' instruction='TMPSPED210->CCUSTO' ></field>
+					<field name='VL_SLD_INI'   type='N' size='000' dec='2' instruction='TMPSPED210->VLSLDINI'></field>
+					<field name='IND_DC_INI'   type='C' size='001' dec='0' instruction='TMPSPED210->DCINI'   ></field>
+					<field name='VL_DEB'       type='N' size='000' dec='2' instruction='TMPSPED210->VLDEB'   ></field>
+					<field name='VL_CRED'      type='N' size='000' dec='2' instruction='TMPSPED210->VLCRED'  ></field>
+					<field name='VL_SLD_FIM'   type='N' size='000' dec='2' instruction='TMPSPED210->VLSLDFIN'></field>
+					<field name='IND_DC_FIN'   type='C' size='001' dec='0' instruction='TMPSPED210->DCFIN'   ></field>
+				</fields>
+				<count>
+				<instruction>aTotal[11]++</instruction>
+				<instruction>aTotal[19]++</instruction>
+				<instruction>Eval({||cReg := "I155",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+			</lines>
+			<finishing>
+				<instruction><![CDATA[SpedQuery({"SPED210","TMPSPED210"},2)]]></instruction>
+			</finishing>
+		</register>
+		<register id='I200' description='Lancamento contabil'>
+			<superior>I010</superior>
+			<table>TMPSPED220</table>
+			<initiating>
+				<instruction>dbSelectArea("SPED220")</instruction>
+				<instruction><![CDATA[SpedQuery({"SPED220","TMPSPED220"},1,"ID_ENT='"+SPED001->ID_ENT+"' AND ORDEM = "+Str(Val(oParam:_ORDEM:TEXT),18)+" AND DTLCTO >= '"+oParam:_DT_INI:TEXT+"' AND DTLCTO <= '"+oParam:_DT_FIM:TEXT+"'")]]></instruction>
+			</initiating>
+			<lines Delimited='|' NumericNull='T' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<initiating>
+					<instruction><![CDATA[SPED200->IND_ESC<>'Z']]></instruction>
+				</initiating>
+				<fields>
+					<field name='REG'          type='C' size='004' dec='0' instruction='"I200"'             ></field>
+					<field name='NUM_LCTO'     type='C' size='000' dec='0' instruction='TMPSPED220->NUMLCTO'></field>
+					<field name='DT_LCTO'      type='D' size='008' dec='0' instruction='TMPSPED220->DTLCTO'></field>
+					<field name='VL_LCTO'      type='N' size='000' dec='2' instruction='TMPSPED220->VLLCTO'></field>
+					<field name='IND_LCTO'     type='C' size='001' dec='0' instruction='TMPSPED220->INDLCTO'></field>
+				</fields>
+				<count>
+				<instruction>aTotal[11]++</instruction>
+				<instruction>aTotal[19]++</instruction>
+				<instruction>Eval({||cReg := "I200",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+			</lines>
+			<finishing>
+				<instruction><![CDATA[SpedQuery({"SPED220","TMPSPED220"},2)]]></instruction>
+			</finishing>
+		</register>
+		<register id='I250' description='Partidas do lancamento'>
+			<superior>I200</superior>
+			<table>TMPSPED220A</table>
+			<initiating>
+				<instruction>dbSelectArea("SPED220A")</instruction>
+				<instruction><![CDATA[SpedQuery({"SPED220A","TMPSPED220A"},1,"ID_ENT='"+SPED001->ID_ENT+"' AND ORDEM = "+Str(Val(oParam:_ORDEM:TEXT),18)+" AND NUMLCTO = '"+TMPSPED220->NUMLCTO+"'")]]></instruction>
+			</initiating>
+			<lines Delimited='|' NumericNull='T' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>			
+				<fields>
+					<field name='REG'          type='C' size='004' dec='0' instruction='"I250"'                ></field>
+					<field name='COD_CTA'      type='C' size='000' dec='0' instruction='TMPSPED220A->CODCTA'   ></field>
+					<field name='COD_CCUS'     type='C' size='000' dec='0' instruction='TMPSPED220A->CCUSTO'   ></field>
+					<field name='VL_DC'        type='N' size='000' dec='2' instruction='TMPSPED220A->VALOR'    ></field>
+					<field name='IND_DC'       type='C' size='001' dec='0' instruction='TMPSPED220A->DC'       ></field>
+					<field name='NUM_ARQ'      type='C' size='000' dec='0' instruction='TMPSPED220A->NUMARQ'   ></field>
+					<field name='COD_HIST_PAD' type='C' size='000' dec='0' instruction='TMPSPED220A->COD_HIST' ></field>
+					<field name='HIST'         type='C' size='000' dec='0' instruction='STRTRAN(TMPSPED220A->HISTORICO,Chr(13)+Chr(10),"")'></field>
+					<field name='COD_PART'     type='C' size='000' dec='0' instruction='TMPSPED220A->ID_PART'  ></field>
+				</fields>
+				<count>
+				<instruction>aTotal[11]++</instruction>
+				<instruction>aTotal[19]++</instruction>
+				<instruction>Eval({||cReg := "I250",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+			</lines>
+			<finishing>
+				<instruction><![CDATA[SpedQuery({"SPED220A","TMPSPED220A"},2)]]></instruction>
+			</finishing>
+		</register>
+		<register id='I350' description='Saldo das contas de resultado antes do encerramento'>
+			<superior>I010</superior>
+			<table>TMPSPED220</table>
+			<initiating>
+				<instruction>dbSelectArea("SPED220")</instruction>
+				<instruction><![CDATA[SpedQuery({"SPED220","TMPSPED220"},1,"ID_ENT='"+SPED001->ID_ENT+"' AND ORDEM = "+Str(Val(oParam:_ORDEM:TEXT),18)+" AND DTLCTO >= '"+oParam:_DT_INI:TEXT+"' AND DTLCTO <= '"+oParam:_DT_FIM:TEXT+"' AND INDLCTO='E'","DTLCTO",,,"DTLCTO,count(*) AA","DTLCTO")]]></instruction>
+			</initiating>
+			<lines Delimited='|' NumericNull='T' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<initiating>
+					<instruction><![CDATA[SPED200->IND_ESC<>'Z']]></instruction>
+				</initiating>
+				<fields>
+					<field name='REG'          type='C' size='004' dec='0' instruction='"I350"'                   ></field>
+					<field name='DT_RES'       type='D' size='008' dec='0' instruction='TMPSPED220->DTLCTO'></field>
+				</fields>
+				<count>
+				<instruction>aTotal[11]++</instruction>
+				<instruction>aTotal[19]++</instruction>
+				<instruction>Eval({||cReg := "I350",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+			</lines>
+			<finishing>
+				<instruction><![CDATA[SpedQuery({"SPED220","TMPSPED220"},2)]]></instruction>
+			</finishing>
+		</register>
+		<register id='I355' description='Detalhes dos Saldos das contas de resultado antes do encerramento'>
+			<superior>I350</superior>
+			<table>TMPSPED220A</table>
+			<initiating>
+				<instruction>dbSelectArea("SPED220A")</instruction>
+				<instruction><![CDATA[SpedQuery({"SPED220","TMPSPED220A"},1,"SPED220.ID_ENT='"+SPED001->ID_ENT+"' AND SPED220.ORDEM = "+Str(Val(oParam:_ORDEM:TEXT),18)+" AND SPED220.DTLCTO = '"+DTOS(TMPSPED220->DTLCTO)+"' AND SPED220.INDLCTO='E'",,{"SPED220A.CODCTA","(SELECT DISTINCT CODCTA FROM SPED100A WHERE SPED100A.ID_ENT='"+SPED001->ID_ENT+"' AND SPED100A.DTULTALT <= '"+oParam:_DT_FIM:TEXT+"' AND SPED100A.COD_NAT='04')"},{"SPED220A","SPED220.ID_ENT=SPED220A.ID_ENT AND SPED220.ORDEM=SPED220A.ORDEM AND SPED220.NUMLCTO=SPED220A.NUMLCTO"},"CODCTA,CCUSTO,CASE DC WHEN 'D' THEN -1*valor WHEN 'C' THEN VALOR END VALOR","CODCTA,CCUSTO",{"CODCTA,CCUSTO,SUM(VALOR) VALOR"})]]></instruction>
+			</initiating>
+			<lines Delimited='|' NumericNull='T' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>			
+				<fields>
+					<field name='REG'          type='C' size='004' dec='0' instruction='"I355"'                 ></field>
+					<field name='COD_CTA'      type='C' size='000' dec='0' instruction='TMPSPED220A->CODCTA'    ></field>
+					<field name='CCUSTO'       type='C' size='000' dec='0' instruction='TMPSPED220A->CCUSTO'    ></field>
+					<field name='VL_CTA'       type='N' size='000' dec='2' instruction='ABS(TMPSPED220A->VALOR)'></field>
+					<field name='IND_DC'       type='C' size='001' dec='0'><instruction><![CDATA[IIF(TMPSPED220A->VALOR>0,"D","C")]]></instruction></field>
+				</fields>
+				<count>
+				<instruction>aTotal[11]++</instruction>
+				<instruction>aTotal[19]++</instruction>
+				<instruction>Eval({||cReg := "I355",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+			</lines>
+			<finishing>
+				<instruction><![CDATA[SpedQuery({"SPED220A","TMPSPED220A"},2)]]></instruction>
+			</finishing>
+		</register>
+		<register id='I500' description='Parametros de impressao e visualizacao do liro razao auxiliar com leiaute parametrizavel'>
+			<superior>I010</superior>
+			<initiating>
+				<instruction>dbSelectArea("SPED240")</instruction>
+				<instruction><![CDATA[SpedQuery({"SPED240","TMPSPED240"},1,"ID_ENT='"+SPED001->ID_ENT+"' AND ORDEM = "+Str(Val(oParam:_ORDEM:TEXT),18)+" AND DTINI >= '"+oParam:_DT_INI:TEXT+"' AND DTFIM <= '"+oParam:_DT_FIM:TEXT+"'")]]></instruction>
+			</initiating>
+			<lines Delimited='|' NumericNull='T' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<initiating>
+					<instruction>ALLTRIM( SPED200->IND_ESC ) == "Z"</instruction>
+				</initiating>
+				<validline>
+					<instruction>!(TMPSPED240->(Eof()))</instruction>
+				</validline>
+				<fields>
+					<field name='REG'          type='C' size='004' dec='0' instruction='"I500"'></field>
+					<field name='TAM_FONTE'    type='N' size='000' dec='0' instruction='6'>    </field>
+				</fields>
+				<count>
+				<instruction>aTotal[11]++</instruction>
+				<instruction>aTotal[19]++</instruction>
+				<instruction>Eval({||cReg := "I500",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+			</lines>
+			<finishing>
+				<instruction><![CDATA[SpedQuery({"SPED240","TMPSPED240"},2)]]></instruction>
+			</finishing>
+		</register>
+		<register id='I510' description='Definicao de campos do livro razao auxiliar com leiaute parametrizavel'>
+			<superior>I500</superior>
+			<table>TMPSPED230A</table>
+			<initiating>
+				<instruction>dbSelectArea("SPED230")</instruction>
+				<instruction><![CDATA[SpedQuery({"SPED230A","TMPSPED230A"},1,"ID_ENT='"+SPED001->ID_ENT+"' AND ID_LAYOUT = '"+TMPSPED240->ID_LAYOUT+"'","R_E_C_N_O_")]]></instruction>
+			</initiating>
+			<lines Delimited='|' NumericNull='T' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<fields>
+					<field name='REG'          type='C' size='004' dec='0' instruction='"I510"'             ></field>
+					<field name='NM_CAMPO'     type='C' size='016' dec='0' instruction='TMPSPED230A->CAMPO'  ></field>
+					<field name='DESC_CAMPO'   type='C' size='050' dec='0' instruction='TMPSPED230A->DESCRI' ></field>
+					<field name='TIPO_CAMPO'   type='C' size='001' dec='0' instruction='TMPSPED230A->TIPO'   ></field>
+					<field name='TAM_CAMPO'    type='N' size='003' dec='0' instruction='TMPSPED230A->TAMANHO'></field>
+					<field name='DEC_CAMPO'    type='N' size='003' dec='0' instruction='TMPSPED230A->TAMDECIMAL'></field>
+					<field name='COL_CAMPO'    type='N' size='003' dec='0' instruction='TMPSPED230A->LARGURA'></field>
+				</fields>
+				<count>
+				<instruction>aTotal[11]++</instruction>
+				<instruction>aTotal[19]++</instruction>
+				<instruction>Eval({||cReg := "I510",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+			</lines>
+			<finishing>
+				<instruction><![CDATA[SpedQuery({"SPED230A","TMPSPED230A"},2)]]></instruction>
+			</finishing>
+		</register>
+		<register id='I550' description='Detalhes do livro razao auxiliar com leiaute parametrizavel'>
+			<superior>I500</superior>
+			<table>TMPSPED240</table>
+			<lines Delimited='|' NumericNull='T' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<fields>
+					<field name='REG'          type='C' size='004' dec='0' instruction='"I550"'></field>
+					<field name='RZ_CONT'      type='C' size='000' dec='0' instruction='TMPSPED240->CONTEUDO'>  </field>
+				</fields>
+				<count>
+				<instruction>aTotal[11]++</instruction>
+				<instruction>aTotal[19]++</instruction>
+				<instruction>Eval({||cReg := "I550",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+			</lines>
+		</register>
+		<register id='I990' description='Encerramento do Bloco I'>
+			<lines Delimited='|' NumericNull='T' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>			
+				<fields>
+					<field name='REG'          type='C' size='004' dec='0' instruction='"I990"'                ></field>
+					<field name='QTD_LIN_I'    type='N' size='000' dec='0' instruction='aTotal[19]'></field>
+				</fields>
+				<count>
+				<instruction>aTotal[11]++</instruction>
+				<instruction>Eval({||cReg := "I990",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+			</lines>
+		</register>
+		<register id='J001' description='Abertura do bloco J'>
+			<lines Delimited='|' NumericNull='F' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<fields>
+					<field name='REG'        type='C' size='004' dec='0' instruction='"J001"'></field>
+					<field name='IND_DATA'   type='N' size='001' dec='0' instruction='0'></field>
+				</fields>
+				<count>
+				<instruction>aTotal[11]++</instruction>
+				<instruction>aTotal[18]++</instruction>
+				<instruction>Eval({||cReg := "J001",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+			</lines>
+		</register>
+		<register id='J005' description='Demonstracoes contabeis'>
+			<superior>J001</superior>
+			<table>SPED300</table>
+			<initiating>
+				<instruction>dbSelectArea("SPED300")</instruction>
+				<instruction>dbSetOrder(1)</instruction>
+				<instruction>MsSeek(SPED001->ID_ENT+Str(Val(oParam:_ORDEM:TEXT),18)+oParam:_DT_INI:TEXT)</instruction>
+			</initiating>
+			<lines Delimited='|' NumericNull='F' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<initiating>
+					<instruction><![CDATA[SPED300->DTFIM<=STOD(oParam:_DT_FIM:TEXT)]]></instruction>
+				</initiating>
+				<fields>
+					<field name='REG'        type='C' size='004' dec='0' instruction='"J005"'></field>
+					<field name='DT_INI'     type='D' size='008' dec='0' instruction='SPED300->DTINI'></field>
+					<field name='DT_FIN'     type='D' size='008' dec='0' instruction='SPED300->DTFIM'></field>
+					<field name='ID_DEM'     type='N' size='001' dec='0' instruction='1'></field>
+					<field name='CAB_DEM'    type='C' size='000' dec='0' instruction='SPED300->CABDEM'></field>
+				</fields>
+				<count>
+				<instruction>aTotal[11]++</instruction>
+				<instruction>aTotal[18]++</instruction>
+				<instruction>Eval({||cReg := "J005",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+			</lines>
+		</register>
+		<register id='J100' description='Balanco Patrimonial'>
+			<superior>J005</superior>
+			<table>TMPSPED300A</table>
+			<initiating>
+				<instruction>dbSelectArea("SPED140")</instruction>
+				<instruction>dbSetOrder(2)</instruction>
+				<instruction>dbSelectArea("SPED300A")</instruction>
+				<instruction><![CDATA[SpedQuery({"SPED300A","TMPSPED300A"},1,"SPED300A.ID_ENT='"+SPED001->ID_ENT+"' AND SPED300A.ORDEM = "+Str(Val(oParam:_ORDEM:TEXT),18)+" AND SPED300A.DTINI = '"+DTOS(SPED300->DTINI)+"' AND SPED300A.DTFIM='"+DTOS(SPED300->DTFIM)+"' AND SPED300A.TIPO_DEM='1'","COD_AGL,NIVEL")]]></instruction>
+			</initiating>
+			<lines Delimited='|' NumericNull='F' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<validline>
+					<instruction>SPED140->(MsSeek(SPED001->ID_ENT+TMPSPED300A->COD_AGL))</instruction>
+				</validline>
+				<fields>
+					<field name='REG'        type='C' size='004' dec='0' instruction='"J100"'></field>
+					<field name='COD_AGL'    type='C' size='000' dec='0' instruction='TMPSPED300A->COD_AGL'></field>
+					<field name='NIVEL_AGL'  type='N' size='000' dec='0' instruction='TMPSPED300A->NIVEL'></field>
+					<field name='ID_GRP_BAL' type='N' size='001' dec='0' ><instruction><![CDATA[IIF(SPED140->COD_NAT$'02/03',2,1)]]></instruction></field>
+					<field name='DESCR_AGL'  type='C' size='000' dec='0' instruction='TMPSPED300A->DESCRI'></field>
+					<field name='VL_CTA'     type='N' size='000' dec='2' instruction='TMPSPED300A->VALOR'></field>
+					<field name='ID_DC_BAL'  type='C' size='001' dec='0' instruction='TMPSPED300A->INDVALOR'></field>
+				</fields>
+				<count>
+				<instruction>aTotal[11]++</instruction>
+				<instruction>aTotal[18]++</instruction>
+				<instruction>Eval({||cReg := "J100",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+			</lines>
+			<finishing>
+				<instruction><![CDATA[SpedQuery({"SPED300A","TMPSPED300A"},2)]]></instruction>
+			</finishing>
+
+		</register>
+		<register id='J150' description='Balanco Patrimonial'>
+			<superior>J005</superior>
+			<table>TMPSPED300A</table>
+			<initiating>
+				<instruction>dbSelectArea("SPED140")</instruction>
+				<instruction>dbSetOrder(2)</instruction>
+				<instruction>dbSelectArea("SPED300A")</instruction>
+				<instruction><![CDATA[SpedQuery({"SPED300A","TMPSPED300A"},1,"SPED300A.ID_ENT='"+SPED001->ID_ENT+"' AND SPED300A.ORDEM = "+Str(Val(oParam:_ORDEM:TEXT),18)+" AND SPED300A.DTINI = '"+DTOS(SPED300->DTINI)+"' AND SPED300A.DTFIM='"+DTOS(SPED300->DTFIM)+"' AND SPED300A.TIPO_DEM='2'","COD_AGL,NIVEL")]]></instruction>
+			</initiating>
+			<lines Delimited='|' NumericNull='F' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<fields>
+					<field name='REG'        type='C' size='004' dec='0' instruction='"J150"'></field>
+					<field name='COD_AGL'    type='C' size='000' dec='0' instruction='TMPSPED300A->COD_AGL'></field>
+					<field name='NIVEL_AGL'  type='N' size='000' dec='0' instruction='TMPSPED300A->NIVEL'></field>
+					<field name='DESCR_AGL'  type='C' size='000' dec='0' instruction='TMPSPED300A->DESCRI'></field>
+					<field name='VL_CTA'     type='N' size='000' dec='2' instruction='TMPSPED300A->VALOR'></field>
+					<field name='ID_DC_BAL'  type='C' size='001' dec='0' instruction='TMPSPED300A->INDVALOR'></field>
+				</fields>
+				<count>
+				<instruction>aTotal[11]++</instruction>
+				<instruction>aTotal[18]++</instruction>
+				<instruction>Eval({||cReg := "J150",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+			</lines>
+			<finishing>
+				<instruction><![CDATA[SpedQuery({"SPED300A","TMPSPED300A"},2)]]></instruction>
+			</finishing>
+		</register>
+		<register id='J900' description='Termo de encerramento'>
+			<superior>J001</superior>
+			<initiating>
+				<instruction>dbSelectArea("SPED200")</instruction>
+				<instruction>dbSetOrder(1)</instruction>
+				<instruction>MsSeek(SPED001->ID_ENT+Str(Val(oParam:_ORDEM:TEXT),18))</instruction>
+			</initiating>
+			<lines Delimited='|' NumericNull='F' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<fields>
+					<field name='REG'          type='C' size='004' dec='0' instruction='"J900"'></field>
+					<field name='DNRC_ENCER'   type='C' size='021' dec='0' instruction='"TERMO DE ENCERRAMENTO"'></field>
+					<field name='NUM_ORD'      type='N' size='000' dec='0' instruction='SPED200->ORDEM'></field>
+					<field name='NAT_LIVR'     type='C' size='080' dec='0' instruction='SPED200->NATUREZA'></field>
+					<field name='NOME'         type='C' size='000' dec='0' instruction='SPED001A->NOME'></field>
+					<field name='QTD_LIN'      type='F' size='000' dec='0' instruction='AllTrim(Str(aTotal[16],18))'></field>
+					<field name='DT_INI_ESCR'  type='D' size='008' dec='0' instruction='STOD(oParam:_DT_INI:TEXT)'></field>
+					<field name='DT_FIN_ESCR'  type='D' size='008' dec='0' instruction='STOD(oParam:_DT_FIM:TEXT)'></field>
+				</fields>
+				<count>
+				<instruction>aTotal[11]++</instruction>
+				<instruction>aTotal[18]++</instruction>
+				<instruction>Eval({||cReg := "J900",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+			</lines>
+		</register>	
+		<register id='J930' description='Identificacao dos signatarios da escrituracao'>
+			<superior>J900</superior>
+			<table>SPED002C</table>
+			<initiating>
+				<instruction>dbSelectArea("SPED002A")</instruction>
+				<instruction>dbSetOrder(1)</instruction>
+				<instruction>MsSeek(SPED001->ID_ENT)</instruction>
+
+			</initiating>
+			<lines Delimited='|' NumericNull='F' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<initiating>
+					<instruction><![CDATA[SpedQuery({"SPED002","TMPSPED002"},1,"ID_ENT='"+SPED002C->ID_ENT+"' AND ID_PART='"+SPED002C->ID_PART+"'")]]></instruction>
+					<instruction><![CDATA[SpedQuery({"SPED002A","TMPSPED002A"},1,"ID_ENT='"+SPED002C->ID_ENT+"' AND ID_PART='"+SPED002C->ID_PART+"'")]]></instruction>
+				</initiating>
+				<fields>
+					<field name='REG'          type='C' size='004' dec='0' instruction='"J930"'></field>
+					<field name='NOME'         type='C' size='000' dec='0' instruction='TMPSPED002A->NOME'></field>
+					<field name='CPF'          type='C' size='011' dec='0' instruction='TMPSPED002->CPF'></field>
+					<field name='QUALIF'       type='C' size='000' dec='0' instruction='SPED002C->QUALIF'></field>
+					<field name='COD_ASSIN'    type='C' size='000' dec='0' instruction='SPED002C->CODASSIN'></field>
+					<field name='IND_CRC'      type='C' size='011' dec='0' instruction='SPED002C->CRC'></field>
+				</fields>
+				<count>
+				<instruction>aTotal[18]++</instruction>
+				<instruction>Eval({||cReg := "J930",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+				<finishing>
+					<instruction><![CDATA[SpedQuery({"SPED002","TMPSPED002"},2,)]]></instruction>
+					<instruction><![CDATA[SpedQuery({"SPED002A","TMPSPED002A"},2)]]></instruction>
+				</finishing>
+			</lines>
+		</register>
+		<register id='J990' description='Encerramento do bloco J'>
+			<superior>J001</superior>
+			<lines Delimited='|' NumericNull='F' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<fields>
+					<field name='REG'        type='C' size='004' dec='0' instruction='"J990"'></field>
+					<field name='QTD_LIN_J'  type='N' size='000' dec='0' instruction='aTotal[18]'></field>
+				</fields>
+				<count>
+				<instruction>Eval({||cReg := "J990",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+			</lines>
+		</register>
+		<register id='9001' description='Abertura do bloco 9'>
+			<lines Delimited='|' NumericNull='F' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<fields>
+					<field name='REG'        type='C' size='004' dec='0' instruction='"9001"'></field>
+					<field name='IND_DATA'   type='N' size='001' dec='0' instruction='0'></field>
+				</fields>
+				<count>
+				<instruction>aTotal[17]++</instruction>
+				<instruction>Eval({||cReg := "9001",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				<instruction>Eval({||cReg := "9990",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				<instruction>Eval({||cReg := "9999",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,1}),aTotal[15][nScan][02]++)})</instruction>
+				<instruction>Eval({||cReg := "9900",nScan := aScan(aTotal[15],{|x| x[1] == cReg}),IIf(nScan==0,aadd(aTotal[15],{cReg,Len(aTotal[15])+1}),aTotal[15][nScan][02]++)})</instruction>
+				</count>
+			</lines>
+		</register>
+		<register id='9900' description='Registros do arquivo'>
+			<table>TRB</table>
+			<initiating>
+				<instruction><![CDATA[SpedGrvTmp("TRB",1,{{"REG","C",4,0},{"NREG","N",18,0}},aTotal[15])]]></instruction>
+				<instruction>TRB->(dbGotop())</instruction>
+			</initiating>
+			<lines Delimited='|' NumericNull='F' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<fields>
+					<field name='REG'         type='C' size='004' dec='0' instruction='"9900"'></field>
+					<field name='REG_BLC'     type='C' size='004' dec='0' instruction='TRB->REG'></field>
+					<field name='QTD_REG_BLC' type='N' size='000' dec='0' instruction='TRB->NREG'></field>
+				</fields>
+				<count>
+				<instruction>aTotal[16]+=TRB->NREG</instruction>
+				<instruction>aTotal[17]++</instruction>
+				</count>
+			</lines>
+			<finishing>
+				<instruction>SpedGrvTmp("TRB",2)</instruction>
+			</finishing>
+
+		</register>
+		<register id='9990' description='Encerramento do bloco 9'>
+			<lines Delimited='|' NumericNull='F' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<fields>
+					<field name='REG'        type='C' size='004' dec='0' instruction='"9990"'></field>
+					<field name='QTD_LIN_9'  type='N' size='000' dec='0' instruction='aTotal[17]+1'></field>
+				</fields>
+			</lines>
+		</register>
+		<register id='9999' description='Encerramento do arquivo digital'>
+			<lines Delimited='|' NumericNull='F' DecimalPoint=',' DateFormat='DDMMYYYY' DateNull='T' StringNull='T'>
+				<fields>
+					<field name='REG'        type='C' size='004' dec='0' instruction='"9999"'></field>
+					<field name='QTD_LIN'    type='N' size='000' dec='0' instruction='aTotal[16]'></field>
+				</fields>
+			</lines>
+		</register>
+	</registers>
+	</layout>
+</LayOutTax>

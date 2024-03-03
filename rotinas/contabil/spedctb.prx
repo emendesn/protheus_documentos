@@ -1,0 +1,2820 @@
+#INCLUDE "SPEDCTB.CH"
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "APWIZARD.CH"
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³SPEDCTB   ³ Rev.  ³Eduardo Riera          ³ Data ³11.05.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Servico de sincronicao do ERP com o Gateway do projeto SPED ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³Esta rotina tem como objetivo efetuar a sincronizacao do ERP³±±
+±±³          ³com o Gateway do projeto sped.                              ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Observacao³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Totvs SPED Services Gateway                                ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function SPEDCTB()
+
+Local oObj 
+
+Local aSays		:= {}
+Local aButtons	:= {}
+
+Local cMsgValid := ""
+Local cCadastro := "SPED Contabil"
+
+Local nOpca		:= 0
+
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para parametros                                               ³
+//³ (*) mv_par01 // Tipo Escrituracao ? Sem Centralizacao / Com Centralizacao          ³
+//³ (*) mv_par02 // Situacao Especial ? Opcoes com F3: (Consulta "CTBSP1" no SXB)      ³
+//³                                     Z-Normal;                                      ³
+//³                                     0-Abertura;                                    ³
+//³                                     1-Cisao;                                       ³
+//³                                     2-Fusao;                                       ³
+//³                                     3-Incorporacao;                                ³
+//³                                     4-Extincao                                     ³
+//³ (*) mv_par03 // Outras Inscricoes ? Opcoes com F3: (Consulta CTBSP2 no SXB)        ³
+//³                                     00-Nao ha;                                     ³
+//³                                     01-Banco Central do Brasil/BACEN;              ³
+//³                                     02-Superintendência de Seguros Privados/SUSEP; ³
+//³                                     03-Comissão de Valores Mobiliários/CVM;        ³
+//³                                     04-Secretaria de Previdência complementar      ³
+//³     mv_par04 // Inscricao ?                                                        ³
+//³ (*) mv_par05 // Moeda CTB ?                                                        ³
+//³ (*) mv_par06 // Registra C.Custo no Lcto ? 1-Sim; 2-Nao                            ³
+//³ (*) mv_par07 // Calendario ?                                                       ³
+//³ (*) mv_par08 // Periodo Inicial de Lcto ?                                          ³
+//³ (*) mv_par09 // Periodo Final de Lcto ?                                            ³
+//³ (*) mv_par10 // Numero de Ordem do Livro ?                                         ³
+//³ (*) mv_par11 // Natureza do Livro ?                                                ³
+//³     mv_par12 // Data Lucros/Perdas ?                                               ³
+//³     mv_par13 // Periodo Inicial - Demons.?                                         ³
+//³     mv_par14 // Periodo Final - Demons.?                                           ³
+//³     mv_par15 // Config. Livros Bal. Patrim. ?                                      ³
+//³     mv_par16 // Config. Livros DRE ?                                               ³
+//³     mv_par17 // Outras Demonstracoes ?                                             ³
+//³                                                                                    ³
+//³ (*) Dados Obrigatorios                                                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Pergunte("CTBSP1",.F.)
+	
+AADD(aSays,STR0001)	//	"Este programa tem como objetivo gerar a Escrituração Contábil Digital."
+	
+AADD(aButtons, { 5,.T.,{|| Pergunte("CTBSP1",.T.) } } )
+AADD(aButtons, { 1,.T.,{|| nOpca := 1, If( CTBOk(), FechaBatch(), nOpca:=0 ) }} )
+AADD(aButtons, { 2,.T.,{|| FechaBatch() }} )
+	
+FormBatch( cCadastro, aSays, aButtons,, 130, 560 )
+	
+If nOpca == 1
+	If !ValidaPar1(@cMsgValid)
+		MsgInfo(cMsgValid,STR0002)	//	"SPED Contabil - Inconsistencia nos Parametros"
+	Else                                
+		MV_PAR01 := IF( MV_PAR01==1, "0", "1" )
+		MV_PAR06 := IF( MV_PAR06==1, "S", "N" )
+
+		// WIZARD do SPED Contabil
+		If SpedCtbCFG()
+			//MV_PAR06 := SubStr(MV_PAR06,1,1)
+			oObj := MsNewProcess():New({|lEnd| SpedCtbDo(oObj)},STR0003,"",.F.)	//	"SPED Contábil"
+			oObj :Activate()
+		EndIf
+	EndIf
+Endif
+
+Return
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³SPEDCTBRA ³ Rev.  ³Eduardo Riera          ³ Data ³11.05.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Servico de sincronicao do ERP com o Gateway do projeto SPED ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³Esta rotina tem como objetivo efetuar a sincronizacao do ERP³±±
+±±³          ³com o Gateway do projeto sped.                              ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Observacao³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Totvs SPED Services Gateway                                ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function SPEDCTB_RA()
+
+Local oObj
+
+Local aSays		:= {}
+Local aButtons	:= {}
+
+Local cMsgValid := ""
+Local cCadastro := STR0004	//	"SPED Contabil - Razão Auxiliar"
+
+Local nOpca		:= 0
+
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para parametros                                               ³
+//³ (*) mv_par01 // Tipo Escrituracao ? Sem Centralizacao / Com Centralizacao          ³
+//³ (*) mv_par02 // Situacao Especial ? Opcoes com F3: (Consulta "CTBSP1" no SXB)      ³
+//³                                     Z-Normal;                                      ³
+//³                                     0-Abertura;                                    ³
+//³                                     1-Cisao;                                       ³
+//³                                     2-Fusao;                                       ³
+//³                                     3-Incorporacao;                                ³
+//³                                     4-Extincao                                     ³
+//³ (*) mv_par03 // Numero do Livro Geral                                              ³
+//³ (*) mv_par04 // Numero do Livro Auxiliar                                           ³
+//³ (*) mv_par05 // Natureza do Livro Auxiliar                                         ³
+//³ (*) mv_par06 // Periodo Inicial de Lcto ?                                          ³
+//³ (*) mv_par07 // Periodo Final de Lcto ?                                            ³
+//³     mv_par08 // Razao Auxiliar Configuravel                                        ³
+//³                                                                                    ³
+//³ (*) Dados Obrigatorios                                                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Pergunte("CTBSP2",.F.)
+
+AADD(aSays,STR0012)	//	"Este programa tem como objetivo importar os dados de um arquivo com informacoes de"
+AADD(aSays,STR0013)	//	"Livro Auxiliar."
+
+AADD(aButtons, { 5,.T.,{|| Pergunte("CTBSP2",.T.) } } )
+AADD(aButtons, { 1,.T.,{|| nOpca := 1, If( CTBOk(), FechaBatch(), nOpca:=0 ) }} )
+AADD(aButtons, { 2,.T.,{|| FechaBatch() }} )
+
+FormBatch( cCadastro, aSays, aButtons,, 150/*130*/, 560 )
+
+If nOpca == 1
+	If !ValidaPar2(@cMsgValid)
+		MsgInfo(cMsgValid,STR0002)	//	"SPED Contabil - Inconsistencia nos Parametros")
+	Else                                
+		MV_PAR01 := IF( MV_PAR01==1, "0", "1" )
+
+		// WIZARD do SPED Contabil
+		If SpedCtbCFG()
+			oObj := MsNewProcess():New({|lEnd| SpedCtbDo2(oObj)},"","",.F.)
+			oObj :Activate()
+		EndIf
+	EndIf
+Endif
+
+Return
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³SPEDCTBTXT³ Rev.  ³Eduardo Riera          ³ Data ³12.06.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Servico de geracao do arquivo TXT do Projeto Sped contabil  ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³Esta rotina tem como objetivo efetuar a geracao do aruqivo  ³±±
+±±³          ³TXT utilizando o Gateway do projeto sped.                   ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Observacao³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Totvs SPED Services Gateway                                ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function SPEDCTB_TXT()
+
+Local oObj
+
+Local aSays		:= {}
+Local aButtons	:= {}
+
+Local cThread   := ""
+Local cMsgValid := ""
+Local cCadastro := STR0003	//	"SPED Contabil"
+Local cURL
+Local nOpca		:= 0
+Local lCopied 	:= .F.
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para parametros                      ³
+//³ (*) mv_par01 // Arquivo de Destino                        ³
+//³ (*) mv_par02 // Periodo Inicial de Lcto ?                 ³
+//³ (*) mv_par03 // Periodo Final de Lcto ?                   ³
+//³ (*) mv_par05 // Indicador da forma de Escrituração ?      ³
+//³                 G-Diario Geral                            ³
+//³                 R-Diario Geral com escrituracao auxiliar  ³
+//³                 A-Diario Auxiliar                         ³
+//³                 Z-Livro Auxiliar Parametrizavel           ³
+//³                                                           ³
+//³ (*) Dados Obrigatorios                                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Pergunte("CTBSP3",.F.)
+
+AADD(aSays,STR0015)	//	"Este programa tem como objetivo gerar o arquivo magnetico da Escrituracao Contabil Digital."
+
+AADD(aButtons, { 5,.T.,{|| Pergunte("CTBSP3",.T.) } } )
+AADD(aButtons, { 1,.T.,{|| nOpca := 1, If( CTBOk(), FechaBatch(), nOpca:=0 ) }} )
+AADD(aButtons, { 2,.T.,{|| FechaBatch() }} )
+
+FormBatch( cCadastro, aSays, aButtons,, 130, 560 )
+
+If nOpca == 1
+	If !ValidaPar3(@cMsgValid)
+		MsgInfo(cMsgValid,STR0002)	//	"SPED Contabil - Inconsistencia nos Parametros"
+	Else
+		If MV_PAR05 == 1		//	G-Diario Geral
+			MV_PAR05 := "G"
+		ElseIf MV_PAR05 == 2	//	R-Diario Geral com escrituracao auxiliar
+			MV_PAR05 := "R"
+		ElseIf MV_PAR05 == 3	//	A-Diario Auxiliar
+			MV_PAR05 := "A"
+		Else					//	Z-Livro Auxiliar Parametrizavel
+			MV_PAR05 := "Z"
+		EndIf
+
+		// WIZARD do SPED Contabil
+		If SpedCtbCFG()
+			
+			cURL := PadR(GetNewPar("MV_CTBURL","http://"),250)
+			
+			oObj:=WsSPEDLayOutTax():New()
+			oObj:cUSERTOKEN := "TOTVS"
+			oObj:cFILELAYOUT:= "SPEDCTB.XML"
+			oObj:cVERSION   := "1.0"
+			oObj:_URL        := AllTrim(cURL)+"/SPEDLAYOUTTAX.apw"
+			oObj:cFILEOUT   := AllTrim(MV_PAR01)
+		
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Parametros da versao                                 ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			oObj:oWsParams := SPEDLAYOUTTAX_SPED_PARAMETERS():New()
+			oObj:oWsParams:oWsInfo := SPEDLAYOUTTAX_ARRAYOFSPED_GENERICPARAMETER():New()
+		
+			aadd(oObj:oWsParams:oWsInfo:oWsSPED_GenericParameter,SPEDLAYOUTTAX_SPED_GENERICPARAMETER():New())
+			Atail(oObj:oWsParams:oWsInfo:oWsSPED_GenericParameter):cVariable := "DT_INI"
+			Atail(oObj:oWsParams:oWsInfo:oWsSPED_GenericParameter):cValue    := DTOS(MV_PAR02)
+			aadd(oObj:oWsParams:oWsInfo:oWsSPED_GenericParameter,SPEDLAYOUTTAX_SPED_GENERICPARAMETER():New())
+			Atail(oObj:oWsParams:oWsInfo:oWsSPED_GenericParameter):cVariable := "DT_FIM"
+			Atail(oObj:oWsParams:oWsInfo:oWsSPED_GenericParameter):cValue    := DTOS(MV_PAR03)
+			aadd(oObj:oWsParams:oWsInfo:oWsSPED_GenericParameter,SPEDLAYOUTTAX_SPED_GENERICPARAMETER():New())
+			Atail(oObj:oWsParams:oWsInfo:oWsSPED_GenericParameter):cVariable := "ORDEM"
+			Atail(oObj:oWsParams:oWsInfo:oWsSPED_GenericParameter):cValue    := AllTrim(STR(MV_PAR04,18))
+			aadd(oObj:oWsParams:oWsInfo:oWsSPED_GenericParameter,SPEDLAYOUTTAX_SPED_GENERICPARAMETER():New())
+			Atail(oObj:oWsParams:oWsInfo:oWsSPED_GenericParameter):cVariable := "IND_ESC"
+			Atail(oObj:oWsParams:oWsInfo:oWsSPED_GenericParameter):cValue    := SubStr(MV_PAR05,1,1)
+
+			If !oObj:Export()
+				Aviso("SPED",GetWscError(3),{"Ok"},3)
+			Else	
+				cThread := oObj:cEXPORTRESULT
+				AvisoRun( STR0003 , "Iniciando..." , ;		//	"SPED - Parte Contábil"
+				         {|oGet|oObj:cUSERTOKEN := "TOTVS",;
+						        oObj:cIDTHREAD 	:= cThread,;
+						        oObj:_URL 		:= AllTrim(cURL) + "/SPEDLAYOUTTAX.apw",;
+						        cMsg			:= IIf( oObj:Status() <> Nil , Eval(oGet:bSetGet , oObj:cStatusResult ) , "ERR" ),;
+								oGet:Refresh(),;
+				           		IIf(cMsg=="ERR",.T.,.F.) })
+
+				// efetua a copia do arquivo do sped
+				Processa( { || lCopied := CpyFileSPED( AllTrim( MV_PAR01 ) ) }, "Transferindo arquivo", "Aguarde...", .F. )
+				
+				IF ! lCopied
+					Aviso( "Atencao !", "Nao foi possivel efetuar a transferencia do arquivo do SPED para a area informada !" , { "Ok" },2 )
+				Else
+					Aviso( "Atencao !", "Arquivo gerado em: " + AllTrim(MV_PAR01) + " !" , { "Ok" },2 )
+				Endif
+			EndIf
+		EndIf
+	EndIf
+Endif
+
+Return
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³SPEDCTBDO ³ Rev.  ³Eduardo Riera          ³ Data ³11.05.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Servico de sincronicao do ERP com o Gateway do projeto SPED ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³Esta rotina tem como objetivo efetuar a sincronizacao do ERP³±±
+±±³          ³com o Gateway do projeto sped.                              ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Observacao³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Totvs SPED Services Gateway                                ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function SpedCtbDo(oObj)
+
+Local oWs
+
+Local aArea    := GetArea()
+Local aAreaSM0 := SM0->(GetArea())
+Local aStruct  := {}
+Local aTemp    := {}
+Local aCtaSup  := {{},{}}
+
+Local bWhileEmp:= {||.T.}
+
+Local cSeekEmp := ""
+Local cBckFil  := cFilAnt
+Local cMatriz  := ""
+Local cIDEnt   := ""
+Local cAliasCT1:= "CT1"
+Local cAliasCTT:= "CTT"
+Local cAliasCVB:= "CVB"
+Local cAliasCVC:= "CVC"
+Local cAliasCVD:= "CVD"
+Local cAliasCTS:= "CTS"
+Local cAliasCT8:= "CT8"
+Local cAliasCTG:= "CTG"
+Local cAliasCT6:= "CT6"
+Local cAliasCT2:= "CT2"
+Local cQuery   := ""
+Local cFile    := ""
+Local cExt     := ""
+Local cDoc     := ""
+Local cContaSup
+Local cURL      := PadR(GetNewPar("MV_CTBURL","http://"),250)
+
+Local lCplLote := .F.
+Local lRetorno := .T.
+Local lFirst   := .T.
+Local lQuery   := .F.
+
+Local nX       := 0
+Local noWS     := 0
+Local nNivelCta 
+Local nScanSup
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Inicio da transferencia de dados                     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+oObj:SetRegua1(SM0->(LastRec()))
+MV_PAR01 := SubStr(MV_PAR01,1,1)
+
+If MV_PAR01 == "0"
+	bWhileEmp:= {|| cSeekEmp == SM0->M0_CODIGO+SM0->M0_CODFIL}
+	cSeekEmp := cEmpAnt+cFilAnt
+Else
+	bWhileEmp:= {|| cSeekEmp == SM0->M0_CODIGO}
+	cSeekEmp := cEmpAnt
+EndIf                                        
+
+dbSelectArea("SM0")
+MsSeek(cSeekEmp)
+
+While !Eof() .And. Eval(bWhileEmp)
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Transferindo empresas                                ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	cFilAnt := SM0->M0_CODFIL
+	
+	oObj:IncRegua1("Filial: "+cFilAnt+" - sincronizando dados...")
+	oObj:SetRegua2(2)
+	oObj:IncRegua2("Atualizando entidades empresariais")
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Preenche os dados de transferencia da entidade       ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	oWS := WsSPEDAdm():New()
+	oWS:cUSERTOKEN := "TOTVS"
+	oWS:_URL       := AllTrim(cURL)+"/SPEDADM.apw"
+	
+	oWS:oWSEMPRESA:cCNPJ       := IIF(SM0->M0_TPINSC==2 .Or. Empty(SM0->M0_TPINSC),SM0->M0_CGC,"")	
+	oWS:oWSEMPRESA:cCPF        := IIF(SM0->M0_TPINSC==3,SM0->M0_CGC,"")
+	oWS:oWSEMPRESA:cIE         := SM0->M0_INSC
+	oWS:oWSEMPRESA:cIM         := SM0->M0_INSCM		
+	oWS:oWSEMPRESA:cNOME       := SM0->M0_NOMECOM
+	oWS:oWSEMPRESA:cFANTASIA   := SM0->M0_NOME
+	oWS:oWSEMPRESA:cENDERECO   := FisGetEnd(SM0->M0_ENDENT)[1]
+	oWS:oWSEMPRESA:cNUM        := FisGetEnd(SM0->M0_ENDENT)[3]
+	oWS:oWSEMPRESA:cCOMPL      := FisGetEnd(SM0->M0_ENDENT)[4]
+	oWS:oWSEMPRESA:cUF         := SM0->M0_ESTENT
+	oWS:oWSEMPRESA:cCEP        := SM0->M0_CEPENT
+	oWS:oWSEMPRESA:cCOD_MUN    := SM0->M0_CODMUN
+	oWS:oWSEMPRESA:cCOD_PAIS   := GetNewPar( "MV_SPDPAIS" , "01058" )
+	oWS:oWSEMPRESA:cBAIRRO     := SM0->M0_BAIRENT
+	oWS:oWSEMPRESA:cMUN        := SM0->M0_CIDENT
+	oWS:oWSEMPRESA:cCEP_CP     := Nil
+	oWS:oWSEMPRESA:cCP         := Nil
+	oWS:oWSEMPRESA:cDDD        := Str(FisGetTel(SM0->M0_TEL)[2],3)
+	oWS:oWSEMPRESA:cFONE       := AllTrim(Str(FisGetTel(SM0->M0_TEL)[3],15))
+	oWS:oWSEMPRESA:cFAX        := AllTrim(Str(FisGetTel(SM0->M0_FAX)[3],15))
+	oWS:oWSEMPRESA:cEMAIL      := UsrRetMail(RetCodUsr())
+	oWS:oWSEMPRESA:cNIRE       := SM0->M0_NIRE
+	oWS:oWSEMPRESA:cNIT        := IIF(SM0->M0_TPINSC==1,SM0->M0_CGC,"")
+	oWS:oWSEMPRESA:cINDSITESP  := IIF(SubStr(MV_PAR02,1,1)=='Z',"",MV_PAR02)
+	oWS:oWSEMPRESA:cID_MATRIZ  := cMatriz	
+	oWS:oWSOUTRASINSCRICOES:oWSInscricao := SPEDADM_ARRAYOFSPED_GENERICSTRUCT():New()
+	If SubStr(MV_PAR03,1,2)>"00"
+		aadd(oWS:oWSOUTRASINSCRICOES:oWSInscricao:OWSSPED_GENERICSTRUCT,SPEDADM_SPED_GENERICSTRUCT():New())	
+		Atail(oWS:oWSOUTRASINSCRICOES:oWSInscricao:OWSSPED_GENERICSTRUCT):cCODE        := SubStr(MV_PAR03,1,2)
+		Atail(oWS:oWSOUTRASINSCRICOES:oWSInscricao:OWSSPED_GENERICSTRUCT):cDescription := MV_PAR04
+	EndIf
+	If oWs:ADMEMPRESAS()
+		cMatriz := IIf(Empty(cMatriz),oWs:cADMEMPRESASRESULT,"")
+		cIdEnt  := oWs:cADMEMPRESASRESULT
+	Else
+		Aviso("SPED",GetWscError(3),{"Ok"},3)
+		lRetorno := .F.
+		Exit
+	EndIf
+
+	IF lRetorno
+		oObj:IncRegua2("Efetuando a limpeza dos dados administrativos")	
+
+		oWS := WsSPEDAdm():New()
+		oWS:cUSERTOKEN := "TOTVS"				
+		oWS:_URL       := AllTrim(cURL)+"/SPEDADM.apw"
+
+		// efetua a limpeza das tabelas de administração do SPED Contabil
+		oWS:cID_ENT := cIdEnt
+
+		If !oWs:Admclear()
+			Aviso("SPED Clear", GetWscError(3),{"Ok"},3)
+			lRetorno := .F.
+			EXIT
+		Endif
+	Endif
+
+	oObj:SetRegua2(CVB->(LastRec()))
+
+	If lRetorno 
+		oObj:IncRegua2("Atualizando Contabilista")	
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Transferindo Contabilista                            ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If !Empty(xFilial("CVB")) .Or. lFirst
+			dbSelectArea("CVB")
+			dbSetOrder(1)	
+
+			#IFDEF TOP
+			If TcSrvType() != "AS/400"
+				lQuery    := .T.
+				cAliasCVB := GetNextAlias()
+				aStruct   := CVB->(dbStruct())
+				
+				cQuery := "SELECT * "
+				cQuery += "FROM "+RetSqlName("CVB")+" CVB "
+				cQuery += "WHERE "
+				cQuery += "CVB_FILIAL='"+xFilial("CVB")+"' AND "
+				cQuery += "CVB.D_E_L_E_T_=' ' "
+				
+				// verifica se o bloqueio do signatario está ativo
+				IF CVB->( FieldPos( "CVB_MSBLQL" ) ) > 0
+					cQuery += " AND CVB.CVB_MSBLQL <> '1' "
+				ENDIF
+
+				dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAliasCVB)
+			   
+				For nX := 1 To Len(aStruct)
+					If aStruct[nX][2] <> "C"
+						TcSetField(cAliasCVB,aStruct[nX][1],aStruct[nX][2],aStruct[nX][3],aStruct[nX][4])
+					EndIf
+				Next nX				
+			Else
+			#ENDIF
+
+				MsSeek(xFilial("CVB"))
+
+			#IFDEF TOP
+			Endif
+			#ENDIF
+
+			oWS := WsSPEDAdm():New()
+			oWS:cUSERTOKEN := "TOTVS"				
+			oWS:_URL       := AllTrim(cURL)+"/SPEDADM.apw"
+
+			While !Eof() .And. xFilial("CVB") == (cAliasCVB)->CVB_FILIAL
+				oWS:oWsParticipante:cID_ENT   := cIdEnt
+				oWS:oWsParticipante:cCNPJ     := IIf(!Empty((cAliasCVB)->CVB_CGC), (cAliasCVB)->CVB_CGC, "")
+				oWS:oWsParticipante:cCPF      := IIf(!Empty((cAliasCVB)->CVB_CPF), (cAliasCVB)->CVB_CPF, "")
+				oWS:oWsParticipante:cIE       := ""
+				oWS:oWsParticipante:cUF       := (cAliasCVB)->CVB_UF
+				oWS:oWsParticipante:dDTINI    := (cAliasCVB)->CVB_DTINI
+				oWS:oWsParticipante:dDTFIM    := (cAliasCVB)->CVB_DTFIM
+				oWS:oWsParticipante:cIM       := ""
+				oWS:oWsParticipante:cNIT      := ""
+				oWS:oWsParticipante:cSUFRAMA  := "" 
+				oWS:oWsParticipante:cNOME     := (cAliasCVB)->CVB_NOME
+				oWS:oWsParticipante:cCOD_MUN  := "00000"
+				oWS:oWsParticipante:cCOD_PAIS := GetNewPar( "MV_SPDPAIS" , "01058" )
+				oWS:oWsParticipante:cCEP      := (cAliasCVB)->CVB_CEP
+				oWS:oWsParticipante:cENDERECO := FisGetEnd((cAliasCVB)->CVB_END)[1]
+				oWS:oWsParticipante:cNUM      := FisGetEnd((cAliasCVB)->CVB_END)[3]
+				oWS:oWsParticipante:cCOMPL    := FisGetEnd((cAliasCVB)->CVB_END)[4]
+				oWS:oWsParticipante:cBAIRRO   := (cAliasCVB)->CVB_BAIRRO
+				oWS:oWsParticipante:cMUN      := ""
+				oWS:oWsParticipante:cCEP_CP   := ""
+				oWS:oWsParticipante:cCP       := ""
+				oWS:oWsParticipante:cDDD      := Str(FisGetTel((cAliasCVB)->CVB_TEL)[2],3)
+				oWS:oWsParticipante:cFAX      := AllTrim(Str(FisGetTel((cAliasCVB)->CVB_FAX)[3],15))
+				oWS:oWsParticipante:cFONE     := AllTrim(Str(FisGetTel((cAliasCVB)->CVB_TEL)[3],15))
+
+				// efetuo a gravação dos participantes
+				If !oWs:AdmParticipantes()
+					Aviso("SPED", GetWscError(3),{"Ok"},3)
+					lRetorno := .F.
+					EXIT
+				ELSE
+					oWS:oWsSignatario:cID_ENT       := cIdEnt
+					oWS:oWsSignatario:cID_PART      := oWs:cADMPARTICIPANTESRESULT
+					oWS:oWsSignatario:cIDENT_QUALIF := (cAliasCVB)->CVB_QUALIF
+					oWS:oWsSignatario:cCOD_ASSIN    := (cAliasCVB)->CVB_ASSIN
+					oWS:oWsSignatario:cCRC          := (cAliasCVB)->CVB_CRC
+	
+					// efetuo a gravação dos participantes
+					If !oWs:AdmSignatarios()
+						Aviso("SPED", GetWscError(3),{"Ok"},3)
+						lRetorno := .F.
+						EXIT
+					EndIf
+				ENDIF
+				
+				oObj:IncRegua2("Atualizando Contabilista")	
+
+				dbSelectArea(cAliasCVB)
+				dbSkip()
+			EndDo
+			
+			If lQuery
+				dbSelectArea(cAliasCVB)
+				dbCloseArea()
+				dbSelectArea("CVB")
+			EndIf
+		EndIf		
+	EndIf
+	oObj:SetRegua2(CVC->(LastRec()))
+	If lRetorno
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Transferindo Participante                            ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		oWS := WsSPEDAdm():New()
+		oWS:cUSERTOKEN := "TOTVS"				
+		oWS:_URL       := AllTrim(cURL)+"/SPEDADM.apw"
+		If !Empty(xFilial("CVC")) .Or. lFirst
+			dbSelectArea("CVC")
+			dbSetOrder(1)	
+
+			#IFDEF TOP
+			If TcSrvType() != "AS/400"
+				lQuery    := .T.
+				cAliasCVC := GetNextAlias()
+				aStruct   := CVC->(dbStruct())
+				
+				cQuery := "SELECT * "
+				cQuery += "FROM "+RetSqlName("CVC")+" CVC "
+				cQuery += "WHERE "
+				cQuery += "CVC_FILIAL='"+xFilial("CVC")+"' AND "
+				cQuery += "CVC.D_E_L_E_T_=' ' "
+				
+				// verifica se o bloqueio do participante está ativo
+				IF CVC->( FieldPos( "CVC_MSBLQL" ) ) > 0
+					cQuery += " AND CVC.CVC_MSBLQL <> '1' "
+				ENDIF
+
+				dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAliasCVC)
+
+				For nX := 1 To Len(aStruct)
+					If aStruct[nX][2] <> "C"
+						TcSetField(cAliasCVC,aStruct[nX][1],aStruct[nX][2],aStruct[nX][3],aStruct[nX][4])
+					EndIf
+				Next nX
+			Else
+			#ENDIF
+				MsSeek(xFilial("CVC"))					
+			#IFDEF TOP
+			Endif
+			#ENDIF
+
+			While !Eof() .And. xFilial("CVC") == (cAliasCVC)->CVC_FILIAL
+				
+				oWS:oWsParticipante:cID_ENT   := cIdEnt
+				oWS:oWsParticipante:cCNPJ     := IIf((cAliasCVC)->CVC_TIPO=="J",(cAliasCVC)->CVC_CGC,"")
+				oWS:oWsParticipante:cCPF      := IIf((cAliasCVC)->CVC_TIPO=="F",(cAliasCVC)->CVC_CGC,"")
+				oWS:oWsParticipante:cIE       := (cAliasCVC)->CVC_IE
+				oWS:oWsParticipante:cUF       := (cAliasCVC)->CVC_UF
+				oWS:oWsParticipante:dDTINI    := (cAliasCVC)->CVC_DTINI
+				oWS:oWsParticipante:dDTFIM    := (cAliasCVC)->CVC_DTFIM
+				oWS:oWsParticipante:cIE       := (cAliasCVC)->CVC_IE
+				oWS:oWsParticipante:cIE_ST    := (cAliasCVC)->CVC_IE_ST
+				oWS:oWsParticipante:cIM       := ""
+				oWS:oWsParticipante:cNIT      := ""
+				oWS:oWsParticipante:cSUFRAMA  := (cAliasCVC)->CVC_SUFRAM
+				oWS:oWsParticipante:cNOME     := (cAliasCVC)->CVC_NOME
+				oWS:oWsParticipante:cCOD_MUN  := (cAliasCVC)->CVC_CODMUN
+				oWS:oWsParticipante:cCOD_PAIS := (cAliasCVC)->CVC_PAIS
+				oWS:oWsParticipante:cCEP      := SM0->M0_CEPENT
+				oWS:oWsParticipante:cENDERECO := FisGetEnd(SM0->M0_ENDENT)[1]
+				oWS:oWsParticipante:cNUM      := FisGetEnd(SM0->M0_ENDENT)[3]
+				oWS:oWsParticipante:cCOMPL    := FisGetEnd(SM0->M0_ENDENT)[4]
+				oWS:oWsParticipante:cBAIRRO   := SM0->M0_BAIRENT
+				oWS:oWsParticipante:cMUN      := ""
+				oWS:oWsParticipante:cCEP_CP   := ""
+				oWS:oWsParticipante:cCP       := ""
+				oWS:oWsParticipante:cDDD      := Str(FisGetTel(SM0->M0_TEL)[2],3)
+				oWS:oWsParticipante:cFAX      := AllTrim(Str(FisGetTel(SM0->M0_TEL)[3],15))
+				oWS:oWsParticipante:cFONE     := AllTrim(Str(FisGetTel(SM0->M0_FAX)[3],15))
+				oWS:oWsParticipante:cCOD_REL  := (cAliasCVC)->CVC_CODREL
+//				oWS:oWsParticipante:dDTINI    := (cAliasCVC)->CVC_DTINI
+//				oWS:oWsParticipante:dDTFIM    := (cAliasCVC)->CVC_DTFIM
+				
+				If !oWs:AdmParticipantes()
+					Aviso("SPED",GetWscError(3),{"Ok"},3)
+					lRetorno := .F.
+					Exit
+				EndIf
+
+				oObj:IncRegua2("Atualizando Participantes")	
+				dbSelectArea(cAliasCVC)
+				dbSkip()
+			EndDo
+			If lQuery
+				dbSelectArea(cAliasCVC)
+				dbCloseArea()
+				dbSelectArea("CVC")
+			EndIf
+		EndIf		
+	EndIf
+	oObj:SetRegua2(CT1->(LastRec()))
+
+	If lRetorno
+		oObj:IncRegua2("Atualizando plano de contas")	
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Transferindo Plano de contas                         ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		oWS := WSSPEDCtbEntidades():New()
+		oWS:cUSERTOKEN := "TOTVS"				
+		oWS:_URL       := AllTrim(cURL)+"/SPEDCTBENTIDADES.apw"
+		If Empty(xFilial("CT1")) .Or. lFirst
+			dbSelectArea("CT1")
+			dbSetOrder(1)	
+
+			#IFDEF TOP
+			If TcSrvType() != "AS/400"
+				lQuery    := .T.
+				cAliasCT1 := GetNextAlias()
+				aStruct   := CT1->(dbStruct())
+				
+				cQuery := "SELECT CT1_CONTA,CT1_CTASUP,CT1_NTSPED,CT1_DTEXSF,CT1_DTEXIS,CT1_CLASSE,CT1_FILIAL,CT1_DESC01 "
+				cQuery += "FROM "+RetSqlName("CT1")+" CT1 "
+				cQuery += "WHERE "
+				cQuery += "CT1_FILIAL='"+xFilial("CT1")+"' AND "
+				cQuery += "CT1.D_E_L_E_T_=' ' "
+				cQuery += "ORDER BY CT1_CONTA "
+				
+				dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAliasCT1)
+				For nX := 1 To Len(aStruct)
+					If aStruct[nX][2] <> "C" .And. FieldPos(aStruct[nX][1])<>0
+						TcSetField(cAliasCT1,aStruct[nX][1],aStruct[nX][2],aStruct[nX][3],aStruct[nX][4])
+					EndIf
+				Next nX
+			Else
+			#ENDIF
+				MsSeek(xFilial("CT1"))
+			#IFDEF TOP
+			EndIf
+			#ENDIF
+			    
+			oWS:oWSPlanoDeContas:cID_ENT  := cIdEnt
+			oWS:oWSPlanoDeContas:oWsConta := SPEDCTBENTIDADES_ARRAYOFSPED_CONTACONTABIL():New()
+			noWS := 0
+
+			nNivelCta := 1
+			cContaSup := ""
+			aCtaSup   := {{},{}}
+			
+			While !Eof() .And. xFilial("CT1") == (cAliasCT1)->CT1_FILIAL
+
+				If (cAliasCT1)->CT1_CTASUP <> cContaSup
+				   nScanSup := Ascan(aCtaSup[01],(cAliasCT1)->CT1_CTASUP)
+				   If nScanSup == 0
+				      nNivelCta := CtbNivCta((cAliasCT1)->CT1_CONTA)
+				   Else
+				      nNivelCta := aCtaSup[02,nScanSup]
+				   EndIf
+				   cContaSup := (cAliasCT1)->CT1_CTASUP
+				   Aadd(aCtaSup[1],cContaSup)
+				   Aadd(aCtaSup[2],nNivelCta)
+				EndIf
+				
+				aadd(oWS:oWSPlanoDeContas:OWSCONTA:oWsSPED_ContaContabil,SPEDCTBENTIDADES_SPED_CONTACONTABIL():New())
+				noWS++
+				
+				oWS:oWSPlanoDeContas:OWSCONTA:oWsSPED_ContaContabil[noWS]:cCODCTA     := (cAliasCT1)->CT1_CONTA
+				oWS:oWSPlanoDeContas:OWSCONTA:oWsSPED_ContaContabil[noWS]:cCODCTASUP  := (cAliasCT1)->CT1_CTASUP
+				oWS:oWSPlanoDeContas:OWSCONTA:oWsSPED_ContaContabil[noWS]:cCOD_NAT    := (cAliasCT1)->CT1_NTSPED
+				oWS:oWSPlanoDeContas:OWSCONTA:oWsSPED_ContaContabil[noWS]:dDTINI      := IIF(CT1->(FieldPos("CT1_DTEXIS"))==0.Or.Empty((cAliasCT1)->CT1_DTEXIS),CTOD("01/01/1980"),(cAliasCT1)->CT1_DTEXIS)
+				oWS:oWSPlanoDeContas:OWSCONTA:oWsSPED_ContaContabil[noWS]:cIND_CTA    := IIF((cAliasCT1)->CT1_CLASSE=='1','S','A')
+				oWS:oWSPlanoDeContas:OWSCONTA:oWsSPED_ContaContabil[noWS]:nNIVEL      := nNivelCta
+				oWS:oWSPlanoDeContas:OWSCONTA:oWsSPED_ContaContabil[noWS]:cDESCRI     := (cAliasCT1)->CT1_DESC01
+						
+				dbSelectArea(cAliasCT1)
+				dbSkip()
+				oObj:IncRegua2("Atualizando plano de contas")	
+				If noWS >= 300
+					noWS := 0
+					If !oWs:CtbPlanodeContas()
+						Aviso("SPED",GetWscError(3),{"Ok"},3)
+						lRetorno := .F.
+						Exit
+					EndIf
+					oWS:oWSPlanoDeContas:cID_ENT     := cIdEnt
+					oWS:oWSPlanoDeContas:oWsConta := SPEDCTBENTIDADES_ARRAYOFSPED_CONTACONTABIL():New()
+				EndIf
+			EndDo
+
+			If noWS > 0
+				If !oWs:CtbPlanodeContas()
+					Aviso("SPED",GetWscError(3),{"Ok"},3)
+					lRetorno := .F.
+					Exit
+				EndIf
+			EndIf			
+
+			If lQuery
+				dbSelectArea(cAliasCT1)
+				dbCloseArea()
+				dbSelectArea("CT1")
+			EndIf
+		EndIf		
+	EndIf
+	
+	oObj:SetRegua2(CTT->(LastRec()))
+	
+	If lRetorno .And. MV_PAR06=="S"
+		oObj:IncRegua2("Atualizando centro de custos")	
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Transferindo Centro de custo contabil                ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		oWS := WSSPEDCtbEntidades():New()
+		oWS:cUSERTOKEN := "TOTVS"				
+		oWS:_URL       := AllTrim(cURL)+"/SPEDCTBENTIDADES.apw"
+		If !Empty(xFilial("CTT")) .Or. lFirst
+			dbSelectArea("CTT")
+			dbSetOrder(1)	
+
+			#IFDEF TOP
+			If TcSrvType() != "AS/400"
+				lQuery    := .T.
+				cAliasCTT := GetNextAlias()
+				aStruct   := CTT->(dbStruct())
+				
+				cQuery := "SELECT * "
+				cQuery += "FROM "+RetSqlName("CTT")+" CTT "
+				cQuery += "WHERE "
+				cQuery += "CTT_FILIAL='"+xFilial("CTT")+"' AND "
+				cQuery += "CTT.D_E_L_E_T_=' ' "
+				
+				dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAliasCTT)
+				For nX := 1 To Len(aStruct)
+					If aStruct[nX][2] <> "C" .And. FieldPos(aStruct[nX][1])<>0
+						TcSetField(cAliasCTT,aStruct[nX][1],aStruct[nX][2],aStruct[nX][3],aStruct[nX][4])
+					EndIf
+				Next nX
+			Else
+			#ENDIF
+				MsSeek(xFilial("CTT"))
+			#IFDEF TOP
+			EndIf
+			#ENDIF
+			    
+			IF ( cAliasCTT )->( !Eof() ) // efetuo o tratamento somente se possuir centro de custo cadastrado
+				oWS:oWSCentroDeCustos:cID_ENT   := cIdEnt
+				oWS:oWsCentroDeCustos:oWsCCusto := SPEDCTBENTIDADES_ARRAYOFSPED_CENTRODECUSTO():New()
+				noWS := 0
+				
+				While !Eof() .And. xFilial("CTT") == (cAliasCTT)->CTT_FILIAL
+								
+					aadd(oWS:oWSCentroDeCustos:oWsCCusto:oWSSPED_CentrodeCusto,SPEDCTBENTIDADES_SPED_CENTRODECUSTO():New())
+					noWS++
+					
+					oWS:oWSCentroDeCustos:oWsCCusto:oWSSPED_CentrodeCusto[noWS]:cCCUSTO     := (cAliasCTT)->CTT_CUSTO
+					oWS:oWSCentroDeCustos:oWsCCusto:oWSSPED_CentrodeCusto[noWS]:dDTINI      := IIF(CTT->(FieldPos("CTT_DTEXIS"))==0.Or.Empty((cAliasCTT)->CTT_DTEXIS),CTOD("01/01/1980"),(cAliasCTT)->CTT_DTEXIS)
+					oWS:oWSCentroDeCustos:oWsCCusto:oWSSPED_CentrodeCusto[noWS]:cDESCRI     := (cAliasCTT)->CTT_DESC01
+											
+					dbSelectArea(cAliasCTT)
+					dbSkip()
+					oObj:IncRegua2("Atualizando centro de custos")	
+					If noWS >= 300
+						noWS := 0
+						If !oWs:CtbCentrodeCustos()
+							Aviso("SPED",GetWscError(3),{"Ok"},3)
+							lRetorno := .F.
+							Exit
+						EndIf
+	
+						oWS:oWSCentroDeCustos:cID_ENT   := cIdEnt
+						oWS:oWsCentroDeCustos:oWsCCusto := SPEDCTBENTIDADES_ARRAYOFSPED_CENTRODECUSTO():New()
+					EndIf
+				EndDo
+	
+				If noWS > 0
+					If !oWs:CtbCentrodeCustos()
+						Aviso("SPED",GetWscError(3),{"Ok"},3)
+						lRetorno := .F.
+						Exit
+					EndIf
+				EndIf
+			Endif
+	
+			If lQuery
+				dbSelectArea(cAliasCTT)
+				dbCloseArea()
+				dbSelectArea("CTT")
+			EndIf
+		EndIf		
+	EndIf	
+
+	oObj:SetRegua2(CVD->(LastRec()))
+
+	If lRetorno
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Transferindo Plano de contas referencial             ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		oWS := WSSPEDCtbEntidades():New()
+		oWS:cUSERTOKEN := "TOTVS"				
+		oWS:_URL       := AllTrim(cURL)+"/SPEDCTBENTIDADES.apw"
+
+		If !Empty(xFilial("CVD")) .Or. lFirst
+			dbSelectArea("CVD")
+			dbSetOrder(1)	
+
+			#IFDEF TOP
+			If TcSrvType() != "AS/400"
+				lQuery    := .T.
+				cAliasCVD := GetNextAlias()
+				aStruct   := CVD->(dbStruct())
+				
+				cQuery := "SELECT * "
+				cQuery += "FROM "+RetSqlName("CVD")+" CVD "
+				cQuery += "WHERE "
+				cQuery += "CVD_FILIAL='"+xFilial("CVD")+"' AND "
+				cQuery += "CVD.D_E_L_E_T_=' ' "
+				
+				dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAliasCVD)
+				For nX := 1 To Len(aStruct)
+					If aStruct[nX][2] <> "C" .And. FieldPos(aStruct[nX][1])<>0
+						TcSetField(cAliasCVD,aStruct[nX][1],aStruct[nX][2],aStruct[nX][3],aStruct[nX][4])
+					EndIf
+				Next nX
+			Else
+			#ENDIF
+				MsSeek(xFilial("CVD"))
+			#IFDEF TOP
+			EndIf
+			#ENDIF
+			oWs:oWSPlanoReferencial:cID_ENT       := cIdEnt
+			oWs:oWSPlanoReferencial:oWsReferencia := SPEDCtbEntidades_ARRAYOFSPED_PlanoReferencial():New()
+			noWS := 0
+			
+			While !Eof() .And. xFilial("CVD") == (cAliasCVD)->CVD_FILIAL
+							
+				aadd(oWs:oWSPlanoReferencial:oWsReferencia:oWsSPED_PlanoReferencial,SPEDCTBENTIDADES_SPED_PLANOREFERENCIAL():New())
+				noWS++
+				
+				oWs:oWSPlanoReferencial:oWsReferencia:oWsSPED_PlanoReferencial[noWS]:cCOD_ENT_REF := (cAliasCVD)->CVD_ENTREF
+				oWs:oWSPlanoReferencial:oWsReferencia:oWsSPED_PlanoReferencial[noWS]:cCOD_CTA_REF := (cAliasCVD)->CVD_CTAREF
+				oWs:oWSPlanoReferencial:oWsReferencia:oWsSPED_PlanoReferencial[noWS]:cCODCTA      := (cAliasCVD)->CVD_CONTA
+				oWs:oWSPlanoReferencial:oWsReferencia:oWsSPED_PlanoReferencial[noWS]:cCCUSTO      := ""
+													
+				dbSelectArea(cAliasCVD)
+				dbSkip()
+				oObj:IncRegua2("Atualizando plano de contas referencial")	
+				If noWS >= 300
+					noWS := 0
+					If !oWs:CtbPlanoReferencial()
+						Aviso("SPED",GetWscError(3),{"Ok"},3)
+						lRetorno := .F.
+						Exit
+					EndIf
+					oWs:oWSPlanoReferencial:cID_ENT       := cIdEnt
+					oWs:oWSPlanoReferencial:oWsReferencia := SPEDCtbEntidades_ARRAYOFSPED_PlanoReferencial():New()
+				EndIf
+			EndDo
+
+			If noWS > 0
+				If !oWs:CtbPlanoReferencial()
+					Aviso("SPED",GetWscError(3),{"Ok"},3)
+					lRetorno := .F.
+					Exit
+				EndIf
+			EndIf
+
+			If lQuery
+				dbSelectArea(cAliasCVD)
+				dbCloseArea()
+				dbSelectArea("CVD")
+			EndIf
+		EndIf
+	EndIf
+
+	oObj:SetRegua2(CTS->(LastRec()))
+
+	If lRetorno .And. !Empty(MV_PAR15) .And. !Empty(MV_PAR16)
+		dbSelectArea("CTN")
+		dbSetOrder(1)
+
+		MsSeek(xFilial("CTN")+MV_PAR15)
+
+		cDoc := "'"+CTN->CTN_PLAGER
+		dbSelectArea("CTN")
+		dbSetOrder(1)
+
+		MsSeek(xFilial("CTN")+MV_PAR16)	
+		cDoc += "','"+CTN->CTN_PLAGER+"'"
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Transferindo Plano de contas-Demonstrativos          ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ		
+		oWS := WSSPEDCtbEntidades():New()
+		oWS:cUSERTOKEN := "TOTVS"				
+		oWS:_URL       := AllTrim(cURL)+"/SPEDCTBENTIDADES.apw"
+
+		If !Empty(xFilial("CTS")) .Or. lFirst
+			dbSelectArea("CTS")
+			dbSetOrder(1)	
+
+			#IFDEF TOP
+			If TcSrvType() != "AS/400"
+				lQuery    := .T.
+				cAliasCTS := GetNextAlias()
+				aStruct   := CTS->(dbStruct())
+				
+				cQuery := "SELECT * "
+				cQuery += "FROM "+RetSqlName("CTS")+" CTS "
+				cQuery += "WHERE "
+				cQuery += "CTS_FILIAL='"+xFilial("CTS")+"' AND "
+				cQuery += "CTS_CODPLA IN("+cDoc+") AND "
+				cQuery += "CTS.D_E_L_E_T_=' ' "
+				
+				dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAliasCTS)
+
+				For nX := 1 To Len(aStruct)
+					If aStruct[nX][2] <> "C" .And. FieldPos(aStruct[nX][1])<>0
+						TcSetField(cAliasCTS,aStruct[nX][1],aStruct[nX][2],aStruct[nX][3],aStruct[nX][4])
+					EndIf
+				Next nX
+			Else
+			#ENDIF
+				MsSeek(xFilial("CTS"))
+			#IFDEF TOP
+			EndIf
+			#ENDIF
+
+			oWs:oWSPlanoDemonstrativo:cID_ENT      		:= cIdEnt
+			oWs:oWSPlanoDemonstrativo:oWSDemonstrativo 	:= SPEDCtbEntidades_ARRAYOFSPED_Demonstrativo():New()
+			noWS := 0
+			
+			While !Eof() .And. xFilial("CTS") == (cAliasCTS)->CTS_FILIAL
+
+				If (cAliasCTS)->CTS_IDENT=='1'			
+
+					dbSelectArea("CT1")
+					dbSetOrder(1)
+					MsSeek(xFilial("CT1")+(cAliasCTS)->CTS_CT1INI,.T.)
+					
+					While !Eof() .And. xFilial("CT1") == CT1->CT1_FILIAL .And. CT1->CT1_CONTA <= (cAliasCTS)->CTS_CT1FIM
+
+						If CT1->CT1_CLASSE == "2"
+							
+							If !Empty((cAliasCTS)->CTS_CTTINI) .Or. !Empty((cAliasCTS)->CTS_CTTFIM)
+								dbSelectArea("CTT")
+								dbSetOrder(1)
+								MsSeek(xFilial("CTT")+(cAliasCTS)->CTS_CTTINI,.T.)
+
+								While !Eof() .And. xFilial("CTT") == CTT->CTT_FILIAL .And. CTT->CTT_CUSTO <= (cAliasCTS)->CTS_CTTFIM
+								
+									aadd(oWs:oWSPlanoDemonstrativo:oWSDemonstrativo:oWSSped_Demonstrativo,SpedCtbEntidades_Sped_Demonstrativo():New())
+									noWS++						
+									oWs:oWSPlanoDemonstrativo:oWSDemonstrativo:oWSSped_Demonstrativo[noWS]:cCOD_CTA_AGL    := (cAliasCTS)->CTS_CONTAG
+									oWs:oWSPlanoDemonstrativo:oWSDemonstrativo:oWSSped_Demonstrativo[noWS]:cCOD_CTA_AGLSUP := (cAliasCTS)->CTS_CTASUP
+									oWs:oWSPlanoDemonstrativo:oWSDemonstrativo:oWSSped_Demonstrativo[noWS]:cCOD_NAT        := StrZero((cAliasCTS)->CTS_COLUNA,2)
+									oWs:oWSPlanoDemonstrativo:oWSDemonstrativo:oWSSped_Demonstrativo[noWS]:cCODCTA         := CT1->CT1_CONTA
+									oWs:oWSPlanoDemonstrativo:oWSDemonstrativo:oWSSped_Demonstrativo[noWS]:cCCUSTO         := CTT->CTT_CUSTO
+
+									If noWS >= 300
+										If !oWs:CtbDemonstrativos()
+											Aviso("SPED",GetWscError(3),{"Ok"},3)
+											lRetorno := .F.
+											Exit
+										EndIf
+
+										noWS := 0
+										oWs:oWSPlanoDemonstrativo:cID_ENT      		:= cIdEnt
+										oWs:oWSPlanoDemonstrativo:oWSDemonstrativo 	:= SPEDCtbEntidades_ARRAYOFSPED_Demonstrativo():New()
+									EndIf
+
+									dbSelectArea("CTT")
+									dbSkip()
+								EndDo
+
+							Else
+								aadd(oWs:oWSPlanoDemonstrativo:oWSDemonstrativo:oWSSped_Demonstrativo,SpedCtbEntidades_Sped_Demonstrativo():New())
+								noWS++						
+								oWs:oWSPlanoDemonstrativo:oWSDemonstrativo:oWSSped_Demonstrativo[noWS]:cCOD_CTA_AGL    := (cAliasCTS)->CTS_CONTAG
+								oWs:oWSPlanoDemonstrativo:oWSDemonstrativo:oWSSped_Demonstrativo[noWS]:cCOD_CTA_AGLSUP := (cAliasCTS)->CTS_CTASUP
+								oWs:oWSPlanoDemonstrativo:oWSDemonstrativo:oWSSped_Demonstrativo[noWS]:cCOD_NAT        := StrZero((cAliasCTS)->CTS_COLUNA,2)
+								oWs:oWSPlanoDemonstrativo:oWSDemonstrativo:oWSSped_Demonstrativo[noWS]:cCODCTA         := CT1->CT1_CONTA
+								oWs:oWSPlanoDemonstrativo:oWSDemonstrativo:oWSSped_Demonstrativo[noWS]:cCCUSTO         := ""
+							EndIf
+						EndIf
+
+						If noWS >= 300
+							If !oWs:CtbDemonstrativos()
+								Aviso("SPED",GetWscError(3),{"Ok"},3)
+								lRetorno := .F.
+								Exit
+							EndIf
+
+							noWS := 0
+							oWs:oWSPlanoDemonstrativo:cID_ENT      		:= cIdEnt
+							oWs:oWSPlanoDemonstrativo:oWSDemonstrativo 	:= SPEDCtbEntidades_ARRAYOFSPED_Demonstrativo():New()
+						EndIf
+
+						dbSelectArea("CT1")
+						dbSkip()
+					EndDo
+				Else
+					aadd(oWs:oWSPlanoDemonstrativo:oWSDemonstrativo:oWSSped_Demonstrativo,SpedCtbEntidades_Sped_Demonstrativo():New())
+					noWS++						
+					oWs:oWSPlanoDemonstrativo:oWSDemonstrativo:oWSSped_Demonstrativo[noWS]:cCOD_CTA_AGL    := (cAliasCTS)->CTS_CONTAG
+					oWs:oWSPlanoDemonstrativo:oWSDemonstrativo:oWSSped_Demonstrativo[noWS]:cCOD_CTA_AGLSUP := (cAliasCTS)->CTS_CTASUP
+					oWs:oWSPlanoDemonstrativo:oWSDemonstrativo:oWSSped_Demonstrativo[noWS]:cCOD_NAT        := StrZero((cAliasCTS)->CTS_COLUNA,2)
+					oWs:oWSPlanoDemonstrativo:oWSDemonstrativo:oWSSped_Demonstrativo[noWS]:cCODCTA         := ""
+					oWs:oWSPlanoDemonstrativo:oWSDemonstrativo:oWSSped_Demonstrativo[noWS]:cCCUSTO         := ""
+				EndIf
+
+				If noWS >= 300
+					If !oWs:CtbDemonstrativos()
+						Aviso("SPED",GetWscError(3),{"Ok"},3)
+						lRetorno := .F.
+						Exit
+					EndIf
+
+					noWS := 0
+					oWs:oWSPlanoDemonstrativo:cID_ENT      		:= cIdEnt
+					oWs:oWSPlanoDemonstrativo:oWSDemonstrativo 	:= SPEDCtbEntidades_ARRAYOFSPED_Demonstrativo():New()
+				EndIf
+
+				dbSelectArea(cAliasCTS)
+				dbSkip()
+
+				oObj:IncRegua2("Atualizando plano dos demonstrativos")	
+			EndDo
+
+			If noWS > 0
+				If !oWs:CtbDemonstrativos()
+					Aviso("SPED",GetWscError(3),{"Ok"},3)
+					lRetorno := .F.
+					Exit
+				EndIf
+			EndIf
+
+			If lQuery
+				dbSelectArea(cAliasCTS)
+				dbCloseArea()
+				dbSelectArea("CTS")
+			EndIf
+		EndIf	
+	EndIf
+
+	oObj:SetRegua2(CT8->(LastRec()))
+
+	If lRetorno
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Transferindo historico padrão                        ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		oWS := WSSPEDCtbEntidades():New()
+		oWS:cUSERTOKEN := "TOTVS"				
+		oWS:_URL       := AllTrim(cURL)+"/SPEDCTBENTIDADES.apw"
+
+		If !Empty(xFilial("CT8")) .Or. lFirst
+			dbSelectArea("CT8")
+			dbSetOrder(1)	
+
+			#IFDEF TOP
+			If TcSrvType() != "AS/400"
+				lQuery    := .T.
+				cAliasCT8 := GetNextAlias()
+				aStruct   := CT8->(dbStruct())
+				
+				cQuery := "SELECT * "
+				cQuery += "  FROM " + RetSqlName("CT8") + " CT8 "
+				cQuery += " WHERE CT8.CT8_FILIAL = '" + xFilial("CT8") + "' "
+				cQuery += "   AND CT8.CT8_SEQUEN = '000001'"
+				cQuery += "   AND CT8.D_E_L_E_T_= ' ' "
+				cQuery += " ORDER BY CT8.CT8_FILIAL, CT8.CT8_HIST, CT8.CT8_SEQUEN "
+				
+				dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAliasCT8)
+
+				For nX := 1 To Len(aStruct)
+					If aStruct[nX][2] <> "C" .And. FieldPos(aStruct[nX][1])<>0
+						TcSetField(cAliasCT8,aStruct[nX][1],aStruct[nX][2],aStruct[nX][3],aStruct[nX][4])
+					EndIf
+				Next nX
+			Else
+			#ENDIF
+				MsSeek(xFilial("CT8"))
+			#IFDEF TOP
+			EndIf
+			#ENDIF
+
+			noWS := 0
+			While !Eof() .And. xFilial("CT8") == (cAliasCT8)->CT8_FILIAL
+				oObj:IncRegua2("Atualizando historico padrão")	
+							
+				IF CT8->CT8_IDENT <> 'I' .OR. ( CT8->CT8_IDENT == 'I' .AND. CT8->CT8_SEQUEN == '000001' )
+					If noWs == 0
+						oWs:oWsHistoricoPadrao:cID_ENT    	:= cIdEnt
+						oWs:oWsHistoricoPadrao:oWsHistorico := SpedCtbEntidades_ARRAYOFSped_HistPad():New()
+					Endif
+	
+					aadd(oWs:oWsHistoricoPadrao:oWsHistorico:oWsSped_HistPad,SpedCtbEntidades_Sped_HistPad():New())
+					noWS++
+					
+					oWs:oWsHistoricoPadrao:oWsHistorico:oWsSped_HistPad[noWS]:cCodigo    := (cAliasCT8)->CT8_HIST
+					oWs:oWsHistoricoPadrao:oWsHistorico:oWsSped_HistPad[noWS]:cDescricao := (cAliasCT8)->CT8_DESC  
+
+					If noWS >= 300
+						noWS := 0
+	
+						If !oWs:CtbHistoricoPadrao()
+							Aviso("SPED",GetWscError(3),{"Ok"},3)
+							lRetorno := .F.
+							Exit
+						EndIf
+					EndIf
+				Endif
+
+				dbSelectArea(cAliasCT8)
+				dbSkip()
+			EndDo
+
+			If noWS > 0
+				If !oWs:CtbHistoricoPadrao()
+					Aviso("SPED",GetWscError(3),{"Ok"},3)
+					lRetorno := .F.
+					Exit
+				EndIf
+			EndIf
+
+			If lQuery
+				dbSelectArea(cAliasCT8)
+				dbCloseArea()
+				dbSelectArea("CT8")
+			EndIf
+		EndIf
+	EndIf
+
+	oObj:SetRegua2(1)
+
+	If lRetorno
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Transferindo livro contabil                          ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		oWS := WSSPEDCtbMovimentos():New()
+		
+		oWS:cUSERTOKEN := "TOTVS"
+		oWS:_URL       := AllTrim(cURL)+"/SPEDCTBMOVIMENTOS.apw"
+		oWS:oWSLIVROCONTABIL:cID_ENT      := cIdEnt
+		oWS:oWSLIVROCONTABIL:nORDEM       := MV_PAR10
+		oWS:oWSLIVROCONTABIL:cNATUREZA    := MV_PAR11
+		oWS:oWSLIVROCONTABIL:cIND_ESC     := "G"
+		oWS:oWSLIVROCONTABIL:cTIPO_ESC    := MV_PAR01
+		oWS:oWSLIVROCONTABIL:dDT_ARQ      := SM0->M0_DTRE
+		oWS:oWSLIVROCONTABIL:dDT_ARQ_CONV := Ctod("")
+
+		oObj:IncRegua2( "Atualizando livro contabil" )
+		
+		If !oWs:CtbLivroContabil()
+			Aviso("SPED",GetWscError(3),{"Ok"},3)
+			lRetorno := .F.
+			Exit
+		EndIf	
+	EndIf
+
+	oObj:SetRegua2(CTG->(LastRec()))
+
+	If lRetorno
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Transferindo balancetes contabeis do período         ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		oWS := WSSPEDCtbMovimentos():New()
+		oWS:cUSERTOKEN := "TOTVS"				
+		oWS:_URL       := AllTrim(cURL)+"/SPEDCTBMOVIMENTOS.apw"
+
+		If !Empty(xFilial("CTG")) .Or. lFirst
+			dbSelectArea("CTG")
+			dbSetOrder(1)
+
+			#IFDEF TOP
+			If TcSrvType() != "AS/400"
+				lQuery    := .T.
+				cAliasCTG := GetNextAlias()
+				aStruct   := CTG->(dbStruct())
+				
+				cQuery := "SELECT * "
+				cQuery += "FROM "+RetSqlName("CTG")+" CTG "
+				cQuery += "WHERE "
+				cQuery += "CTG_FILIAL='"+xFilial("CTG")+"' AND "
+				cQuery += "CTG_CALEND='"+MV_PAR07+"' AND "
+				cQuery += "CTG_DTINI >= '"+DTOS(MV_PAR08)+"' AND "
+				cQuery += "CTG_DTFIM <= '"+DTOS(MV_PAR09)+"' AND "
+				cQuery += "CTG.D_E_L_E_T_=' ' "
+				
+				dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAliasCTG)
+				For nX := 1 To Len(aStruct)
+					If aStruct[nX][2] <> "C" .And. FieldPos(aStruct[nX][1])<>0
+						TcSetField(cAliasCTG,aStruct[nX][1],aStruct[nX][2],aStruct[nX][3],aStruct[nX][4])
+					EndIf
+				Next nX
+			Else
+			#ENDIF
+				MsSeek(xFilial("CTG")+MV_PAR07+DTOS(MV_PAR08),.T.)
+			#IFDEF TOP
+			EndIf
+			#ENDIF 
+
+//			oWs:oWsSaldosdoPeriodo:cID_ENT   := cIdEnt
+//			oWs:oWsSaldosdoPeriodo:nOrdem    := MV_PAR10
+//			oWs:oWsSaldosdoPeriodo:oWsSaldos := SPEDCTBMOVIMENTOS_ARRAYOFSPED_CTBSALDOPERIODO():New()
+			noWS := 0
+			
+			While !Eof() .And. xFilial("CTG") == (cAliasCTG)->CTG_FILIAL .And.;
+				(cAliasCTG)->CTG_CALEND == MV_PAR07 .And.;
+				(cAliasCTG)->CTG_DTINI  >= MV_PAR08 .And.;
+				(cAliasCTG)->CTG_DTFIM  <= MV_PAR09
+											
+				aTemp := {""}
+				CtGerPlan(,,,.F.,aTemp[1],(cAliasCTG)->CTG_DTINI,(cAliasCTG)->CTG_DTFIM,;
+							IIF(MV_PAR06=="S","CT3","CT7"),"","",Repl("z",len(CT1->CT1_CONTA)),;
+							"",Repl("z",len(CTT->CTT_CUSTO)),;
+							"",Repl("Z", Len(CTD->CTD_ITEM)),;
+							"",Repl("Z", Len(CTH->CTH_CLVL)),;
+							mv_par05,"1",;
+							CTBSetOf(""),,,,,.F.,.T.,2,"CT1",.F./*lImpAntLP*/,MV_PAR12,1,.F.,,,,,,,,,,,,,,.F.)
+
+				dbSelectArea("cArqTmp")
+				dbGotop()
+
+				If cArqTmp->( Reccount() ) > 0
+					oWs:oWsSaldosdoPeriodo:cID_ENT   := cIdEnt
+					oWs:oWsSaldosdoPeriodo:nOrdem    := MV_PAR10					
+					oWs:oWsSaldosdoPeriodo:oWsSaldos := SPEDCTBMOVIMENTOS_ARRAYOFSPED_CTBSALDOPERIODO():New()
+				Endif
+
+				While !Eof()
+					noWS := 0
+					While ! Eof()
+						aadd(oWs:oWsSaldosdoPeriodo:oWsSaldos:oWsSped_CtbSaldoPeriodo,SpedCtbMovimentos_Sped_CtbSaldoPeriodo():New())
+						noWS++
+	 					
+						oWs:oWsSaldosdoPeriodo:oWsSaldos:oWsSped_CtbSaldoPeriodo[noWS]:dDTINI     := (cAliasCTG)->CTG_DTINI
+						oWs:oWsSaldosdoPeriodo:oWsSaldos:oWsSped_CtbSaldoPeriodo[noWS]:dDTFIM     := (cAliasCTG)->CTG_DTFIM
+						oWs:oWsSaldosdoPeriodo:oWsSaldos:oWsSped_CtbSaldoPeriodo[noWS]:cCODCTA    := cArqTmp->CONTA
+						oWs:oWsSaldosdoPeriodo:oWsSaldos:oWsSped_CtbSaldoPeriodo[noWS]:cCCUSTO    := cArqTmp->CUSTO
+						oWs:oWsSaldosdoPeriodo:oWsSaldos:oWsSped_CtbSaldoPeriodo[noWS]:nVLSLDINI  := ABS(cArqTmp->SALDOANT)
+						oWs:oWsSaldosdoPeriodo:oWsSaldos:oWsSped_CtbSaldoPeriodo[noWS]:cDCINI     := IIF(cArqTmp->SALDOANT>0,"C","D")
+						oWs:oWsSaldosdoPeriodo:oWsSaldos:oWsSped_CtbSaldoPeriodo[noWS]:nVLDEB     := ABS(cArqTmp->SALDODEB)
+						oWs:oWsSaldosdoPeriodo:oWsSaldos:oWsSped_CtbSaldoPeriodo[noWS]:nVLCRED    := ABS(cArqTmp->SALDOCRD)
+						oWs:oWsSaldosdoPeriodo:oWsSaldos:oWsSped_CtbSaldoPeriodo[noWS]:nVLSLDFIN  := ABS(cArqTmp->SALDOATU)
+						oWs:oWsSaldosdoPeriodo:oWsSaldos:oWsSped_CtbSaldoPeriodo[noWS]:cDCFIN     := IIF(cArqTmp->SALDOATU>0,"C","D")
+							
+						dbSelectArea("cArqTmp")
+						dbSkip()
+
+						If noWS > 500
+					       Exit
+						Endif
+					EndDo
+					
+					If noWS > 500 .AND. cArqTmp->( !Eof() )
+						oWs:oWsSaldosdoPeriodo:cID_ENT   := cIdEnt
+						oWs:oWsSaldosdoPeriodo:nOrdem    := MV_PAR10					
+						oWs:oWsSaldosdoPeriodo:oWsSaldos := SPEDCTBMOVIMENTOS_ARRAYOFSPED_CTBSALDOPERIODO():New()
+					Endif
+				Enddo								
+
+				dbSelectArea("cArqTmp")
+				dbCloseArea()
+				FErase(aTemp[1])
+				aTemp := {}
+													
+				dbSelectArea(cAliasCTG)
+				dbSkip()
+				oObj:IncRegua2("Atualizando balancentes contabeis do período")	
+				noWS := 0
+
+				If !oWs:CtbSaldosdoPeriodo()
+					Aviso("SPED",GetWscError(3),{"Ok"},3)
+					lRetorno := .F.
+					Exit
+				EndIf
+
+//				oWs:oWsSaldosdoPeriodo:cID_ENT   := cIdEnt
+//				oWs:oWsSaldosdoPeriodo:nOrdem    := MV_PAR10					
+//				oWs:oWsSaldosdoPeriodo:oWsSaldos := SPEDCTBMOVIMENTOS_ARRAYOFSPED_CTBSALDOPERIODO():New()
+			EndDo
+
+			If noWS > 0
+				If !oWs:CtbSaldosDoPeriodo()
+					Aviso("SPED",GetWscError(3),{"Ok"},3)
+					lRetorno := .F.
+					Exit
+				EndIf
+			EndIf
+
+			If lQuery
+				dbSelectArea(cAliasCTG)
+				dbCloseArea()
+				dbSelectArea("CTG")
+			EndIf
+		EndIf
+	EndIf
+
+	oObj:SetRegua2(CT6->(LastRec()))
+
+	If lRetorno
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Transferindo lancamentos contabeis do período        ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		oWS := WSSPEDCtbMovimentos():New()
+		oWS:cUSERTOKEN := "TOTVS"				
+		oWS:_URL       := AllTrim(cURL)+"/SPEDCTBMOVIMENTOS.apw"
+		If !Empty(xFilial("CT6")) .Or. lFirst
+			dbSelectArea("CT6")
+			dbSetOrder(1)
+
+			#IFDEF TOP
+			If TcSrvType() != "AS/400"
+				lQuery    := .T.
+				cAliasCT6 := GetNextAlias()
+				aStruct   := CT6->(dbStruct())
+				
+				cQuery := "SELECT * "
+				cQuery += "FROM "+RetSqlName("CT6")+" CT6 "
+				cQuery += "WHERE "
+				cQuery += "CT6_FILIAL='"+xFilial("CT6")+"' AND "
+				cQuery += "CT6_DATA >= '"+DTOS(MV_PAR08)+"' AND "
+				cQuery += "CT6_DATA <= '"+DTOS(MV_PAR09)+"' AND "
+				cQuery += "CT6_MOEDA = '"+MV_PAR05+"' AND "
+				cQuery += "CT6_TPSALD = '1' AND "
+				cQuery += "CT6.D_E_L_E_T_=' ' "
+				
+				dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAliasCT6)
+				For nX := 1 To Len(aStruct)
+					If aStruct[nX][2] <> "C" .And. FieldPos(aStruct[nX][1])<>0
+						TcSetField(cAliasCT6,aStruct[nX][1],aStruct[nX][2],aStruct[nX][3],aStruct[nX][4])
+					EndIf
+				Next nX
+			Else
+			#ENDIF
+				MsSeek(xFilial("CT6")+DTOS(MV_PAR08),.T.)
+			#IFDEF TOP
+			EndIf
+			#ENDIF			
+
+			While !Eof() .And. xFilial("CT6") == (cAliasCT6)->CT6_FILIAL .And.;
+				(cAliasCT6)->CT6_DATA  >= MV_PAR08 .And.;
+				(cAliasCT6)->CT6_DATA  <= MV_PAR09				
+				If (cAliasCT6)->CT6_MOEDA == MV_PAR05 .And. (cAliasCT6)->CT6_TPSALD == '1'
+				
+					lCplLote := .F.
+					noWS := 0
+					oWs:oWsLctoCtb:cId_Ent := cIdEnt
+					oWs:oWsLctoCtb:nOrdem  := MV_PAR10
+					oWs:oWsLctoCtb:dDtLcto := (cAliasCT6)->CT6_DATA
+					oWs:oWsLctoCtb:cLote   := xFilial("CT2")+DTOS((cAliasCT6)->CT6_DATA)+(cAliasCT6)->CT6_LOTE+(cAliasCT6)->CT6_SBLOTE
+					oWs:oWsLctoCtb:cIndLcto:= "N"
+					oWs:oWsLctoCtb:cCplLote:= IIF(lCplLote,"S","N")
+					oWs:oWsLctoCtb:oWsLctos:= SPEDCTBMOVIMENTOS_ARRAYOFSPED_CTBPARTIDAS():New()
+																		
+					dbSelectArea("CT2")
+					dbSetOrder(1)
+
+					#IFDEF TOP
+					If TcSrvType() != "AS/400"
+						lQuery    := .T.
+						cAliasCT2 := GetNextAlias()
+						aStruct   := CT2->(dbStruct())
+						
+						cQuery := "SELECT "
+						cQuery += " CT2_FILIAL,CT2_DATA,CT2_LOTE,CT2_SBLOTE,CT2_DOC,CT2_LINHA,CT2_SEQLAN,"
+						cQuery += " CT2_DC,CT2_DEBITO,CT2_CREDIT,CT2_HP,CT2_HIST,CT2_CCD,CT2_CCC,CT2_DTLP,"
+						cQuery += " CT2_SEQHIS,CT2_MOEDLC,CT2_TPSALD,CT2_VALOR, CT2_EMPORI, CT2_FILORI"
+						cQuery += " FROM "+RetSqlName("CT2")+" CT2 "
+						cQuery += " WHERE "
+						cQuery += " CT2_FILIAL='"+xFilial("CT2")+"' AND "
+						cQuery += " CT2_DATA = '"+DTOS((cAliasCT6)->CT6_DATA)+"' AND "
+						cQuery += " CT2_LOTE = '"+(cAliasCT6)->CT6_LOTE+"' AND "
+						cQuery += " CT2_SBLOTE = '"+(cAliasCT6)->CT6_SBLOTE+"' AND "
+						cQuery += " CT2_MOEDLC = '"+(cAliasCT6)->CT6_MOEDA+"' AND "
+						cQuery += " CT2_TPSALD = '"+(cAliasCT6)->CT6_TPSALD+"' AND "
+						cQuery += " CT2.D_E_L_E_T_=' ' "
+						cQuery += " ORDER BY "+SqlOrder(CT2->(IndexKey()))
+						
+						dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAliasCT2)
+						For nX := 1 To Len(aStruct)
+							If aStruct[nX][2] <> "C" .And. FieldPos(aStruct[nX][1])<>0
+								TcSetField(cAliasCT2,aStruct[nX][1],aStruct[nX][2],aStruct[nX][3],aStruct[nX][4])
+							EndIf
+						Next nX
+					Else
+					#ENDIF
+						MsSeek(xFilial("CT2")+DTOS((cAliasCT6)->CT6_DATA)+(cAliasCT6)->CT6_LOTE+(cAliasCT6)->CT6_SBLOTE)
+					#IFDEF TOP
+					EndIf
+					#ENDIF
+
+					While !Eof() .And. xFilial("CT2") == (cAliasCT2)->CT2_FILIAL .And.;
+						(cAliasCT6)->CT6_DATA == (cAliasCT2)->CT2_DATA .And.;
+						(cAliasCT6)->CT6_LOTE == (cAliasCT2)->CT2_LOTE .And.;
+						(cAliasCT6)->CT6_SBLOTE == (cAliasCT2)->CT2_SBLOTE
+					
+						cDoc := (cAliasCT2)->CT2_DOC
+						aTemp := {}
+						
+						While !Eof() .And. xFilial("CT2") == (cAliasCT2)->CT2_FILIAL .And.;
+							(cAliasCT6)->CT6_DATA == (cAliasCT2)->CT2_DATA .And.;
+							(cAliasCT6)->CT6_LOTE == (cAliasCT2)->CT2_LOTE .And.;
+							(cAliasCT6)->CT6_SBLOTE == (cAliasCT2)->CT2_SBLOTE .And.;
+							(cAliasCT2)->CT2_DOC == cDoc
+							
+							If (cAliasCT6)->CT6_MOEDA == (cAliasCT2)->CT2_MOEDLC .And. (cAliasCT6)->CT6_TPSALD == (cAliasCT2)->CT2_TPSALD
+							
+								If !Empty((cAliasCT2)->CT2_DTLP)
+									oWs:oWsLctoCtb:cIndLcto:= "E"
+								EndIf
+								If Val((cAliasCT2)->CT2_SEQHIS)==1
+									aTemp := {}
+								EndIf
+								      
+								If (cAliasCT2)->CT2_DC == "1" .Or. (cAliasCT2)->CT2_DC == "3"
+									noWS++
+									aadd(oWs:oWsLctoCtb:oWsLctos:oWsSped_CtbPartidas,SPEDCTBMOVIMENTOS_SPED_CTBPARTIDAS():New())
+									aadd(aTemp,noWS)							
+									oWs:oWsLctoCtb:oWsLctos:oWsSped_CtbPartidas[noWS]:cNUMARQ     := xFilial("CT2")+DTOS((cAliasCT2)->CT2_DATA)+(cAliasCT2)->CT2_LOTE+(cAliasCT2)->CT2_SBLOTE+(cAliasCT2)->CT2_DOC+(cAliasCT2)->CT2_LINHA+(cAliasCT2)->CT2_SEQLAN+"D"
+									oWs:oWsLctoCtb:oWsLctos:oWsSped_CtbPartidas[noWS]:cCODCTA     := (cAliasCT2)->CT2_DEBITO
+									oWs:oWsLctoCtb:oWsLctos:oWsSped_CtbPartidas[noWS]:cCCUSTO     := IIF(MV_PAR06=="S",(cAliasCT2)->CT2_CCD,"")
+									oWs:oWsLctoCtb:oWsLctos:oWsSped_CtbPartidas[noWS]:cDC         := "D"
+									oWs:oWsLctoCtb:oWsLctos:oWsSped_CtbPartidas[noWS]:cHISTPAD    := (cAliasCT2)->CT2_HP
+									oWs:oWsLctoCtb:oWsLctos:oWsSped_CtbPartidas[noWS]:cHISTORICO  := IIf(Empty((cAliasCT2)->CT2_HP),(cAliasCT2)->CT2_HIST,"")
+									oWs:oWsLctoCtb:oWsLctos:oWsSped_CtbPartidas[noWS]:nVALOR      := (cAliasCT2)->CT2_VALOR
+									oWs:oWsLctoCtb:oWsLctos:oWsSped_CtbPartidas[noWS]:cCNPJ_PART  := ""
+									oWs:oWsLctoCtb:oWsLctos:oWsSped_CtbPartidas[noWS]:cCPF_PART   := ""
+									oWs:oWsLctoCtb:oWsLctos:oWsSped_CtbPartidas[noWS]:cIE_PART    := ""
+									oWs:oWsLctoCtb:oWsLctos:oWsSped_CtbPartidas[noWS]:cUF_PART    := ""
+									oWs:oWsLctoCtb:oWsLctos:oWsSped_CtbPartidas[noWS]:cEMPORI     := (cAliasCT2)->CT2_EMPORI
+									oWs:oWsLctoCtb:oWsLctos:oWsSped_CtbPartidas[noWS]:cFILORI     := (cAliasCT2)->CT2_FILORI
+								EndIf
+
+								If (cAliasCT2)->CT2_DC == "2" .Or. (cAliasCT2)->CT2_DC == "3"
+									noWS++
+									aadd(oWs:oWsLctoCtb:oWsLctos:oWsSped_CtbPartidas,SPEDCTBMOVIMENTOS_SPED_CTBPARTIDAS():New())
+									aadd(aTemp,noWS)
+									oWs:oWsLctoCtb:oWsLctos:oWsSped_CtbPartidas[noWS]:cNUMARQ     := xFilial("CT2")+DTOS((cAliasCT2)->CT2_DATA)+(cAliasCT2)->CT2_LOTE+(cAliasCT2)->CT2_SBLOTE+(cAliasCT2)->CT2_DOC+(cAliasCT2)->CT2_LINHA+(cAliasCT2)->CT2_SEQLAN+"C"
+									oWs:oWsLctoCtb:oWsLctos:oWsSped_CtbPartidas[noWS]:cCODCTA     := (cAliasCT2)->CT2_CREDIT
+									oWs:oWsLctoCtb:oWsLctos:oWsSped_CtbPartidas[noWS]:cCCUSTO     := IIF(MV_PAR06=="S",(cAliasCT2)->CT2_CCC,"")
+									oWs:oWsLctoCtb:oWsLctos:oWsSped_CtbPartidas[noWS]:cDC         := "C"
+									oWs:oWsLctoCtb:oWsLctos:oWsSped_CtbPartidas[noWS]:cHISTPAD    := (cAliasCT2)->CT2_HP
+									oWs:oWsLctoCtb:oWsLctos:oWsSped_CtbPartidas[noWS]:cHISTORICO  := IIf(Empty((cAliasCT2)->CT2_HP),(cAliasCT2)->CT2_HIST,"")
+									oWs:oWsLctoCtb:oWsLctos:oWsSped_CtbPartidas[noWS]:nVALOR      := (cAliasCT2)->CT2_VALOR
+									oWs:oWsLctoCtb:oWsLctos:oWsSped_CtbPartidas[noWS]:cCNPJ_PART  := ""
+									oWs:oWsLctoCtb:oWsLctos:oWsSped_CtbPartidas[noWS]:cCPF_PART   := ""
+									oWs:oWsLctoCtb:oWsLctos:oWsSped_CtbPartidas[noWS]:cIE_PART    := ""
+									oWs:oWsLctoCtb:oWsLctos:oWsSped_CtbPartidas[noWS]:cUF_PART    := ""
+									oWs:oWsLctoCtb:oWsLctos:oWsSped_CtbPartidas[noWS]:cEMPORI     := (cAliasCT2)->CT2_EMPORI
+									oWs:oWsLctoCtb:oWsLctos:oWsSped_CtbPartidas[noWS]:cFILORI     := (cAliasCT2)->CT2_FILORI
+		                        EndIf
+
+		                        If (cAliasCT2)->CT2_DC == "4"
+		                        	For nX := 1 To Len(aTemp)
+			                        	oWs:oWsLctoCtb:oWsLctos:oWsSped_CtbPartidas[aTemp[nX]]:cHISTORICO += (cAliasCT2)->CT2_HIST
+		                        	Next nX
+		                        EndIf
+							EndIf
+
+							dbSelectArea(cAliasCT2)
+							dbSkip()							
+
+							If noWS > 300
+								Exit
+							EndIf
+						EndDo						
+
+						If noWS > 300
+							If !oWs:CtbLctoContabil()
+								Aviso("SPED",GetWscError(3),{"Ok"},3)
+								lRetorno := .F.
+								Exit
+							EndIf
+
+							lCplLote := .T.
+							noWS := 0
+
+							oWs:oWsLctoCtb:cId_Ent := cIdEnt
+							oWs:oWsLctoCtb:nOrdem  := MV_PAR10
+							oWs:oWsLctoCtb:dDtLcto := (cAliasCT6)->CT6_DATA
+							oWs:oWsLctoCtb:cLote   := xFilial("CT2")+DTOS((cAliasCT6)->CT6_DATA)+(cAliasCT6)->CT6_LOTE+(cAliasCT6)->CT6_SBLOTE
+							oWs:oWsLctoCtb:cIndLcto:= "N"
+							oWs:oWsLctoCtb:cCplLote:= IIF(lCplLote,"S","N")
+							oWs:oWsLctoCtb:oWsLctos:= SPEDCTBMOVIMENTOS_ARRAYOFSPED_CTBPARTIDAS():New()
+						EndIf
+					EndDo
+
+					If noWS > 0
+						If !oWs:CtbLctoContabil()
+							Aviso("SPED",GetWscError(3),{"Ok"},3)
+							lRetorno := .F.
+							Exit
+						EndIf
+					EndIf
+
+					If lQuery
+						dbSelectArea(cAliasCT2)
+						dbCloseArea()
+						dbSelectArea("CT2")
+					EndIf
+										
+				EndIf
+
+				dbSelectArea(cAliasCT6)
+				dbSkip()
+				oObj:IncRegua2("Atualizando lctos contabeis do período: "+dtoc((cAliasCT6)->CT6_DATA))	
+			EndDo
+			If lQuery
+
+				dbSelectArea(cAliasCT6)
+				dbCloseArea()
+				dbSelectArea("CT6")
+			EndIf
+		EndIf
+	EndIf
+
+	oObj:SetRegua2(12)
+
+	If lRetorno	 .And. !Empty(MV_PAR12)
+		If !Empty(xFilial("CT6")) .Or. lFirst
+			If !Empty(MV_PAR13) .And. !Empty(MV_PAR14) .And. !Empty(MV_PAR15) 
+
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³ Transferindo balanco patrimonial do periodo          ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				If !Empty(MV_PAR15)
+					aTemp := {""}
+					lComNivel := .T.
+					oObj:IncRegua2("Atualizando Balanco Patrimonial do período")	
+
+					CTGerPlan(,,,.F.,@aTemp[1],MV_PAR13,MV_PAR14,;
+						"CT7","",;
+						"",Repl("z",Len(CT1->CT1_CONTA)),;
+						"",Repl("Z", Len(CTT->CTT_CUSTO)),;
+						"",Repl("Z", Len(CTD->CTD_ITEM)),;
+						"",Repl("Z", Len(CTH->CTH_CLVL)),;
+						MV_PAR05,"1",CTBSetOf(MV_PAR15),;
+						Space(2),Space(20),Repl("z",20),Space(30),.F.,.T.,2,"CT1",.F./*lImpAntLP*/,MV_PAR12,1,.T.,,,,,,,,,,,,,,.T.)
+
+					oObj:IncRegua2("Atualizando Balanco Patrimonial do período")
+	
+					oWS := WsSPEDCtbDemonstracoesContabeis():New()
+					oWS:cUSERTOKEN := "TOTVS"
+					oWS:_URL       := AllTrim(cURL)+"/SPEDCTBDEMONSTRACOESCONTABEIS.apw"
+					oWS:oWSDEMONSTRATIVO:cID_ENT:= cIdEnt
+					oWs:oWSDEMONSTRATIVO:nOrdem := MV_PAR10
+					oWS:oWSDEMONSTRATIVO:dDTINI := MV_PAR13
+					oWS:oWSDEMONSTRATIVO:dDTFIM := MV_PAR14
+					oWS:oWSDEMONSTRATIVO:oWSDEMONSTRACAO := SPEDCTBDEMONSTRACOESCONTABEIS_ARRAYOFSPED_CTBLCTODODEMONSTRATIVO():New()
+					noWS := 0
+																	
+					dbSelectArea("cArqTmp")
+					dbGotop()
+					While !Eof()
+					
+						If !Empty( cArqTmp->CONTA )
+							aadd(oWS:oWSDEMONSTRATIVO:oWSDEMONSTRACAO:oWSSPED_CTBLCTODODEMONSTRATIVO,SPEDCTBDEMONSTRACOESCONTABEIS_SPED_CTBLCTODODEMONSTRATIVO():New())					
+							noWS ++
+							
+							oWS:oWSDEMONSTRATIVO:oWSDEMONSTRACAO:oWSSPED_CTBLCTODODEMONSTRATIVO[noWS]:cCOD_CTA_AGL    := cArqTmp->CONTA
+							oWS:oWSDEMONSTRATIVO:oWSDEMONSTRACAO:oWSSPED_CTBLCTODODEMONSTRATIVO[noWS]:cDESCRICAO      := cArqTmp->DESCCTA
+							oWS:oWSDEMONSTRATIVO:oWSDEMONSTRACAO:oWSSPED_CTBLCTODODEMONSTRATIVO[noWS]:nNIVEL_CTA_AGL  := cArqTmp->NIVEL
+							oWS:oWSDEMONSTRATIVO:oWSDEMONSTRACAO:oWSSPED_CTBLCTODODEMONSTRATIVO[noWS]:cIND_VALOR      := IIF(cArqTmp->SALDOATU<0,"D","C")
+							oWS:oWSDEMONSTRATIVO:oWSDEMONSTRACAO:oWSSPED_CTBLCTODODEMONSTRATIVO[noWS]:nVALOR          := ABS(cArqTmp->SALDOATU)
+						EndIf
+
+						dbSelectArea("cArqTmp")
+						dbSkip()
+					EndDo				
+
+					dbSelectArea("cArqTmp")
+					dbCloseArea()
+					FErase(aTemp[1])
+					aTemp := {}
+									
+					oObj:IncRegua2("Atualizando Balanco Patrimonial do período")
+
+					If noWS > 0
+						If !oWs:CtbBalancoPatrimonial()
+							Aviso("SPED",GetWscError(3),{"Ok"},3)
+							lRetorno := .F.
+							Exit
+						EndIf
+					EndIf
+
+					noWS := 0					
+					oObj:IncRegua2("Atualizando Balanco Patrimonial do período")
+				EndIf
+
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³ Transferindo demonstrativo de resultado do periodo   ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				If !Empty(MV_PAR16)
+					aTemp := {""}
+					lComNivel := .T.
+					oObj:IncRegua2("Atualizando DRE do período")
+					CTGerPlan(,,,.F.,@aTemp[1],MV_PAR13,MV_PAR14,;
+						"CT7","",;
+						"",Repl("z",Len(CT1->CT1_CONTA)),;
+						"",Repl("Z", Len(CTT->CTT_CUSTO)),;
+						"",Repl("Z", Len(CTD->CTD_ITEM)),;
+						"",Repl("Z", Len(CTH->CTH_CLVL)),;
+						MV_PAR05,"1",CTBSetOf(MV_PAR16),;
+						Space(2),Space(20),Repl("z",20),Space(30),.F.,.T.,2,"CT1",.T./*lImpAntLP*/,MV_PAR12,1,.T.,,,,,,,,,,,,,,.T.)
+
+					oObj:IncRegua2("Atualizando DRE do período")
+	
+					oWS := WsSPEDCtbDemonstracoesContabeis():New()
+					oWS:cUSERTOKEN := "TOTVS"
+					oWS:_URL       := AllTrim(cURL)+"/SPEDCTBDEMONSTRACOESCONTABEIS.apw"
+					oWS:oWSDEMONSTRATIVO:cID_ENT:= cIdEnt
+					oWs:oWSDEMONSTRATIVO:nOrdem := MV_PAR10
+					oWS:oWSDEMONSTRATIVO:dDTINI := MV_PAR13
+					oWS:oWSDEMONSTRATIVO:dDTFIM := MV_PAR14
+					oWS:oWSDEMONSTRATIVO:oWSDEMONSTRACAO := SPEDCTBDEMONSTRACOESCONTABEIS_ARRAYOFSPED_CTBLCTODODEMONSTRATIVO():New()
+	
+					noWS := 0
+																	
+					dbSelectArea("cArqTmp")
+					dbGotop()
+					While !Eof()
+					
+						IF !Empty( cArqTmp->CONTA )
+							aadd(oWS:oWSDEMONSTRATIVO:oWSDEMONSTRACAO:oWSSPED_CTBLCTODODEMONSTRATIVO,SPEDCTBDEMONSTRACOESCONTABEIS_SPED_CTBLCTODODEMONSTRATIVO():New())					
+							noWS ++
+							
+							oWS:oWSDEMONSTRATIVO:oWSDEMONSTRACAO:oWSSPED_CTBLCTODODEMONSTRATIVO[noWS]:cCOD_CTA_AGL    := cArqTmp->CONTA
+							oWS:oWSDEMONSTRATIVO:oWSDEMONSTRACAO:oWSSPED_CTBLCTODODEMONSTRATIVO[noWS]:cDESCRICAO      := cArqTmp->DESCCTA
+							oWS:oWSDEMONSTRATIVO:oWSDEMONSTRACAO:oWSSPED_CTBLCTODODEMONSTRATIVO[noWS]:nNIVEL_CTA_AGL  := cArqTmp->NIVEL
+							oWS:oWSDEMONSTRATIVO:oWSDEMONSTRACAO:oWSSPED_CTBLCTODODEMONSTRATIVO[noWS]:cIND_VALOR      := IIF(cArqTmp->IDENTIFI>"2",IIF(cArqTmp->SALDOATU<0,"N","P"),IIF(cArqTmp->SALDOATU<0,"D","R"))
+							oWS:oWSDEMONSTRATIVO:oWSDEMONSTRACAO:oWSSPED_CTBLCTODODEMONSTRATIVO[noWS]:nVALOR          := Abs(cArqTmp->SALDOATU)
+						Endif
+							
+						dbSelectArea("cArqTmp")
+						dbSkip()
+					EndDo				
+					dbSelectArea("cArqTmp")
+					dbCloseArea()
+					FErase(aTemp[1])
+					aTemp := {}
+									
+					oObj:IncRegua2("Atualizando DRE do período")
+					If noWS > 0
+						If !oWs:CtbDRE()
+							Aviso("SPED",GetWscError(3),{"Ok"},3)
+							lRetorno := .F.
+							Exit
+						EndIf
+					EndIf
+					oObj:IncRegua2("Atualizando DRE do período")
+				EndIf
+
+				If !Empty(MV_PAR17) .And. cBckFil == cFilAnt
+					oObj:IncRegua2("Atualizando outras demonstraçoes do período")
+					SplitPath(MV_PAR17,/*cDrive*/,/*cPath*/, @cFile,@cExt)
+					oObj:IncRegua2("Atualizando outras demonstraçoes do período")
+				
+					oWS := WsSPEDCtbDemonstracoesContabeis():New()
+					oWS:cUSERTOKEN := "TOTVS"
+					oWS:_URL       := AllTrim(cURL)+"/SPEDCTBDEMONSTRACOESCONTABEIS.apw"
+					oWs:oWSDEMONSTRATIVORTF:nOrdem   := MV_PAR10
+					oWS:oWSDEMONSTRATIVORTF:dDTINI   := MV_PAR13
+					oWS:oWSDEMONSTRATIVORTF:dDTFIM   := MV_PAR14
+					oWS:oWSDEMONSTRATIVORTF:cNOMEDEM := cFile
+					oWS:oWSDEMONSTRATIVORTF:cARQRTF  := FsLoadTXT(MV_PAR17)	
+					
+					oObj:IncRegua2("Atualizando outras demonstraçoes do período")				
+					If !oWs:CtbOutrasRTF()
+						Aviso("SPED",GetWscError(3),{"Ok"},3)
+						lRetorno := .F.
+						Exit
+					EndIf
+					oObj:IncRegua2("Atualizando outras demonstraçoes do período")
+				EndIf
+			EndIf
+		EndIf
+	EndIf
+
+	lFirst := .F.
+
+	dbSelectArea("SM0")
+	dbSkip()
+EndDo
+
+cFilAnt := cBckFil
+RestArea(aAreaSM0)
+RestArea(aArea)
+
+Return(lRetorno)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³SPEDCTBDO2³ Rev.  ³Eduardo Riera          ³ Data ³11.05.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Servico de sincronicao do ERP com o Gateway do projeto SPED ³±±
+±±³          ³para o Razao Auxiliar                                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³Esta rotina tem como objetivo efetuar a sincronizacao do ERP³±±
+±±³          ³com o Gateway do projeto sped.                              ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Observacao³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Totvs SPED Services Gateway                                ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function SpedCtbDo2(oObj)
+
+Local oWs
+      
+Local aArea    := GetArea()
+Local aTemp    := {}
+
+Local cLinha1  := ""
+Local cLinha2  := ""
+Local cTag     := ""
+Local cIDEnt   := ""
+Local cFile    := ""
+Local cExt     := ""
+Local cURL     := PadR(GetNewPar("MV_CTBURL","http://"),250)
+
+Local noWS     := 0
+Local nX       := 0
+Local nY       := 0
+Local nLinha   := 0
+
+Local lRetorno := .T.
+
+
+MV_PAR08 := AllTrim(MV_PAR08)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Importando livro razao auxiliar com layout parametri.³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If File(MV_PAR08)
+	oObj:SetRegua1(SM0->(LastRec()))
+	
+	oObj:IncRegua1("Filial: "+cFilAnt+" - sincronizando dados...")
+	oObj:SetRegua2(2)
+	oObj:IncRegua2("Atualizando entidades empresariais")
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Preenche os dados de transferencia da entidade       ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	oWS := WsSPEDAdm():New()
+	oWS:cUSERTOKEN := "TOTVS"
+	oWS:_URL       := AllTrim(cURL)+"/SPEDADM.apw"
+	
+	oWS:oWSEMPRESA:cCNPJ       := IIF(SM0->M0_TPINSC==2 .Or. Empty(SM0->M0_TPINSC),SM0->M0_CGC,"")	
+	oWS:oWSEMPRESA:cCPF        := IIF(SM0->M0_TPINSC==3,SM0->M0_CGC,"")
+	oWS:oWSEMPRESA:cIE         := SM0->M0_INSC
+	oWS:oWSEMPRESA:cIM         := SM0->M0_INSCM		
+	oWS:oWSEMPRESA:cNOME       := SM0->M0_NOMECOM
+	oWS:oWSEMPRESA:cFANTASIA   := SM0->M0_NOME
+	oWS:oWSEMPRESA:cENDERECO   := FisGetEnd(SM0->M0_ENDENT)[1]
+	oWS:oWSEMPRESA:cNUM        := FisGetEnd(SM0->M0_ENDENT)[3]
+	oWS:oWSEMPRESA:cCOMPL      := FisGetEnd(SM0->M0_ENDENT)[4]
+	oWS:oWSEMPRESA:cUF         := SM0->M0_ESTENT
+	oWS:oWSEMPRESA:cCEP        := SM0->M0_CEPENT
+	oWS:oWSEMPRESA:cCOD_MUN    := SM0->M0_CODMUN
+	oWS:oWSEMPRESA:cCOD_PAIS   := GetNewPar( "MV_SPDPAIS" , "01058" )
+	oWS:oWSEMPRESA:cBAIRRO     := SM0->M0_BAIRENT
+	oWS:oWSEMPRESA:cMUN        := SM0->M0_CIDENT
+	oWS:oWSEMPRESA:cCEP_CP     := Nil
+	oWS:oWSEMPRESA:cCP         := Nil
+	oWS:oWSEMPRESA:cDDD        := Str(FisGetTel(SM0->M0_TEL)[2],3)
+	oWS:oWSEMPRESA:cFONE       := AllTrim(Str(FisGetTel(SM0->M0_TEL)[3],15))
+	oWS:oWSEMPRESA:cFAX        := AllTrim(Str(FisGetTel(SM0->M0_FAX)[3],15))
+	oWS:oWSEMPRESA:cEMAIL      := UsrRetMail(RetCodUsr())
+	oWS:oWSEMPRESA:cNIRE       := SM0->M0_NIRE
+	oWS:oWSEMPRESA:cNIT        := IIF(SM0->M0_TPINSC==1,SM0->M0_CGC,"")
+	oWS:oWSEMPRESA:cINDSITESP  := IIF(SubStr(MV_PAR02,1,1)=='Z',"",MV_PAR02)
+	If oWs:ADMEMPRESAS()
+		cIdEnt  := oWs:cADMEMPRESASRESULT
+	Else
+		Aviso("SPED",GetWscError(3),{"Ok"},3)
+		lRetorno := .F.
+	EndIf
+
+	oObj:SetRegua2(4)
+
+	If lRetorno
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Transferindo livro contabil                          ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		oWS := WSSPEDCtbMovimentos():New()		
+		oWS:cUSERTOKEN := "TOTVS"
+		oWS:_URL       := AllTrim(cURL)+"/SPEDCTBMOVIMENTOS.apw"
+		oWS:oWSLIVROCONTABIL:cID_ENT      := cIdEnt
+		oWS:oWSLIVROCONTABIL:nORDEM       := MV_PAR04
+		oWS:oWSLIVROCONTABIL:nORDEMSUP    := MV_PAR03
+		oWS:oWSLIVROCONTABIL:cNATUREZA    := MV_PAR05
+		oWS:oWSLIVROCONTABIL:cIND_ESC     := "Z"
+		oWS:oWSLIVROCONTABIL:cTIPO_ESC    := MV_PAR01
+		oWS:oWSLIVROCONTABIL:dDT_ARQ      := SM0->M0_DTRE
+		oWS:oWSLIVROCONTABIL:dDT_ARQ_CONV := Ctod("")
+		
+		oObj:IncRegua2("Atualizando livro contabil")
+		
+		If !oWs:CtbLivroContabil()
+			Aviso("SPED",GetWscError(3),{"Ok"},3)
+			lRetorno := .F.
+		EndIf	
+	EndIf
+	If lRetorno
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Transferindo LayOut                                  ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Formato do arquivo valido:                            ³
+		//³Linha1: Titulo das colunas                            ³
+		//³LinhaN: Conteudo do arquivo                           ³
+		//³                                                      ³
+		//³Formato: Delimited                                    ³
+		//³Separador: Virgula                                    ³
+		//³Indetificador de texto: aspas dupla                   ³			
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		SplitPath(MV_PAR08,/*cDrive*/,/*cPath*/, @cFile,@cExt)
+		oObj:IncRegua2("Importando arquivo "+cFile+cExt)
+		CpyT2S(MV_PAR08,"\",.T.)
+				
+		oWS := WSSPEDCtbMovimentos():New()
+		oWS:cUSERTOKEN := "TOTVS"
+		oWS:_URL       := AllTrim(cURL)+"/SPEDCTBMOVIMENTOS.apw"
+				
+		oWS:oWSLAYOUT:cID_ENT    := cIdEnt
+		oWS:oWSLAYOUT:cID_LAYOUT := cFile
+		oWS:oWSLAYOUT:oWSCAMPOS  := SPEDCTBMOVIMENTOS_ARRAYOFFIELDSTRUCT():New()
+				
+		FT_FUse("\"+cFile+cExt)
+				
+		cLinha1 := FT_FReadln()
+		FT_FSkip()
+		cLinha2 := FT_FReadln()  
+		noWS := 0
+		While !Empty(cLinha1)
+			aadd(oWS:oWSLAYOUT:oWSCAMPOS:oWSFIELDSTRUCT,SPEDCTBMOVIMENTOS_FIELDSTRUCT():New())	
+			noWS ++
+					
+			nX := At(",",cLinha1)
+			nX := IIf(nX==0,Len(cLinha1),nX)
+			cTag := StrTran(SubStr(cLinha1,1,nX-1),'"',"")				
+			oWS:oWSLAYOUT:oWSCAMPOS:oWSFIELDSTRUCT[noWS]:cFLDNAME  := cTag
+			aadd(aTemp,cTag)
+			cLinha1 := SubStr(cLinha1,nX+1)
+					
+			If SubStr(cLinha2,1,1)=='"'
+				oWS:oWSLAYOUT:oWSCAMPOS:oWSFIELDSTRUCT[noWS]:cFLDTYPE  := "C"
+				nX := At('"',cLinha2,2)+1
+				nX := IIf(nX==0,Len(cLinha2),nX)
+				cTag := StrTran(SubStr(cLinha2,1,nX-1),'"',"")
+			Else
+				oWS:oWSLAYOUT:oWSCAMPOS:oWSFIELDSTRUCT[noWS]:cFLDTYPE  := "N"				
+				nX := At(",",cLinha2)
+				nX := IIf(nX==0,Len(cLinha2),nX)
+				cTag := PadL(SubStr(cLinha2,1,nX-1),18)
+				nY := At(".",cTag)
+				If nY <> 0
+					nY := Max(Len(cTag)-nY,0)
+				Else
+					nY := 0
+				EndIf
+			EndIf
+			oWS:oWSLAYOUT:oWSCAMPOS:oWSFIELDSTRUCT[noWS]:nFLDDEC   := nY
+			oWS:oWSLAYOUT:oWSCAMPOS:oWSFIELDSTRUCT[noWS]:nFLDSIZE  := Len(cTag)
+			oWS:oWSLAYOUT:oWSCAMPOS:oWSFIELDSTRUCT[noWS]:nFLDWidth := Max(Len(oWS:oWSLAYOUT:oWSCAMPOS:oWSFIELDSTRUCT[noWS]:cFLDNAME),oWS:oWSLAYOUT:oWSCAMPOS:oWSFIELDSTRUCT[noWS]:nFLDSIZE)
+			cLinha2 := SubStr(cLinha2,nX+1)
+		EndDo
+		If !oWs:CTBRazaoAuxiliarLayOut()
+			Aviso("SPED",GetWscError(3),{"Ok"},3)
+			lRetorno := .F.
+		EndIf
+	EndIf
+	If lRetorno
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ lendo o layout                                       ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		oWS := WSSPEDCtbMovimentos():New()
+	
+		oWS:cUSERTOKEN := "TOTVS"
+		oWS:_URL       := AllTrim(cURL)+"/SPEDCTBMOVIMENTOS.apw"
+		oWS:oWSLctoAux:cID_ENT    := cIdEnt
+		oWS:oWSLctoAux:nOrdem     := MV_PAR04
+		oWS:oWSLctoAux:cID_LAYOUT := cFile
+		oWS:oWSLctoAux:dDTINI     := MV_PAR06
+		oWS:oWSLctoAux:dDTFIM     := MV_PAR07
+		oWS:oWSLctoAux:oWSLINHAS  := SPEDCTBMOVIMENTOS_ARRAYOFSPED_CTBPARTIDAAUXILIAR():New()
+		noWS:=0
+		nLinha := 0
+		While !FT_FEof() .And. lRetorno
+				
+			nLinha++
+			aadd(oWS:oWSLctoAux:oWSLINHAS:oWSSPED_CTBPARTIDAAUXILIAR,SPEDCTBMOVIMENTOS_SPED_CTBPARTIDAAUXILIAR():New())
+			noWS++
+			oWS:oWSLctoAux:oWSLINHAS:oWSSPED_CTBPARTIDAAUXILIAR[noWS]:nID_LINHA := nLinha
+			oWS:oWSLctoAux:oWSLINHAS:oWSSPED_CTBPARTIDAAUXILIAR[noWS]:cCONTEUDO := ""
+					
+			cLinha2 := FT_FReadLn()
+			
+			For nY := 1 To Len(aTemp)
+				If SubStr(cLinha2,1,1)=='"'
+					nX := At('"',cLinha2,2)+1
+					nX := IIf(nX==0,Len(cLinha2),nX)
+					cTag := StrTran(SubStr(cLinha2,1,nX-1),'"',"")
+				Else
+					nX := At(",",cLinha2)
+					nX := IIf(nX==0,Len(cLinha2),nX)
+					cTag := PadL(SubStr(cLinha2,1,nX-1),18)
+				EndIf
+				cLinha2 := SubStr(cLinha2,nX+1)	
+				oWS:oWSLctoAux:oWSLINHAS:oWSSPED_CTBPARTIDAAUXILIAR[noWS]:cCONTEUDO += cTag+IIF(nY<>Len(aTemp),"|","")
+			Next nY
+			oObj:IncRegua2(cFile+cExt+" Lidas: "+AllTrim(Str(nLinha,18)))
+			If noWS >= 500
+				If !oWs:CTBRazaoAuxiliar()
+					Aviso("SPED",GetWscError(3),{"Ok"},3)
+					lRetorno := .F.
+				EndIf
+				oWS := WSSPEDCtbMovimentos():New()
+				oWS:cUSERTOKEN := "TOTVS"
+				oWS:_URL       := AllTrim(cURL)+"/SPEDCTBMOVIMENTOS.apw"
+				oWS:oWSLctoAux:cID_ENT    := cIdEnt
+				oWS:oWSLctoAux:nOrdem     := MV_PAR04
+				oWS:oWSLctoAux:cID_LAYOUT := cFile
+				oWS:oWSLctoAux:dDTINI     := MV_PAR06
+				oWS:oWSLctoAux:dDTFIM     := MV_PAR07
+				oWS:oWSLctoAux:oWSLINHAS  := SPEDCTBMOVIMENTOS_ARRAYOFSPED_CTBPARTIDAAUXILIAR():New()
+				noWS:=0					
+			EndIf
+			FT_FSkip()
+		EndDo
+		If noWS > 0
+			If oWs:CTBRazaoAuxiliar()
+				Aviso("SPED",GetWscError(3),{"Ok"},3)
+				lRetorno := .F.	
+			EndIf
+		EndIf
+	EndIf
+	FT_FUse()
+	FErase("\"+cFile+cExt)
+EndIf
+RestArea(aArea)
+Return
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³AvisoRun  ³ Rev.  ³Eduardo Riera          ³ Data ³12.06.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Funcao de espera de processamento                           ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1: Titulo da janela                                     ³±±
+±±³          ³ExpC2: Mensagem da janela                                   ³±±
+±±³          ³ExpB3: Code Block da rotina de mensagens                    ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³Esta rotina tem como objetivo esperar um processamento e    ³±±
+±±³          ³demonstrar ao usuario o status da espera                    ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Observacao³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Totvs SPED Services Gateway                                ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+
+Static Function AvisoRun( cCaption, cMensagem, bAction)
+
+Local oDlgAviso
+Local oGet
+Local oTimer
+
+DEFAULT cCaption := "Aguarde..."
+
+DEFINE MSDIALOG oDlgAviso FROM 0,0 TO 227,450 TITLE cCaption Of oMainWnd PIXEL
+DEFINE TIMER oTimer INTERVAL 10 ACTION (IIf(Eval(bAction,oGet),oDlgAviso:End(),Nil)) OF oDlgAviso
+@ 000,000 BITMAP RESNAME "LOGIN" OF oDlgAviso SIZE 035,210 NOBORDER WHEN .F. PIXEL
+@ 011,035 TO 013,400 LABEL '' OF oDlgAviso PIXEL
+@ 016,038 GET oGet VAR cMensagem Of oDlgAviso PIXEL SIZE 185,085 READONLY MEMO
+
+ACTIVATE MSDIALOG oDlgAviso CENTERED ON INIT oTimer:Activate()
+
+Return
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³ValidaPar1³ Rev.  ³Eduardo Nunes Cirqueira³ Data ³28.08.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Validar a digitacao dos parametros (SX1) da rotina SPEDCTB()³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1: Variavel recebida por referencia que recebera a men- ³±±
+±±³          ³       sagem de inconsistencia                              ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Logico: .T. se nao ha inconsistencia                        ³±±
+±±³          ³        .F. se encontrou inconsistencia                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Totvs SPED Services Gateway                                ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function ValidaPar1(cMsgValid)
+                                
+Local cMsgObrig := ""
+Local cMsgIncon := ""
+
+DEFAULT cMsgValid := ""
+
+//
+// Parametros Obrigatorios em Branco
+//
+If Empty(MV_PAR01)	;	cMsgObrig += "    Tipo Escrituracao, " 			+ CRLF	;	EndIf
+If Empty(MV_PAR02)	;	cMsgObrig += "    Situacao Especial, " 			+ CRLF	;	EndIf
+If Empty(MV_PAR03)	;	cMsgObrig += "    Outras inscricoes, " 			+ CRLF	;	EndIf
+If Empty(MV_PAR05)	;	cMsgObrig += "    Moeda CTB, "           		+ CRLF	;	EndIf
+If Empty(MV_PAR06)	;	cMsgObrig += "    Registra C.Custo no Lcto, "	+ CRLF	;	EndIf
+If Empty(MV_PAR07)	;	cMsgObrig += "    Calendario, "             	+ CRLF	;	EndIf
+If Empty(MV_PAR08)	;	cMsgObrig += "    Periodo Inicial de Lcto, "	+ CRLF	;	EndIf
+If Empty(MV_PAR09)	;	cMsgObrig += "    Periodo Final de Lcto, "		+ CRLF	;	EndIf
+If Empty(MV_PAR10)	;	cMsgObrig += "    Numero de Ordem do Livro, "	+ CRLF	;	EndIf
+If Empty(MV_PAR11)	;	cMsgObrig += "    Natureza do Livro, "			+ CRLF	;	EndIf
+
+If !Empty(cMsgObrig)
+	cMsgValid += "PARAMETROS QUE NAO PODEM FICAR EM BRANCO: " + CRLF
+	cMsgValid += Left(cMsgObrig,Len(cMsgObrig)-2)
+EndIf
+  
+//                         
+// Outras Inconsistencias nos Parametros
+//
+If MV_PAR08 > MV_PAR09	//	"Periodo Inicial de Lcto" e "Periodo Final de Lcto"
+	cMsgIncon += "    'Periodo Inicial de Lcto' esta maior que 'Periodo Final de Lcto'; " + CRLF
+EndIf
+
+If MV_PAR10 <= 0	//	"No. Ordem do Livro"
+	cMsgIncon += "    'Numero de Ordem do Livro' deve ser maior que 0 (zero); " + CRLF
+EndIf
+
+If !Empty(MV_PAR12)	//	"Data Lucros/Perdas"
+	If (MV_PAR12 < MV_PAR08 .Or. MV_PAR12 > MV_PAR09)
+		cMsgIncon += "    'Data Lucros/Perdas' deve estar entre 'Periodo Inicial e Final de Lcto.'; " + CRLF
+	EndIf
+
+	If MV_PAR12 <= MV_PAR13 .Or. MV_PAR12 > MV_PAR14	//	"Data Lucros/Perdas" e "Per. Inicial - Demons." e "Per. Final - Demons."
+		cMsgIncon += "    'Data Lucros/Perdas' deve ser maior que 'Per. Inicial - Demons.' e menor ou igual a 'Per. Final - Demons.'; " + CRLF
+	EndIf
+EndIf
+
+If MV_PAR13 > MV_PAR14	//	"Per. Inicial - Demons." e "Per. Final - Demons."
+	cMsgIncon += "    'Per. Inicial - Demons.' esta maior que 'Per. Final - Demons.'; " + CRLF
+EndIf
+
+
+// Juntando as outras Mensagens de Inconsistencias
+If !Empty(cMsgIncon)
+	If !Empty(cMsgValid)
+		cMsgValid += CRLF + "OUTRAS INCONSISTENCIAS: " + CRLF
+	Else
+		cMsgValid += "INCONSISTENCIAS: " + CRLF
+	EndIf
+
+	cMsgValid += Left( cMsgIncon,Len(cMsgIncon)-2 )
+EndIf
+
+Return ( Len(cMsgValid)==0 )
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³ValidaPar2³ Rev.  ³Eduardo Nunes Cirqueira³ Data ³28.08.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Validar a digitacao dos parametros (SX1) da rotina         ³±±
+±±³          ³ SPEDCTB_RA()                                               ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1: Variavel recebida por referencia que recebera a men- ³±±
+±±³          ³       sagem de inconsistencia                              ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Logico: .T. se nao ha inconsistencia                        ³±±
+±±³          ³        .F. se encontrou inconsistencia                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Totvs SPED Services Gateway                                ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function ValidaPar2(cMsgValid)
+                                
+Local cMsgObrig := ""
+Local cMsgIncon := ""
+
+DEFAULT cMsgValid := ""
+
+//
+// Parametros Obrigatorios em Branco
+//
+If Empty(MV_PAR01)	;	cMsgObrig += "    Tipo Escrituracao, " 			+ CRLF	;	EndIf
+If Empty(MV_PAR02)	;	cMsgObrig += "    Situacao Especial, " 			+ CRLF	;	EndIf
+If Empty(MV_PAR03)	;	cMsgObrig += "    Numero Livro Geral, "			+ CRLF	;	EndIf
+If Empty(MV_PAR04)	;	cMsgObrig += "    Numero Livro Auxiliar, "		+ CRLF	;	EndIf
+If Empty(MV_PAR05)	;	cMsgObrig += "    Natureza do Livro, "			+ CRLF	;	EndIf
+If Empty(MV_PAR06)	;	cMsgObrig += "    Periodo Inicial de Lcto, "	+ CRLF	;	EndIf
+If Empty(MV_PAR07)	;	cMsgObrig += "    Periodo Final de Lcto, "		+ CRLF	;	EndIf
+
+
+If !Empty(cMsgObrig)
+	cMsgValid += "PARAMETROS QUE NAO PODEM FICAR EM BRANCO: " + CRLF
+	cMsgValid += Left(cMsgObrig,Len(cMsgObrig)-2)
+EndIf
+  
+//                         
+// Outras Inconsistencias nos Parametros
+//
+If MV_PAR06 > MV_PAR07	//	"Periodo Inicial de Lcto" e "Periodo Final de Lcto"
+	cMsgIncon += "    'Periodo Inicial de Lcto' esta maior que 'Periodo Final de Lcto'; " + CRLF
+EndIf
+
+If MV_PAR03 <= 0	//	"No. Livro Geral"
+	cMsgIncon += "    'Numero Livro Geral' deve ser maior que 0 (zero); " + CRLF
+EndIf
+
+If MV_PAR04 <= 0	//	"No. Livro Auxiliar"
+	cMsgIncon += "    'Numero Livro Auxiliar' deve ser maior que 0 (zero); " + CRLF
+EndIf
+
+
+// Juntando as outras Mensagens de Inconsistencias
+If !Empty(cMsgIncon)
+	If !Empty(cMsgValid)
+		cMsgValid += CRLF + "OUTRAS INCONSISTENCIAS: " + CRLF
+	Else
+		cMsgValid += "INCONSISTENCIAS: " + CRLF
+	EndIf
+
+	cMsgValid += Left( cMsgIncon,Len(cMsgIncon)-2 )
+EndIf
+
+Return ( Len(cMsgValid)==0 )
+
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³ValidaPar3³ Rev.  ³Eduardo Nunes Cirqueira³ Data ³28.08.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Validar a digitacao dos parametros (SX1) da rotina         ³±±
+±±³          ³ SPEDCTB_TXT()                                              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1: Variavel recebida por referencia que recebera a men- ³±±
+±±³          ³       sagem de inconsistencia                              ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Logico: .T. se nao ha inconsistencia                        ³±±
+±±³          ³        .F. se encontrou inconsistencia                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Totvs SPED Services Gateway                                ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function ValidaPar3(cMsgValid)
+                                
+Local cMsgObrig := ""
+Local cMsgIncon := ""
+
+DEFAULT cMsgValid := ""
+
+//
+// Parametros Obrigatorios em Branco
+//
+If Empty(MV_PAR01)	;	cMsgObrig += "    Arquivo de Destino, "			+ CRLF	;	EndIf
+If Empty(MV_PAR02)	;	cMsgObrig += "    Periodo Inicial de Lcto, "	+ CRLF	;	EndIf
+If Empty(MV_PAR03)	;	cMsgObrig += "    Periodo Final de Lcto, "		+ CRLF	;	EndIf
+If Empty(MV_PAR04)	;	cMsgObrig += "    Numero de Ordem do Livro, "	+ CRLF	;	EndIf
+If Empty(MV_PAR05)	;	cMsgObrig += "    Indicador da Escrituracao, " 	+ CRLF	;	EndIf
+
+
+If !Empty(cMsgObrig)
+	cMsgValid += "PARAMETROS QUE NAO PODEM FICAR EM BRANCO: " + CRLF
+	cMsgValid += Left(cMsgObrig,Len(cMsgObrig)-2)
+EndIf
+  
+//
+// Outras Inconsistencias nos Parametros
+//
+If MV_PAR02 > MV_PAR03	//	"Periodo Inicial de Lcto" e "Periodo Final de Lcto"
+	cMsgIncon += "    'Periodo Inicial de Lcto' esta maior que 'Periodo Final de Lcto'; " + CRLF
+EndIf
+
+If MV_PAR04 <= 0	//	"No. Ordem do Livro"
+	cMsgIncon += "    'Numero de Ordem do Livro' deve ser maior que 0 (zero); " + CRLF
+EndIf
+
+
+// Juntando as outras Mensagens de Inconsistencias
+If !Empty(cMsgIncon)
+	If !Empty(cMsgValid)
+		cMsgValid += CRLF + "OUTRAS INCONSISTENCIAS: " + CRLF
+	Else
+		cMsgValid += "INCONSISTENCIAS: " + CRLF
+	EndIf
+
+	cMsgValid += Left( cMsgIncon,Len(cMsgIncon)-2 )
+EndIf
+
+Return ( Len(cMsgValid)==0 )
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³ SpedCtbCfG ³ Autor ³Eduardo Nunes        ³ Data ³21/12/2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Configura o Totvs Services para Escrituracao Contabil       ³±±
+±±³          ³Digital                                                     ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function SpedCtbCFG()
+
+Local oWizard
+Local cURL    := PadR(GetNewPar("MV_CTBURL","http://"),250)
+Local aTexto  := {}
+Local lFim    := .F.
+Local lAdmin  := .F.
+Local lPriVez := .T.
+
+// Se for o Administrador, nao permitira configurar o parâmetro MV_CTBURL, mas retornara .T. para 
+// prosseguir a geracao
+
+lAdmin := PswAdmin( /*cUser*/, /*cPsw*/,RetCodUsr()) == 0
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Montagem da Interface                                                  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+aadd(aTexto,{})
+aTexto[1] := STR0007+CRLF	//"Esta rotina tem como objetivo ajuda-lo na configuração da integração com o Protheus com o serviço Totvs Services SPED. "
+//aTexto[1] += STR0039 //"O primeiro passo é configurar a conexão do Protheus com o serviço."
+	
+//aadd(aTexto,{})
+//aTexto[2] := STR0040
+	
+DEFINE WIZARD oWizard ;
+	TITLE STR0008;		//"Assistente de configuração da Escrituração Contábil Digital"
+	HEADER STR0005;		//"Atenção"
+	MESSAGE STR0006;	//"Siga atentamente os passos para a configuração da Escrituração Contábil Digital."
+	TEXT aTexto[1] ;
+	NEXT {|| .T.} ;
+	FINISH {||.T.}
+
+CREATE PANEL oWizard  ;
+	HEADER STR0008 ;	//"Assistente de configuração da Escrituração Contábil Digital"
+	MESSAGE ""	;
+	BACK {|| .F.} ;
+	FINISH {|| lFim := IsReady(cURL,.T.)} ;
+	PANEL
+
+	@ 010,010 SAY STR0009 SIZE 270,010 PIXEL OF oWizard:oMPanel[2] //"Informe a URL do servidor Totvs Services (somente Administrador)"
+	@ 025,010 GET cURL SIZE 270,010 PIXEL OF oWizard:oMPanel[2] WHEN lAdmin
+
+ACTIVATE WIZARD oWizard CENTERED
+
+Return lFim
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³IsReady   ³ Autor ³Eduardo Riera          ³ Data ³18.06.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Verifica se a conexao com a Totvs Sped Services pode ser    ³±±
+±±³          ³estabelecida                                                ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1: URL do Totvs Services SPED                        OPC³±±
+±±³          ³ExpL1: Exibe help                                        OPC³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function IsReady(cURL,lHelp)
+
+Local oWS
+Local lRetorno := .F.
+
+DEFAULT lHelp := .F.
+
+If !Empty(cURL) .And. !PutMV("MV_CTBURL",cURL)
+	RecLock("SX6",.T.)
+	SX6->X6_FIL     := xFilial( "SX6" )
+	SX6->X6_VAR     := "MV_CTBURL"
+	SX6->X6_TIPO    := "C"
+	SX6->X6_DESCRIC := "URL do SPED Contabil"
+	MsUnLock()
+	PutMV("MV_CTBURL",cURL)
+EndIf
+SuperGetMv() //Limpa o cache de parametros - nao retirar
+DEFAULT cURL := PadR(GetNewPar("MV_CTBURL","http://"),250)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica se o servidor da Totvs esta no ar                              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+oWs := WsSpedCfgNFe():New()
+oWs:cUserToken := "TOTVS"
+oWS:_URL := AllTrim(cURL)+"/SPEDCFGNFe.apw"
+If oWs:CFGCONNECT()
+	lRetorno := .T.
+Else
+	If lHelp
+		Aviso("SPED",IIf(Empty(GetWscError(3)),GetWscError(1),GetWscError(3)),{"Ok"},3)
+	EndIf
+	lRetorno := .F.
+EndIf
+
+Return(lRetorno)
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³ SPEDCTB_LA ³ Autor ³ Eduardo Nunes Cirqueira ³ Data ³ 03/01/2007 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Gera arquivo com as informacoes do Livro Auxiliar de contas a    ³±±
+±±³          ³ Receber e Pagar (Cliente x Fornecedor) para o SPED Contabil.     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ Nenhum                                                           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ Nenhum                                                           ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function SPEDCTB_LA()
+
+Local aSays		 := {}
+Local aButtons	 := {}
+
+Local cCadastro  := "SPED Contabil - Livro Auxiliar Cliente x Fornecedor"
+Local cArqDest
+Local cDir
+
+Local dDataIni
+Local dDataFim
+                    
+Local nEntidade
+Local nConvMoeda
+Local nOpca		 := 0
+
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para parametros   ³
+//³                                        ³
+//³ mv_par01 // Data Inicial               ³
+//³ mv_par02 // Data Final                 ³
+//³ mv_par03 // Entidade                   ³
+//³                     1-Cliente;         ³
+//³                     2-Fornecedor;      ³
+//³                     3-Ambas            ³
+//³ mv_par04 // Conv. Moeda                ³
+//³                        1-Geracao;      ³
+//³                        2-Data Base;    ³
+//³                        3-Vencimento;   ³
+//³                        4-Final Periodo ³
+//³ mv_par05 // Arquivo Destino            ³
+//³ mv_par06 // Diretorio                  ³
+//³                                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Pergunte("CTBSP4",.F.)
+
+AADD(aSays,STR0010)		//	"Este programa tem como objetivo gerar o Livro Auxiliar"
+AADD(aSays,STR0014)		//	"de Contas a Receber e/ou Contas a Pagar (Cliente x Fornecedor)"
+	
+AADD(aButtons, { 5,.T.,{|| Pergunte("CTBSP4",.T.) } } )
+AADD(aButtons, { 1,.T.,{|| nOpca := 1, If( CTBOk(), FechaBatch(), nOpca:=0 ) }} )
+AADD(aButtons, { 2,.T.,{|| FechaBatch() }} )
+
+FormBatch( cCadastro, aSays, aButtons,, 150, 560 )
+
+If nOpca == 1
+	dDataIni   := mv_par01
+	dDataFim   := mv_par02
+	nEntidade  := mv_par03
+	nConvMoeda := mv_par04
+	cArqDest   := AllTrim(mv_par05)
+	cDir       := AllTrim(mv_par06)
+	Processa({|lEnd| CTBCliFor(dDataIni,dDataFim,nEntidade,nConvMoeda,cArqDest,cDir)},STR0004,STR0016)	//	"SPED Contabil - Razão Auxiliar" ## "Este programa tem como objetivo gerar o Livro Auxiliar Cliente x Fornecedor."
+Endif
+
+Return
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³ CTBCliFor  ³ Autor ³ Eduardo Nunes Cirqueira ³ Data ³ 03/01/2007 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Chama a funcao AdmDirAux() que gera o Livro Auxiliar de contas a ³±±
+±±³          ³ Receber e Pagar (Cliente x Fornecedor) para o SPED Contabil.     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ Nenhum                                                           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Paramatros³ 01-dDataIni  : Data inicial para geracao das informacoes         ³±±
+±±³          ³ 02-dDataFim  : Data final   para geracao das informacoes         ³±±
+±±³          ³ 03-nEntidade : Indica se o Livro Auxiliar sera de contas a Rece- ³±±
+±±³          ³                ber (Cliente), contas a Pagar (Fornecedor) ou     ³±±
+±±³          ³                Ambas. Seu conteudo deve ser, respectivamente,    ³±±
+±±³          ³                1, 2 ou 3.                                        ³±±
+±±³          ³ 04-nConvMoeda: Indica qual a data utilizada para a conversao da  ³±±
+±±³          ³                moeda. Conteudos:                                 ³±±
+±±³          ³                1-Emissao; 2-Data Base; 3-Vencto; 4-Final Periodo ³±±
+±±³          ³ 05-cArqDest  : Nome do arquivo de destino com as informacoes de  ³±±
+±±³          ³                Contas a Receber e/ou Contas a Pagar.             ³±±
+±±³          ³ 06-cDir      : Diretorio onde o arquivo sera criado              ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function CTBCliFor(dDataIni,dDataFim,nEntidade,nConvMoeda,cArqDest,cDir)
+
+Local aArea    := GetArea()
+
+Local nHandle  := 0
+
+Local lHeader  := .T.
+
+Local cNewFile := ""
+Local cDrive   := ""
+Local cExt     := ""
+                
+
+cNewFile := cDir + cArqDest
+			                                                  
+// Separa cada item (Drive, Diretorio, Nome e Extensao) do arquivo informado
+SplitPath(cNewFile,@cDrive,@cDir,@cArqDest,@cExt)
+
+cDir     := cDrive + cDir
+cArqDest += cExt
+			
+// Caso nao exista o diretorio informado, cria-lo
+Makedir(cDir)
+                                                  
+// Se o arquivo informado existir, apaga-lo
+FErase (cDir+cArqDest)
+nHandle := FCreate(cDir+cArqDest,0)
+                                        
+If nHandle <> -1	//	Arquivo de destino criado com sucesso
+
+	If Str(nEntidade,1) $ '13'	//	Cliente ou Ambas
+		// Gera temporario com Titulos a Receber
+		AdmDirAux(1,/*arqs. a excluir*/,"SA1",dDataIni,dDataFim,nConvMoeda)
+            
+		// Grava arquivo de destino
+		GeraDest(nHandle,@lHeader)
+   
+		// Apaga o temporario utilizado anteriormente
+		AdmDirAux(2)
+	EndIf                                               
+
+	If Str(nEntidade,1) $ '23'	//	Fornecedor ou Ambas
+		// Gera temporario com Titulos a Pagar
+		AdmDirAux(1,/*arqs. a excluir*/,"SA2",dDataIni,dDataFim,nConvMoeda)
+
+		// Grava arquivo de destino
+		GeraDest(nHandle,@lHeader)
+
+		// Apaga o temporario utilizado anteriormente
+		AdmDirAux(2)
+	EndIf
+
+	FClose(nHandle)
+	
+Else
+	MsgAlert(STR0011)	//	"Arquivo nao pode ser criado"
+EndIf
+
+RestArea(aArea)
+   
+Return
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³ GeraDest   ³ Autor ³ Eduardo Nunes Cirqueira ³ Data ³ 03/01/2007 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Funcao que grava efetivamente o arquivo de destino que foi       ³±±
+±±³          ³ informado pelo usuario                                           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ Nenhum                                                           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Paramatros³ 01-nHandle: Resultado obtido na criacao do arquivo de destino    ³±±
+±±³          ³             atraves da funcao FCreate().                         ³±±
+±±³          ³ 02-lHeader: Indica se deve gerar o cabecalho do arquivo com o    ³±±
+±±³          ³             nome de cada campo. Para conteudo .T. gerar, pois    ³±±
+±±³          ³             trata-se do inicio do arquivo; para conteudo .F. nao ³±±
+±±³          ³             gerar, pois trata-se da continuacao das informacoes  ³±±
+±±³          ³             com as Contas a Pagar.                               ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function GeraDest(nHandle,lHeader)
+
+Local aStruct
+
+Local cAliasTmp
+Local cFieldName := ""
+Local cLinha
+
+Local nCont
+  
+//
+// Exemplo do arquivo gerado:
+//
+// 1a. linha (cabecalho - nome campos): CONTA,CODIGO,LOJA,DATAX,NUMERO,EMISSAO,VENCREA,VALOR,HISTOR,DC
+// linha 2 a n (conteudo)             : "110101","001","01",31/01/08,"123",29/01/08,28/02/08,455.25,"HISTORICO 1","D"
+//
+
+
+cAliasTmp := "TRB"	//	Temporario com os Titulos a Receber ou a Pagar
+
+If Select(cAliasTmp) > 0
+
+	If (cAliasTmp)->(LastRec()) > 0
+
+		aStruct := (cAliasTmp)->( DbStruct() )
+
+		If lHeader
+			lHeader := .F.		
+
+			// Pega o nome de cada campo do temporario e cria uma string em "cFieldName"
+			// Sera o cabecalho do arquivo do livro auxiliar
+			For nCont := 1 to Len(aStruct)
+				cFieldName += aStruct[nCont,1] + ","
+			Next                                        
+
+			// Retira a virgula do final da string
+			cFieldName := Left(cFieldName,Len(cFieldName)-1)
+
+			// Gravando o cabecalho (titulo dos campo) na 1a. linha do arquivo
+			FWrite(nHandle,cFieldName+Chr(13)+Chr(10))
+		EndIf
+		
+		ProcRegua((cAliasTmp)->(LastRec()))
+		
+		(cAliasTmp)->(DbGoTop())
+          
+		//
+		// Percorre o temporario para gravar o seu conteudo no arquivo de destino, sendo que cada registro
+		// do temporario correspondera a uma linha deste arquivo 
+		//
+		While ! (cAliasTmp)->(EOF())
+
+			IncProc()
+				
+			cLinha := ''
+			For nCont := 1 to Len(aStruct)
+                            
+				//	Acrescentar a virgula para separar o conteudo dos campos
+				If nCont > 1
+					cLinha += ','
+				EndIf
+
+				//
+				// Todos os campos serao transformados em caracter para formarem 
+				// a string em "cLinha"
+				//
+				// Pegar a posicao do campo aStruct[nCont,1] no temporario e buscar o seu
+				// conteudo atraves de FieldGet() e armazena-lo em "cLinha"
+
+				If aStruct[nCont,2] == "C"
+					// Campo caracter deve ficar entre aspas duplas
+					cLinha += '"'+(cAliasTmp)->(FieldGet( FieldPos(aStruct[nCont,1]) ))+'"'
+
+				ElseIf aStruct[nCont,2] == "N"
+					// Campos numericos serao transformados em caracter atraves de STR(), considerando-se 
+					// as casas decimais (aStruct[nCont,4])
+					cLinha += AllTrim( Str( (cAliasTmp)->(FieldGet( FieldPos(aStruct[nCont,1]) )) ,, aStruct[nCont,4] ) )
+
+				ElseIf aStruct[nCont,2] == "D"
+					cLinha += DtoC( (cAliasTmp)->(FieldGet( FieldPos(aStruct[nCont,1]) )) )
+				EndIf
+			Next
+				
+			If ! Empty(cLinha)
+				// Grava o registro do temporario que esta em "cLinha"
+				FWrite(nHandle,cLinha+Chr(13)+Chr(10))
+			EndIf
+				
+			(cAliasTmp)->(DbSkip())
+		EndDo
+	EndIf
+			
+EndIf
+
+Return
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³CPYFILESPED ºAutor  ³Renato F. Campos   º Data ³  12/05/08   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³                                                             º±±
+±±º          ³                                                             º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP                                                          º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function CpyFileSPED( cFileOut )
+Local lCpyfile  := .T.
+Local lCopied	:= .F.
+Local lFTPConn	:= .F.
+Local cArqFtp	:= ""
+Local cDrive    := ""
+Local cDir      := ""
+Local cExt      := ""
+Local cArqDest  := ""
+
+// parametros de conexão com o FTP do SPED
+Local cFTPEnd 	:= GetNewPar( "MV_FTPEND"  , "localhost"		)
+Local nFTPPort	:= GetNewPar( "MV_FTPPORT" , 21 				)
+Local cFTPUser 	:= GetNewPar( "MV_FTPUSER" , "Anonymous"		)
+Local cFTPPass 	:= GetNewPar( "MV_FTPPASS" , "test@test.com"	)
+
+Local lCompress := GetNewPar( "MV_SPDCOMP" , .T. 				) // parametro de compressão do arquivo 
+Local lFTPDow	:= GetNewPar( "MV_SPEDDOW" , .T. 				) // parametro utilizado para setar o download do arquivo via client
+
+IF lFTPDow
+	IncProc( "Efetuando conexão com o FTP" )
+	If FTPCONNECT( cFTPEnd , nFTPPort , cFTPUser , cFTPPass )
+		lFTPConn := .T.
+	EndIf
+	
+	// verifica se o client está conectado ao FTP
+	If lFtpConn
+		// seta o nome correto do arquivo que está no FTP
+		If lCompress
+			cArqFtp := "ArqSPED.MZP"
+		Else
+			cArqFtp := "SPEDFILE.TXT"
+		Endif
+		
+		IncProc( "Efetuando o download do arquivo" )
+	
+		If ! FTPDOWNLOAD( "\" + cArqFtp , cArqFtp )
+			lCpyfile := .F.
+		Else
+			If lCompress
+				IncProc( "Descompactando o arquivo" )
+
+				MsDecomp( "\" + cArqFtp , "\" )
+				
+				If File( "\" + cArqFtp )
+					FErase ( "\" + cArqFtp )
+				Endif
+			Endif
+		EndIf
+	Endif
+Endif
+		
+// efetua a copia do arquivo para o local indicado no parametro
+// se o usuario optar por efetuar o dowload do arquivo via client
+If lCpyfile .And. File( "\SPEDFILE.TXT" )
+	IncProc( "Efetuando a copia do arquivo para o local informado" )
+
+	// Separa cada item (Drive, Diretorio, Nome e Extensao) do arquivo informado
+	SplitPath(cFileOut,@cDrive,@cDir,@cArqDest,@cExt)
+
+	cDir     := cDrive + cDir
+	cArqDest += cExt
+
+	MakeDir(cDir)			// Caso nao exista o diretorio informado, cria-lo
+	FErase (cDir+cArqDest)	// Se o arquivo informado existir no diretorio destino, apaga-lo
+
+	// Gerando o arquivo com nome informado pelo usuario. Isso sera feito copiando o
+	// arquivo SPEDFILE.TXT atraves da funcao __CopyFile().
+	lCopied := 	__CopyFile("\SPEDFILE.TXT" , cDir + cArqDest )
+
+	// Apago o arquivo do SPED
+	FErase( "\SPEDFILE.TXT" )
+Endif
+
+IncProc( "Concluido!" )
+
+Return lCopied

@@ -1,0 +1,38 @@
+BALANCO PATRIMONIAL                     
+CVF_FILIAL;CVF_CODIGO;CVF_CONTAG;CVF_ORDEM;CVF_CLASSE;CVF_CTASUP;CVF_DESCCG;CVF_NORMAL;CVF_COLUNA;CVF_IDENT
+01;001;1                   ;0000000001;1;                    ;ATIVO                                   ;1;0; 
+01;001;11                  ;0000000002;1;1                   ;CIRCULANTE                              ;1;0; 
+01;001;111                 ;0000000003;2;11                  ;DISPONIBILIDADES                        ;1;0; 
+01;001;112                 ;0000000004;2;11                  ;CONTAS A RECEBER DE CLIENTES            ;1;0; 
+01;001;113                 ;0000000005;2;11                  ;ESTOQUES                                ;1;0; 
+01;001;114                 ;0000000006;2;11                  ;ADIANTAMENTOS                           ;1;0; 
+01;001;115                 ;0000000007;2;11                  ;IR E CONTRIBUICAO SOCIAL DIFERIDOS      ;1;0; 
+01;001;116                 ;0000000008;2;11                  ;OUTROS CREDITOS                         ;1;0; 
+01;001;12                  ;0000000010;1;1                   ;NAO CIRCULANTE                          ;1;0; 
+01;001;121                 ;0000000011;1;12                  ;REALIZAVEL A LONGO PRAZO                ;1;0; 
+01;001;1211                ;0000000012;2;121                 ;CONTAS A RECEBER                        ;1;0; 
+01;001;1212                ;0000000013;2;121                 ;CREDITOS COM ACIONISTAS                 ;1;0; 
+01;001;1213                ;0000000014;2;121                 ;IR E CONTRIBUICAO SOCIAL DIFERIDOS      ;1;0; 
+01;001;1214                ;0000000015;2;121                 ;OUTROS                                  ;1;0; 
+01;001;122                 ;0000000016;1;12                  ;PERMANENTE                              ;1;0; 
+01;001;1221                ;0000000017;2;122                 ;INVESTIMENTOS                           ;1;0; 
+01;001;1222                ;0000000018;2;122                 ;IMOBILIZADO                             ;1;0; 
+01;001;1223                ;0000000019;2;122                 ;DIFERIDO                                ;1;0; 
+01;001;2                   ;0000000020;1;                    ;PASSIVO E PATRIMONIO LIQUIDO            ;2;0; 
+01;001;21                  ;0000000021;1;2                   ;CIRCULANTE                              ;2;0; 
+01;001;211                 ;0000000022;2;21                  ;FORNECEDORES                            ;2;0; 
+01;001;212                 ;0000000023;2;21                  ;FORNECEDORES - PARTES RELACIONADAS      ;2;0; 
+01;001;213                 ;0000000024;2;21                  ;FINANCIAMENTOS                          ;2;0; 
+01;001;214                 ;0000000025;2;21                  ;OBRIGACOES SOCIAIS E FISCAIS            ;2;0; 
+01;001;215                 ;0000000027;2;21                  ;PROVISOES DIVERSAS                      ;1;0; 
+01;001;216                 ;0000000028;2;21                  ;DIVIDENDOS E JUROS SOBRE CAPITAL PROPRIO;2;0; 
+01;001;217                 ;0000000029;2;21                  ;OUTRAS OBRIGACOES                       ;2;0; 
+01;001;22                  ;0000000030;1;2                   ;NAO CIRCULANTE                          ;2;0; 
+01;001;221                 ;0000000031;1;22                  ;EXIGIVEL A LONGO PRAZO                  ;2;0; 
+01;001;2211                ;0000000032;2;221                 ;FINANCIAMENTOS                          ;2;0; 
+01;001;2212                ;0000000033;2;221                 ;PROVISOES PARA CONTINGENCIAS            ;2;0; 
+01;001;23                  ;0000000034;1;2                   ;PARTICIPACAO DE MINORITARIOS            ;2;0; 
+01;001;231                 ;0000000035;1;23                  ;PATRIMONIO LIQUIDO                      ;2;0; 
+01;001;2311                ;0000000036;2;231                 ;CAPITAL SOCIAL                          ;2;0; 
+01;001;2312                ;0000000037;2;231                 ;RESERVA LEGAL                           ;2;0; 
+01;001;2313                ;0000000038;2;231                 ;LUCROS ACUMULADOS                       ;2;0; 

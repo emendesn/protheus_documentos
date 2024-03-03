@@ -1,0 +1,35 @@
+DEMONSTRACAO DE RESULTADOS              
+CVF_FILIAL;CVF_CODIGO;CVF_CONTAG;CVF_ORDEM;CVF_CLASSE;CVF_CTASUP;CVF_DESCCG;CVF_NORMAL;CVF_COLUNA;CVF_IDENT
+01;002;1                   ;0000000001;1;                    ;RECEITA OPERACIONAL BRUTA               ;2;0; 
+01;002;10                  ;0000000010;1;                    ;IR E CONTRIB SOCIAL                     ;1;0; 
+01;002;101                 ;0000000017;2;1                   ;VENDA DE SERVICOS                       ;2;0; 
+01;002;102                 ;0000000018;2;1                   ;VENDA DE MERCADORIAS                    ;2;0; 
+01;002;11                  ;0000000011;1;                    ;PARTICIPACAO DOS ADMINISTRADORES        ;1;0; 
+01;002;12                  ;0000000012;1;                    ;REVERSAO DE JUROS SOBRE CAPITAL PROPRIO ;1;0; 
+01;002;13                  ;0000000013;1;                    ;LUCRO LIQ EXERC ANTES PARTICIPACAO MINOR;1;0; 
+01;002;14                  ;0000000014;1;                    ;PARTICIPACAO MINORITARIOS LUCRO LIQ EXER;1;0; 
+01;002;15                  ;0000000015;1;                    ;LUCRO LIQUIDO DO EXERCICIO              ;1;0; 
+01;002;16                  ;0000000016;1;                    ;LUCRO LIQUIDO POR ACAO EM REAIS         ;1;0; 
+01;002;2                   ;0000000002;1;                    ;DEDUCOES DA RECEITA BRUTA DE VENDAS     ;2;0; 
+01;002;201                 ;0000000019;2;2                   ;VENDA DE SERVICOS                       ;2;0; 
+01;002;202                 ;0000000020;2;2                   ;VENDA DE MERCADORIAS                    ;2;0; 
+01;002;3                   ;0000000003;1;                    ;RECEITA OPERACIONAL LIQUIDA             ;2;0; 
+01;002;301                 ;0000000021;2;3                   ;VENDA DE SERVICOS                       ;2;0; 
+01;002;302                 ;0000000022;2;3                   ;VENDA DE MERCADORIAS                    ;2;0; 
+01;002;4                   ;0000000004;1;                    ;CUSTOS DOS PRODUTOS E SERVICOS PRESTADOS;2;0; 
+01;002;401                 ;0000000023;2;4                   ;CUSTO DOS SERVICOS PRESTADOS            ;2;0; 
+01;002;402                 ;0000000024;2;4                   ;CUSTO DAS MERCADORIAS VENDIDAS          ;2;0; 
+01;002;5                   ;0000000005;1;                    ;LUCRO LIQUIDO                           ;1;0; 
+01;002;501                 ;0000000025;2;5                   ;VENDA DE SERVICOS                       ;1;0; 
+01;002;502                 ;0000000026;2;5                   ;VENDA DE MERCADORIAS                    ;1;0; 
+01;002;6                   ;0000000006;1;                    ;RECEITAS OPERACIONAIS                   ;2;0; 
+01;002;601                 ;0000000027;2;6                   ;ADMINISTRATIVAS                         ;2;0; 
+01;002;602                 ;0000000028;2;6                   ;HONORARIOS DA DIRETORIA                 ;2;0; 
+01;002;603                 ;0000000029;2;6                   ;COMERCIAIS                              ;2;0; 
+01;002;604                 ;0000000030;2;6                   ;TRIBUTARIAS                             ;2;0; 
+01;002;605                 ;0000000031;2;6                   ;RESULTADO DE EQUIVALENCIA PATRIMONIAL   ;2;0; 
+01;002;606                 ;0000000032;2;6                   ;RESULTADO FINANCEIRO                    ;2;0; 
+01;002;607                 ;0000000033;2;6                   ;OUTRAS RECEITAS OPERACIONAIS LIQUIDAS   ;2;0; 
+01;002;7                   ;0000000007;1;                    ;RESULTADO OPERACIONAL                   ;1;0; 
+01;002;8                   ;0000000008;1;                    ;RESULTADO NAO OPERACIONAL               ;1;0; 
+01;002;9                   ;0000000009;1;                    ;LUCRO ANTES DO IR CONTR SOCIAL          ;1;0; 

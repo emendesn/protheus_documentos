@@ -1,0 +1,31 @@
+DEMONST ORIGENS E APLICACOES RECURSOS   
+CVF_FILIAL;CVF_CODIGO;CVF_CONTAG;CVF_ORDEM;CVF_CLASSE;CVF_CTASUP;CVF_DESCCG;CVF_NORMAL;CVF_COLUNA;CVF_IDENT
+01;003;1                   ;0000000001;1;                    ;ORIGENS DOS RECURSOS                    ;1;0; 
+01;003;11                  ;0000000005;2;1                   ;DAS OPERACOES                           ;1;0; 
+01;003;110                 ;0000000014;2;1                   ;IR E CONTRIB SOCIAL DIFERIDOS           ;2;0; 
+01;003;111                 ;0000000015;1;1                   ;DE TERCEIROS                            ;2;0; 
+01;003;1111                ;0000000016;2;111                 ;VALOR DE VENDA DE ATIVO IMOBILIZADO     ;1;0; 
+01;003;1112                ;0000000017;2;111                 ;AUMENTO DO EXIGIVEL A LONGO PRAZO       ;1;0; 
+01;003;1113                ;0000000018;2;111                 ;REDUCAO REALIZAVEL A LONGO PRAZO        ;2;0; 
+01;003;1114                ;0000000019;2;111                 ;AUMENTO DA PARTICIPACAO DE MINORITARIOS ;2;0; 
+01;003;12                  ;0000000006;2;1                   ;LUCRO LIQUIDO DO EXERCICIO              ;1;0; 
+01;003;13                  ;0000000007;2;1                   ;DESPESAS QUE NAO AFETAM CAPIT CIRC LIQ  ;1;0; 
+01;003;14                  ;0000000008;2;1                   ;JUROS SOBRE CRED  ACIONISTAS LONG PRAZO ;2;0; 
+01;003;15                  ;0000000009;2;1                   ;ENCARGOS FINANC SOB EXIGIVEL LONG PRAZOS;2;0; 
+01;003;16                  ;0000000010;2;1                   ;DEPRECIACAO E AMORTIZACAO               ;2;0; 
+01;003;17                  ;0000000011;2;1                   ;LUCRO VENDA DE BENS DO ATIVO IMOBILIZADO;1;0; 
+01;003;18                  ;0000000012;2;1                   ;PROVISAO PARA CONTINGENCIAS             ;2;0; 
+01;003;19                  ;0000000013;2;1                   ;EQUIVALENCIA PATRIMONIAL                ;2;0; 
+01;003;2                   ;0000000002;1;                    ;APLICACOES DE RECURSOS                  ;1;0; 
+01;003;21                  ;0000000020;2;2                   ;ADICAO AO ATIVO IMOBILIZADO             ;2;0; 
+01;003;22                  ;0000000021;2;2                   ;ADICAO AO DIFERIDO                      ;2;0; 
+01;003;23                  ;0000000022;2;2                   ;DIVIDENDOS E JUROS SOBRE CAPITAL PROPRIO;2;0; 
+01;003;24                  ;0000000023;2;2                   ;AUMENTO DE REALIZAVEL A LONGO PRAZO     ;2;0; 
+01;003;3                   ;0000000003;1;                    ;AUMENTO CAP CIRCUL LIQ VAR CAPITAL CIRC ;1;0; 
+01;003;31                  ;0000000024;2;3                   ;ATIVO CIRCULANTE NO INICIO DO ANO       ;1;0; 
+01;003;32                  ;0000000025;2;3                   ;ATIVO CIRCULANTE NO FIM DO ANO          ;1;0; 
+01;003;33                  ;0000000026;2;3                   ;AUMENTO DO ATIVO CIRCULANTE             ;1;0; 
+01;003;34                  ;0000000027;2;3                   ;PASSIVO CIRCULANTE NO INICIO DO ANO     ;2;0; 
+01;003;35                  ;0000000028;2;3                   ;PASSIVO CIRCULANTE NO FIM DO ANO        ;2;0; 
+01;003;36                  ;0000000029;2;3                   ;AUMENTO DO PASSIVO CIRCULANTE           ;2;0; 
+01;003;4                   ;0000000004;1;                    ;AUMENTO CAP CIRCUL LIQ                  ;1;0; 

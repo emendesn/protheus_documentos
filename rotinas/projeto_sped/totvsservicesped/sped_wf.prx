@@ -1,0 +1,1433 @@
+#INCLUDE "XMLXFUN.CH"
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "TBICONN.CH"
+#DEFINE MAXJOBNOAR 20
+/*/
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³SPED_WF   ³ Autor ³ Eduardo Riera         ³ Data ³21.06.2008 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³Biblioteca dos jobs do projeto SPED                          ³±±
+±±³          ³                                                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³Materiais                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function SPEDWF()
+
+Local aRotina   := {}
+Local aEntidades:= {}
+Local nX        := 0
+Local nY        := 0
+Local nW        := 0
+Local nZ        := 0
+Local nJobs     := 1
+Local nSleepJob := 0
+Local cHoraIni  := ""
+Local cHoraFim  := ""
+Local cAtivo    := ""
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Processamento das Rotinas                                          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+PtInternal(1,"WF DO SPED")
+aadd(aRotina,{"SPEDWFNFE",0})
+aadd(aRotina,{"SPEDWFNFE",4})
+//If GetSrvProfString("NFESPED_WFPOP","1")=="1"
+//	aadd(aRotina,{"SPEDWFNFE",5})
+//EndIf
+InitSped()
+dbSelectArea("SPED001")
+dbSetOrder(1)
+dbGotop()
+While !Eof()
+	aadd(aEntidades,SPED001->ID_ENT)
+	dbSelectArea("SPED001")
+	DbSkip()
+EndDo
+While !KillApp()
+	cHoraIni   := "00:00:01"
+	cHoraFim   := "23:59:59"
+	nSleepJob  := Val(GetSrvProfString("NFESPED_WF_SLEEPJOB","30"))
+	cAtivo     := "ON"
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Verifica se a Rotina deve ser executada                            ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ	
+	For nX := 1 To Len(aRotina)
+		If cAtivo == "ON"
+			For nY := 1 To nJobs
+				For nW := 1 To Len(aEntidades)
+					StartJob(aRotina[nX][1],GetEnvServer(),.F.,aEntidades[nW],aRotina[nX][2])
+					Sleep(10000)
+				Next nW
+			Next nY
+		EndIf
+	Next nX
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Espera                                                             ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	For nZ := 0 To nSleepJob
+		Sleep(1000)
+		If KillApp()
+			Exit
+		EndIf
+	Next nZ
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Recarga das tabelas                                                ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ	
+	If Select("SPED001")<>0	
+		aEntidades:= {}
+		dbSelectArea("SPED001")
+		dbSetOrder(1)
+		DbGoto(0)
+		dbGotop()
+		While !Eof()	
+			aadd(aEntidades,SPED001->ID_ENT)
+			If GetSrvProfString("NFESPED_WF","0")>="1"
+				ConOut("REFRESH ("+SPED001->ID_ENT+") ")
+			EndIf					
+			dbSelectArea("SPED001")
+			DbSkip()
+		EndDo
+	EndIf
+	If KillApp()
+		Exit
+	EndIf
+EndDo
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³SPEDWFNFE ³ Autor ³Eduardo Riera          ³ Data ³21.06.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³WF de processamento da NFe                                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1: Codigo da Entidade                                   ³±±
+±±³          ³ExpN2: Codigo do Job, utilizado no controle de execucao     ³±±
+±±³          ³      [1] Assinatura da NFe                                 ³±±
+±±³          ³      [2] Transmissao                                       ³±±
+±±³          ³      [3] Cancelamento/Inutilizacao                         ³±±
+±±³          ³      [4] Distribuicao                                      ³±±
+±±³          ³      [5] Recepcao                                          ³±±
+±±³          ³      [0] Tudo                                              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Observacao³Status do SPED050                                           ³±±
+±±³          ³Status NFe                                                  ³±±
+±±³          ³      [1] NFe Recebida                                      ³±±
+±±³          ³      [2] NFe Assinada                                      ³±±
+±±³          ³      [3] NFe com falha no schema XML                       ³±±
+±±³          ³      [4] NFe transmitida                                   ³±±
+±±³          ³      [5] NFe com problemas                                 ³±±
+±±³          ³      [6] NFe autorizada                                    ³±±
+±±³          ³      [7] Cancelamento                                      ³±±
+±±³          ³Status Cancelamento/inutilizacao                            ³±±
+±±³          ³      [1] NFe Recebida                                      ³±±
+±±³          ³      [2] NFe Cancelada                                     ³±±
+±±³          ³      [3] NFe com falha de cancelamento/inutilizacao        ³±±
+±±³          ³Status Mail                                                 ³±±
+±±³          ³      [1] A transmitir                                      ³±±
+±±³          ³      [2] Transmitido                                       ³±±
+±±³          ³      [3] Bloqueio de transmissao - cancelamento/inutiliza  ³±±
+±±³          ³Status do SPED052                                           ³±±
+±±³          ³      [1] Lote transmitido                                  ³±±
+±±³          ³      [2] Lote recebido com sucesso                         ³±±
+±±³          ³      [3] Lote com erro                                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao Efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function SpedWfNfe(cIdEnt,nIDJob)
+
+Local aNfe        := {}
+Local aMail       := {}
+Local cAlias      := GetNextAlias()
+Local cAlias2     := GetNextAlias()
+Local lContinua   := .T.
+Local lQuebra     := .F.
+Local lSchema     := .F.
+Local lFalhou     := .F.
+Local cNFeSPED_WF := GetSrvProfString("NFESPED_WF","0")
+Local cTimeSPEDWF := Time()
+Local cArqLck     := GetPathSemaforo()+"SpedWfNfe"+cIdEnt+StrZero(nIDJob,2)+".LCK"
+Local cDirSchema  := IIf(IsSrvUnix(),"/schemas/", "\schemas\")
+Local cDirMail    := IIf(IsSrvUnix(),"/mailtemplate/", "\mailtemplate\")
+Local cXML        := ""
+Local cXmlCabMsg  := ""
+Local cXmlDados   := ""
+Local cXmlProt    := ""
+Local cXmlLote    := ""
+Local cPrefixo    := "NFe_v"
+Local cModelo     := ""
+Local nXmlSize    := 0
+Local nCountMail  := 0
+Local nAmbiente   := 0
+Local nModalidade := 0
+Local nMaxFor     := 0
+Local cNfe        := ""
+Local cIdLote     := ""
+Local cErro       := "" 
+Local cAviso      := ""
+Local cCodSta     := ""
+Local cMsgSta     := ""
+Local cProtocolo  := ""
+Local cAnexo      := ""
+Local cAnexo2     := ""
+Local cMailError  := ""
+Local cTime       := ""
+Local cTempoMedio := ""
+Local nHandle     := 0
+Local nHdlXml     := 0
+Local nHdlXml2    := 0
+Local nLote       := 0
+Local nX          := 0
+Local nY          := 0
+Local nCount      := 0
+Local nTotalCount := 0
+Local nTimes      := 0
+Local nMemory     := 0
+Local nSleepJob   := Val(GetSrvProfString("NFESPED_WF_SLEEPJOB","30"))
+Local nEspera     := 0
+Local oWs
+Private oXmlResult
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Controle de execucao. Nao permite que o mesmo JOB seja inicializado mais³
+//³de uma vez                                                              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+MakeDir(GetPathSemaforo())
+MakeDir(cDirMail)
+MakeDir(cDirSchema)
+If File(cArqLck)
+	If (nHandle := FOpen(cArqLck,16)) < 0
+		lContinua := .F.
+	EndIf
+Else
+	If ( nHandle := FCreate(cArqLck)) < 0
+		lContinua := .F.
+	EndIf
+EndIf
+If lContinua
+	InitSped()
+	While (nTimes <= MAXJOBNOAR .And. nMemory <= MAXJOBNOAR) .And. !KillApp() .And. nTotalCount<=100
+		PtInternal(1,"WF DO SPED - Emp: "+cIdEnt+" - Job: "+StrZero(nIdJob,2)+" - Times: "+StrZero(nTimes,2)+" - Total: "+StrZero(nTotalCount,3))
+		cNFeSPED_WF := GetSrvProfString("NFESPED_WF","0")
+		If cNFeSPED_WF>="1"
+			ConOut("JOB ("+cIdEnt+"): "+AllTrim(Str(nIdJob,10))+" Times: "+AllTrim(Str(nTimes,10))+" Memory: "+AllTrim(Str(nMemory,10))+ " Time: "+cTimeSPEDWF)
+		EndIf	
+		nTimes++
+		nMemory++
+		DbSelectArea("SPED001")
+		DbSetOrder(1)
+		MsSeek(cIdEnt)
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Assina as Nfe pendentes                                                 ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If nIDJob >= 0 .And. nIdJob <= 2
+			nCount := 0
+			cTime  := Time()
+			BeginSql Alias cAlias
+				SELECT R_E_C_N_O_
+				FROM SPED050
+				WHERE 
+				ID_ENT = %Exp:cIdEnt% AND
+				STATUS = 1 AND
+				%NOTDEL%
+			EndSql
+			DbSelectArea(cAlias)
+			DbGotop()
+			While !Eof() .And. !KillApp()
+				nTimes := 0
+				DbSelectArea("SPED050")
+				MsGoto((cAlias)->R_E_C_N_O_)
+				If SPED050->(SimpleLock()) .And. SPED050->STATUS == 1 .OR. (SPED->STATUS == 2 .AND. "infDPEC"$SPED050->XML_SIG) 
+					nCount ++
+					nTotalCount++
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³Verifica se as NFes estao no formato correto                            ³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					cErro    := ""
+					cAviso   := ""
+					cPrefixo := ""					
+					Do Case
+						Case SPED050->(FieldPos("MODELO"))<>0 .And. SPED050->MODELO == "57"
+							cPrefixo := "CTe_v"
+						OtherWise
+							If SPED050->MODALIDADE == 5
+							cPrefixo := "envDPEC_v"
+					        Else
+					        cPrefixo := "NFe_v"
+					        EndIf
+					EndCase
+			   		Do Case
+				   		Case !SPED050->MODALIDADE == 5
+					   		If !'<?xml version="1.0" encoding="UTF-8"?>'$SPED050->XML_ERP
+							   	cXML := '<?xml version="1.0" encoding="UTF-8"?>'+EncodeUtf8(SPED050->XML_ERP)
+							Else
+								cXml := SPED050->XML_ERP
+							EndIf					
+					     OtherWise
+					     	If !'<?xml version="1.0" encoding="UTF-8"?>'$SPED050->XML_DPEC
+							   	cXML := '<?xml version="1.0" encoding="UTF-8"?>'+EncodeUtf8(SPED050->XML_DPEC)
+							Else
+								cXml := SPED050->XML_DPEC
+							EndIf			
+					EndCase
+					If !Empty(cXML)
+						If File(cDirSchema+cPrefixo+SpedNfeId(cXML,"versao")+"NoSig.xsd")
+							lSchema := XmlSVldSchema(cXML,cDirSchema+cPrefixo+SpedNfeId(cXML,"versao")+"NoSig.xsd",@cErro,@cAviso)
+						ElseIf File(cDirSchema+cPrefixo+SpedNfeId(cXML,"versao")+".xsd")
+							lSchema := XmlSVldSchema(cXML,cDirSchema+cPrefixo+SpedNfeId(cXML,"versao")+".xsd",@cErro,@cAviso)
+						Else
+							cErro := "No Schema"
+							lSchema := .F.
+						EndIf
+					Else						
+						lSchema := .F.
+					EndIf
+					If lSchema
+						//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+						//³Assina as Nfe pendentes                                                 ³
+						//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+						cPrefixo := ""
+						Do Case
+							Case SPED050->(FieldPos("MODELO"))<>0 .And. SPED050->MODELO == "57"
+								cPrefixo := "infCte"
+							OtherWise
+								If !SPED050->MODALIDADE == 5
+								cPrefixo := "infNFe"
+						        Else
+						        cPrefixo := "infDPEC"
+						        EndIf
+						EndCase						
+					   	If !SPED050->MODALIDADE == 5
+						cXml := StrTran(SPED050->XML_ERP,'<?xml version="1.0" encoding="UTF-8"?>',"")
+						Else
+						cXml := StrTran(SPED050->XML_DPEC,'<?xml version="1.0" encoding="UTF-8"?>',"") 
+						EndIf
+						cNfe := SpedSignXML(cXML,cPrefixo,"Id",cIdEnt)
+						If !Empty(cNfe)
+							Begin Transaction
+							RecLock("SPED050")
+							SPED050->XML_SIG := cNfe
+							SPED050->STATUS  := 2
+							End Transaction
+						EndIf
+					ElseIf !Empty(cXml)
+						Begin Transaction
+						RecLock("SPED050")
+						SPED050->STATUS := 3
+						SPED050->XML_SIG := SPED050->XML_ERP
+						End Transaction	
+					EndIf
+				EndIf
+				SPED050->(MsUnLock())
+				DbSelectArea(cAlias)
+				DbSkip()
+			EndDo
+			dbSelectArea(cAlias)
+			dbCloseArea()
+			DbSelectArea("SPED050")
+			If cNFeSPED_WF=="1" .Or. (cNFeSPED_WF=="2" .And. nCount>0 )
+				ConOut("Assinatura ("+cIdEnt+"-"+cTime+" a "+Time()+"): "+AllTrim(Str(nCount,10)))
+			EndIf		
+		EndIf
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Transmite as notas fiscais pendentes                                    ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If nIDJob == 2 .Or. nIdJob == 0
+			nCount := 0
+			cTime  := Time()
+			If SPED050->(FieldPos("MODELO"))<>0
+				BeginSql Alias cAlias
+					SELECT R_E_C_N_O_,AMBIENTE,MODALIDADE,MODELO
+					FROM SPED050
+					WHERE 
+					ID_ENT = %Exp:cIdEnt% AND
+					STATUS = 2 AND
+					%NOTDEL%
+					ORDER BY MODELO,AMBIENTE
+				EndSql
+			Else
+				BeginSql Alias cAlias
+					SELECT R_E_C_N_O_,AMBIENTE,MODALIDADE
+					FROM SPED050
+					WHERE 
+					ID_ENT = %Exp:cIdEnt% AND
+					STATUS = 2 AND
+					%NOTDEL%
+					ORDER BY AMBIENTE
+				EndSql			
+			EndIf
+			DbSelectArea(cAlias)
+			DbGotop()
+			While !(cAlias)->(Eof()) .And. !KillApp()
+				nTimes     := 0			
+				lQuebra    := .F.
+				nLote      := 0
+				nXmlSize   := 0
+				nAmbiente  := (cAlias)->AMBIENTE
+				nModalidade:= (cAlias)->MODALIDADE				
+				cModelo    := IIf(SPED050->(FieldPos("MODELO"))==0,"",(cAlias)->MODELO)
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³ Obtem o proximo numero de lote de transmissao                ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				cIdLote := SpedGetMv("MV_NFEIDLT",cIdEnt)
+				DEFAULT cIdLote := "0"
+				cIdLote := StrZero(Val(cIdLote)+1,15)
+				SpedPutMV("MV_NFEIDLT",cIdEnt,cIdLote)
+				Begin Transaction
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³ Atualizacao do tabela de lotes                               ³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ			
+					dbSelectArea("SPED052")
+					dbSetOrder(1)
+					While MsSeek(cIdEnt+cIdLote) .And. !KillApp()
+						cIdLote := StrZero(Val(SpedGetMv("MV_NFEIDLT",cIdEnt))+1,15)
+						SpedPutMV("MV_NFEIDLT",cIdEnt,cIdLote)
+						Sleep(1000)
+					EndDo
+					RecLock("SPED052",.T.)
+					SPED052->ID_ENT    := cIdEnt
+					If SPED052->(FieldPos("MODELO"))<>0
+						SPED052->MODELO    := cModelo
+					EndIf
+					SPED052->LOTE      := Val(cIdLote)
+					SPED052->DATE_LOTE := Date()
+					SPED052->TIME_LOTE := Time()
+					SPED052->STATUS    := 1
+					SPED052->AMBIENTE  := nAmbiente
+					SPED052->MODALIDADE:= nModalidade
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³ Montagem do XML de NFe                                       ³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					cXmlDados := ""
+					While !(cAlias)->(Eof()) .And. !lQuebra .And. !KillApp()
+						DbSelectArea("SPED050")
+						MsGoto((cAlias)->R_E_C_N_O_)
+						If nXmlSize + Len(EncodeUtf8(AllTrim(SPED050->XML_SIG))) <= 400000
+							If SPED050->(SimpleLock())	.And. !Empty(SPED050->XML_SIG) 
+								nLote++								
+								RecLock("SPED050")
+								SPED050->STATUS := 4
+								
+								RecLock("SPED054",.T.)
+								SPED054->ID_ENT    := cIdEnt
+								SPED054->LOTE      := SPED052->LOTE
+								SPED054->NFE_ID    := SPED050->NFE_ID
+								SPED054->NFE_CHV   := SubStr(SpedNfeId(SPED050->XML_SIG,"Id"),4)
+						
+								cXmlDados += AllTrim(SPED050->XML_SIG)
+								nXmlSize  += Len(EncodeUtf8(AllTrim(SPED050->XML_SIG)))
+							EndIf
+							SPED050->(MsUnLock())
+							DbSelectArea(cAlias)
+							dbSkip()
+							lQuebra := !(nLote < 50)
+							nCount++
+							nTotalCount++
+						Else
+							lQuebra := .T.
+						EndIf
+						If !lQuebra .And. (SPED050->AMBIENTE <> nAmbiente .Or. (cAlias)->MODALIDADE <> nModalidade .Or. IIf(SPED050->(FieldPos("MODELO"))==0,.F.,SPED050->MODELO <> cModelo .Or. nModalidade==5))
+							lQuebra := .T.
+						EndIf
+					EndDo
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³ Montagem da mensagem                                         ³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					aNFe := NfeEnvNfe(cIdLote,cXmlDados,cModelo,SPED050->MODALIDADE)
+					cXmlCabMsg := aNFe[01]
+					cXmlDados  := aNFe[02]
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³ Transmite o lote                                             ³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					If nLote > 0
+						Do Case
+							Case cModelo == "57"
+								oWs:= WSCTeRecepcao():New()
+								oWs:_URL := GetURLSef(SPED001->UF,StrZero(nAmbiente,1),"nfeRecepcao",StrZero(nModalidade,1),cModelo)
+								oWs:cCTeCabecMsg := cXmlCabMsg
+								oWs:cCTeDadosMsg := cXmlDados								
+							OtherWise
+								If !SPED050->MODALIDADE == 5
+									oWs:= WSNfeRecepcao():New()
+									oWs:_URL := GetURLSef(SPED001->UF,StrZero(nAmbiente,1),"nfeRecepcao",StrZero(nModalidade,1),cModelo)
+									oWs:cnfeCabecMsg := cXmlCabMsg
+									oWs:cnfeDadosMsg := cXmlDados 
+								else
+									oWs:= WSDpecRecepcao():New()
+									oWs:_URL := GetURLSef(SPED001->UF,StrZero(nAmbiente,1),"nfeRecepcao",StrZero(nModalidade,1),cModelo)
+									oWs:cdpecCabecMsg := cXmlCabMsg
+									oWs:cdpecDadosMsg := cXmlDados
+						        EndIf
+						EndCase
+						Do Case
+							Case cModelo == "57"
+								If oWs:CteRecepcaoCT()
+									cXmlLote   := EncodeUTF8(oWs:cCTeRecepcaoCTResult)
+									oXmlResult := XmlParser(cXmlLote,"_",@cErro,@cAviso)
+									SPED052->CSTAT_SEF := oXmlResult:_RetEnviCTe:_cStat:TEXT
+									SPED052->XMOT_SEF  := SubStr(oXmlResult:_RetEnviCTe:_xMotivo:TEXT,1,250)
+								 	If SPED052->CSTAT_SEF == "103"
+										SPED052->RECIBO_SEF:= Val(oXmlResult:_RetEnvICTe:_InfRec:_nRec:TEXT)
+										SPED052->DTREC_SEF := Stod(SubStr(StrTran(oXmlResult:_RetEnvICTe:_InfRec:_DHRecbto:TEXT,"-",""),1,8))
+										SPED052->HRREC_SEF := SubStr(oXmlResult:_RetEnvICTe:_InfRec:_DHRecbto:TEXT,12)
+										SPED052->TEMPO_SEF := Val(oXmlResult:_RetEnvICTe:_InfRec:_tMed:TEXT)
+										SPED052->XML_LOTE  := cXmlLote
+									Else
+										If Val(SubStr(SpedGetMv("MV_MODALID",cIdEnt),1,1))<>2
+											NfeNotificacao(cIdEnt,"NFeRecepcao "+SPED052->CSTAT_SEF+"/"+AllTrim(SPED052->XMOT_SEF),oWs:_URL,oWs:cCTeCabecMsg,oWs:cCTeDadosMsg)
+										EndIf
+										DisarmTransaction()
+								 	EndIf
+								Else
+									If Val(SubStr(SpedGetMv("MV_MODALID",cIdEnt),1,1))<>2
+										NfeNotificacao(cIdEnt,"NFeRecepcao "+SPED052->CSTAT_SEF+"/"+AllTrim(SPED052->XMOT_SEF),oWs:_URL,oWs:cCTeCabecMsg,oWs:cCTeDadosMsg)
+									EndIf
+									DisarmTransaction()
+				       			    If SpedGetMv("MV_NOTIFIC",cIdEnt)<>Nil .And. SpedGetMv("MV_NOTIFIC",cIdEnt)=="1"
+					   					cAnexo    := cDirMail+SpedNfeId(cXmlLote,"Id")+"-ret.xml"
+										nHdlXml   := FCreate(cAnexo,0)
+										If nHdlXml > 0
+											FWrite(nHdlXml,cXmlLote)
+											FClose(nHdlXml)
+										EndIf
+									    NfeNotificacao(cIdEnt,"NFeRecepcao",oWs:_URL,oWs:cnfeCabecMsg,oWs:cnfeDadosMsg,,cAnexo,)
+							    	EndIf
+								EndIf							
+							OtherWise
+								If !SPED050->MODALIDADE == 5
+									If oWs:nfeRecepcaoLote()
+										cXmlLote   := EncodeUTF8(oWs:cnfeRecepcaoLoteResult)
+										oXmlResult := XmlParser(cXmlLote,"_",@cErro,@cAviso)
+										SPED052->CSTAT_SEF := oXmlResult:_RetEnviNfe:_cStat:TEXT
+										SPED052->XMOT_SEF  := SubStr(oXmlResult:_RetEnviNfe:_xMotivo:TEXT,1,250)
+									 	If SPED052->CSTAT_SEF == "103"
+											SPED052->RECIBO_SEF:= Val(oXmlResult:_RetEnvINfe:_InfRec:_nRec:TEXT)
+											SPED052->DTREC_SEF := Stod(SubStr(StrTran(oXmlResult:_RetEnvINfe:_InfRec:_DHRecbto:TEXT,"-",""),1,8))
+											SPED052->HRREC_SEF := SubStr(oXmlResult:_RetEnvINfe:_InfRec:_DHRecbto:TEXT,12)
+											SPED052->TEMPO_SEF := Val(oXmlResult:_RetEnvINfe:_InfRec:_tMed:TEXT)
+											SPED052->XML_LOTE  := cXmlLote
+										Else
+											If Val(SubStr(SpedGetMv("MV_MODALID",cIdEnt),1,1))<>2
+												NfeNotificacao(cIdEnt,"NFeRecepcao "+SPED052->CSTAT_SEF+"/"+AllTrim(SPED052->XMOT_SEF),oWs:_URL,oWs:cnfeCabecMsg,oWs:cnfeDadosMsg)
+											EndIf
+											DisarmTransaction()
+						       			    If SpedGetMv("MV_NOTIFIC",cIdEnt)<>Nil .And. SpedGetMv("MV_NOTIFIC",cIdEnt)=="1"
+							   					cAnexo    := cDirMail+SpedNfeId(cXmlLote,"Id")+"-ret.xml"
+												nHdlXml   := FCreate(cAnexo,0)
+												If nHdlXml > 0
+													FWrite(nHdlXml,cXmlLote)
+													FClose(nHdlXml)
+												EndIf
+											    NfeNotificacao(cIdEnt,"NFeRecepcao",oWs:_URL,oWs:cnfeCabecMsg,oWs:cnfeDadosMsg,,cAnexo,)
+									    	EndIf
+									 	EndIf
+									Else
+										If Val(SubStr(SpedGetMv("MV_MODALID",cIdEnt),1,1))<>2
+											NfeNotificacao(cIdEnt,"NFeRecepcao "+SPED052->CSTAT_SEF+"/"+AllTrim(SPED052->XMOT_SEF),oWs:_URL,oWs:cnfeCabecMsg,oWs:cnfeDadosMsg)
+										EndIf
+										DisarmTransaction()
+									EndIf
+						        Else
+						        	If oWs:DpecRecepcaoDp()
+										cXmlLote   := EncodeUTF8(oWs:cDpecRecepcaoDPResult)
+										oXmlResult := XmlParser(cXmlLote,"_",@cErro,@cAviso)
+										SPED052->CSTAT_SEF := oXmlResult:_RetDpec:_InfDpecReg:_cStat:TEXT
+										SPED052->XMOT_SEF  := SubStr(oXmlResult:_RetDpec:_InfDpecReg:_xMotivo:TEXT,1,250)
+									 	If SPED052->CSTAT_SEF == "124"
+											SPED052->DTREC_DPEC := Stod(SubStr(StrTran(oXmlResult:_RetDpec:_InfDpecReg:_DHRegDpec:TEXT,"-",""),1,8))
+											SPED052->HRREC_DPEC := SubStr(oXmlResult:_RetEnvINfe:_RetDpec:_InfDpecReg:_DHRegDpec:TEXT,12)
+											SPED052->XML_LOTE   := cXmlLote
+											SPED052->DPEC	    := oXmlResult:_RetDpec:_InfDpecReg:_ENVDPEC:TEXT
+											SPED050->REG_DPEC   := oXmlResult:_RetDpec:_InfDpecReg:_nREGDPEC:TEXT
+									 	EndIf 
+									Else
+										If Val(SubStr(SpedGetMv("MV_MODALID",cIdEnt),1,1))<>2
+											NfeNotificacao(cIdEnt,"NFeRecepcao "+SPED052->CSTAT_SEF+"/"+AllTrim(SPED052->XMOT_SEF),oWs:_URL,oWs:cdpecCabecMsg,oWs:cdpecDadosMsg)
+										EndIf
+										DisarmTransaction()
+									EndIf
+								EndIf
+						EndCase
+					Else
+						DisarmTransaction()					
+					EndIf
+				End Transaction
+			EndDo
+			dbSelectArea(cAlias)
+			dbCloseArea()
+			DbSelectArea("SPED050")
+			If cNFeSPED_WF=="1" .Or. (cNFeSPED_WF=="2" .And. nCount>0 )
+				ConOut("Transmissão ("+cIdEnt+"-"+cTime+" a "+Time()+"): "+AllTrim(Str(nCount,10)))
+			EndIf
+		EndIf
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Verifica os lotes pendentes                                             ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If nIDJob == 2 .Or. nIdJob == 0
+			nCount := 0
+			cTime  := Time()	
+			BeginSql Alias cAlias
+				SELECT R_E_C_N_O_
+				FROM SPED052
+				WHERE 
+				ID_ENT = %Exp:cIdEnt% AND
+				STATUS = 1 AND
+				%NOTDEL%
+			EndSql
+			DbSelectArea(cAlias)
+			DbGotop()
+			While !(cAlias)->(Eof()) .And. !KillApp()
+				nTimes := 0
+				nCount++
+				nTotalCount++
+				DbSelectArea("SPED052")
+				MsGoto((cAlias)->R_E_C_N_O_)
+				If SPED052->(SimpleLock()) .And. SPED052->STATUS==1
+					Begin Transaction
+					RecLock("SPED052")
+					If SPED052->(FieldPos("NRCNS_SEFR")) <> 0 .And. SPED052->NRCNS_SEFR <= 99998 .AND. SPED052->MODALIDADE<>5
+						SPED052->NRCNS_SEFR++
+						If SPED052->RECIBO_SEF == 0
+							dbDelete()
+						EndIf
+					EndIf
+					End Transaction
+					Begin Transaction
+					RecLock("SPED052")
+					lFalhou := .F.
+					If (SPED052->(FieldPos("NRCNS_SEFR")) == 0 .Or. SPED052->NRCNS_SEFR <= 10 .Or. nMemory == MAXJOBNOAR) .And. SPED052->RECIBO_SEF<>0 .And. SPED052->MODALIDADE<>5
+						//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+						//³ Montagem da mensagem                                         ³
+						//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+						Do Case
+							Case  SPED052->(FieldPos("MODELO"))<>0 .And. SPED052->MODELO == '57'
+								aNFe := NfeReciNfe(SPED052->RECIBO_SEF,SPED052->AMBIENTE,SPED052->MODELO)
+								cXmlCabMsg := aNFe[1]
+								cXmlDados  := aNFE[2]
+								//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+								//³ Recebe o retorno do lote                                     ³
+								//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+								oWs := WsCTeRetRecepcao():New()
+								oWs:_URL := GetURLSef(SPED001->UF,StrZero(SPED052->AMBIENTE,1),"NfeRetRecepcao",StrZero(SPED052->MODALIDADE,1),SPED052->MODELO)
+								oWs:cCTeCabecMsg := cXmlCabMsg
+								oWs:cCTeDadosMsg := cXmlDados
+								If oWs:CTeRetRecepcao()
+									oXmlResult := XmlParser(EncodeUTF8(oWs:cCTeRetRecepcaoResult),"_",@cErro,@cAviso)
+									RecLock("SPED052")
+									SPED052->CSTAT_SEFR:= oXmlResult:_RETCONSRECICTE:_CSTAT:TEXT
+									SPED052->XMOT_SEFR := SubStr(oXmlResult:_RETCONSRECICTE:_XMOTIVO:TEXT,1,250)
+									If oXmlResult:_RETCONSRECICTE:_CSTAT:TEXT == "104"							
+										If ValType(oXmlResult:_RETCONSRECICTE:_PROTCTE)=="A"
+											aNfe := oXmlResult:_RETCONSRECICTe:_PROTCTe
+										Else
+										    aNfe := {oXmlResult:_RETCONSRECICTe:_PROTCTe}
+										EndIf
+										For nX := 1 To Len(aNfe)
+											dbSelectArea("SPED054")
+											dbSetOrder(2)
+											If MsSeek(cIdEnt+Str(SPED052->LOTE,15)+AllTrim(aNfe[nX]:_INFPROT:_CHCTe:TEXT))
+												If SPED054->(SimpleLock())
+													RecLock("SPED054")
+													SPED054->CSTAT_SEFR := aNfe[nX]:_INFPROT:_CSTAT:TEXT
+													SPED054->XMOT_SEFR  := SubStr(aNfe[nX]:_INFPROT:_XMOTIVO:TEXT,1,250)
+													SPED054->DTREC_SEFR := Stod(SubStr(StrTran(aNfe[nX]:_INFPROT:_DHRECBTO:TEXT,"-",""),1,8))
+													SPED054->HRREC_SEFR := SubStr(aNfe[nX]:_INFPROT:_DHRECBTO:TEXT,12)								
+													If SPED054->CSTAT_SEFR == "204" //Duplicidade
+														cProtocolo:= ""
+														cCodSta   := ""
+														cMsgSta   := ""
+														cXmlProt  := ""
+														NfeConsNfe(SPED052->AMBIENTE,SPED052->MODALIDADE,AllTrim(aNfe[nX]:_INFPROT:_CHCTE:TEXT),@cProtocolo,@cCodSta,@cMsgSta,@cXmlProt,SPED052->MODELO)
+														SPED054->NFE_PROT   := cProtocolo
+														SPED054->CSTAT_SEFR := cCodSta
+														SPED054->XMOT_SEFR  := SubStr(cMsgSta,1,250)
+														SPED054->XML_PROT   := NfeProcNfe(,cXMLProt,SpedNfeId(SPED050->XML_ERP,"versao"))
+													ElseIf SPED054->CSTAT_SEFR $ "100,113,114"
+														SPED054->NFE_PROT   := aNfe[nX]:_INFPROT:_NPROT:TEXT
+														SPED054->XML_PROT   := NfeProcNfe(,XMLSaveStr(aNfe[nX],.F.),SpedNfeId(SPED050->XML_ERP,"versao"),SPED052->MODELO)
+													EndIf
+													dbSelectArea("SPED050")
+													dbSetOrder(1)
+													MsSeek(cIdEnt+SPED054->NFE_ID)
+													If SPED050->(SimpleLock())
+														RecLock("SPED050")												
+														If !Empty(SPED054->NFE_PROT)
+															SPED050->NFE_PROT   := SPED054->NFE_PROT
+															SPED050->STATUS     := 6
+														Else
+															SPED050->STATUS     := 5
+										       			    If SpedGetMv("MV_NOTIFIC",SPED050->ID_ENT)<>Nil .And. SpedGetMv("MV_NOTIFIC",SPED050->ID_ENT)=="1"
+											   					cAnexo    := cDirMail+SpedNfeId(XMLSaveStr(aNfe[nX],.F.),"Id")+"-rej.xml"
+																nHdlXml   := FCreate(cAnexo,0)
+																If nHdlXml > 0
+																	FWrite(nHdlXml,XMLSaveStr(aNfe[nX],.F.))
+																	FClose(nHdlXml)
+																EndIf
+															    NfeNotificacao(cIdEnt,"NFeRetRecepcao",oWs:_URL,oWs:cnfeCabecMsg,oWs:cnfeDadosMsg,,cAnexo,)
+														    EndIf
+														EndIf
+													Else
+														lFalhou := .T.
+													EndIf
+											    Else 
+											    	lFalhou := .T.
+											    EndIf								
+											EndIf
+										Next nX
+										If !lFalhou
+											SPED052->STATUS    := 2	
+										EndIf
+									ElseIf SubStr(oXmlResult:_RETCONSRECICTE:_CSTAT:TEXT,1,1)<>"1" .Or. oXmlResult:_RETCONSRECICTE:_CSTAT:TEXT == "110" .Or.;
+										oXmlResult:_RETCONSRECICTE:_CSTAT:TEXT == "106"
+										BeginSql Alias cAlias2
+											SELECT NFE_ID
+											FROM SPED054
+											WHERE 
+											ID_ENT = %Exp:cIdEnt% AND
+											LOTE = %Exp:SPED052->LOTE% AND
+											%NOTDEL%
+										EndSql
+										While !(cAlias2)->(Eof()) .And. !KillApp()
+											dbSelectArea("SPED050")
+											dbSetOrder(1)
+											MsSeek(cIdEnt+(cAlias2)->NFE_ID)
+											If SPED050->(SimpleLock())
+												RecLock("SPED050")
+												SPED050->STATUS := 5
+											Else
+												lFalhou := .T.
+											EndIf
+											
+											dbSelectArea(cAlias2)
+											dbSkip()
+										EndDo
+										If !lFalhou
+											SPED052->STATUS    := 3
+										EndIf
+										dbSelectArea(cAlias2)
+										dbCloseArea()
+										dbSelectArea("SPED054")							
+									EndIf
+								Else
+									If Val(SubStr(SpedGetMv("MV_MODALID",cIdEnt),1,1))<>2
+										NfeNotificacao(cIdEnt,"NFeRetRecepcao",oWs:_URL,oWs:cCTeCabecMsg,oWs:cCTeDadosMsg)
+									EndIf
+									DisarmTransaction()
+								EndIf							
+							OtherWise
+								aNFe := NfeReciNfe(SPED052->RECIBO_SEF,SPED052->AMBIENTE)
+								cXmlCabMsg := aNFe[1]
+								cXmlDados  := aNFE[2]
+								//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+								//³ Recebe o retorno do lote                                     ³
+								//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+								oWs := WsNfeRetRecepcao():New()
+								oWs:_URL := GetURLSef(SPED001->UF,StrZero(SPED052->AMBIENTE,1),"NfeRetRecepcao",StrZero(SPED052->MODALIDADE,1))
+								oWs:cnfeCabecMsg := cXmlCabMsg
+								oWs:cnfeDadosMsg := cXmlDados
+								If oWs:nfeRetRecepcao()
+									oXmlResult := XmlParser(EncodeUTF8(oWs:cnfeRetRecepcaoResult),"_",@cErro,@cAviso)
+									RecLock("SPED052")
+									SPED052->CSTAT_SEFR:= oXmlResult:_RETCONSRECINFE:_CSTAT:TEXT
+									SPED052->XMOT_SEFR := SubStr(oXmlResult:_RetConsReciNfe:_XMotivo:TEXT,1,250)
+									If oXmlResult:_RETCONSRECINFE:_CSTAT:TEXT == "104"							
+										If ValType(oXmlResult:_RETCONSRECINFE:_PROTNFE)=="A"
+											aNfe := oXmlResult:_RETCONSRECINFE:_PROTNFE
+										Else
+										    aNfe := {oXmlResult:_RETCONSRECINFE:_PROTNFE}
+										EndIf
+										For nX := 1 To Len(aNfe)
+											dbSelectArea("SPED054")
+											dbSetOrder(2)
+											If MsSeek(cIdEnt+Str(SPED052->LOTE,15)+AllTrim(aNfe[nX]:_INFPROT:_CHNFE:TEXT))
+												If SPED054->(SimpleLock())
+													RecLock("SPED054")
+													SPED054->CSTAT_SEFR := aNfe[nX]:_INFPROT:_CSTAT:TEXT
+													SPED054->XMOT_SEFR  := SubStr(aNfe[nX]:_INFPROT:_XMOTIVO:TEXT,1,250)
+													SPED054->DTREC_SEFR := Stod(SubStr(StrTran(aNfe[nX]:_INFPROT:_DHRECBTO:TEXT,"-",""),1,8))
+													SPED054->HRREC_SEFR := SubStr(aNfe[nX]:_INFPROT:_DHRECBTO:TEXT,12)								
+													If SPED054->CSTAT_SEFR == "204" //Duplicidade
+														cProtocolo:= ""
+														cCodSta   := ""
+														cMsgSta   := ""
+														cXmlProt  := ""
+														NfeConsNfe(SPED052->AMBIENTE,SPED052->MODALIDADE,AllTrim(aNfe[nX]:_INFPROT:_CHNFE:TEXT),@cProtocolo,@cCodSta,@cMsgSta,@cXmlProt)
+														SPED054->NFE_PROT   := cProtocolo
+														SPED054->CSTAT_SEFR := cCodSta
+														SPED054->XMOT_SEFR  := SubStr(cMsgSta,1,250)
+														SPED054->XML_PROT   := NfeProcNfe(,cXMLProt,SpedNfeId(SPED050->XML_ERP,"versao"))
+													ElseIf SPED054->CSTAT_SEFR $ "100,113,114"
+														SPED054->NFE_PROT   := aNfe[nX]:_INFPROT:_NPROT:TEXT
+														SPED054->XML_PROT   := NfeProcNfe(,XMLSaveStr(aNfe[nX],.F.),SpedNfeId(SPED050->XML_ERP,"versao"))
+													EndIf
+													dbSelectArea("SPED050")
+													dbSetOrder(1)
+													MsSeek(cIdEnt+SPED054->NFE_ID)
+													If SPED050->(SimpleLock())
+														RecLock("SPED050")												
+														If !Empty(SPED054->NFE_PROT)
+															SPED050->NFE_PROT   := SPED054->NFE_PROT
+															SPED050->STATUS     := 6
+														Else
+															SPED050->STATUS     := 5
+										       			    If SpedGetMv("MV_NOTIFIC",SPED050->ID_ENT)<>Nil .And. SpedGetMv("MV_NOTIFIC",SPED050->ID_ENT)=="1"
+											   					cAnexo    := cDirMail+SpedNfeId(XMLSaveStr(aNfe[nX],.F.),"Id")+"-rej.xml"
+																nHdlXml   := FCreate(cAnexo,0)
+																If nHdlXml > 0
+																	FWrite(nHdlXml,XMLSaveStr(aNfe[nX],.F.))
+																	FClose(nHdlXml)
+																EndIf
+															    NfeNotificacao(cIdEnt,"NFeRetRecepcao",oWs:_URL,oWs:cnfeCabecMsg,oWs:cnfeDadosMsg,,cAnexo,)
+														    EndIf
+														EndIf
+													Else
+														lFalhou := .T.
+													EndIf
+											    Else 
+											    	lFalhou := .T.
+											    EndIf								
+											EndIf
+										Next nX
+										If !lFalhou
+											SPED052->STATUS    := 2	
+										EndIf
+									ElseIf SubStr(oXmlResult:_RETCONSRECINFE:_CSTAT:TEXT,1,1)<>"1" .Or. oXmlResult:_RETCONSRECINFE:_CSTAT:TEXT == "110" .Or.;
+										oXmlResult:_RETCONSRECINFE:_CSTAT:TEXT == "106"
+										BeginSql Alias cAlias2
+											SELECT NFE_ID
+											FROM SPED054
+											WHERE 
+											ID_ENT = %Exp:cIdEnt% AND
+											LOTE = %Exp:SPED052->LOTE% AND
+											%NOTDEL%
+										EndSql
+										While !(cAlias2)->(Eof()) .And. !KillApp()
+											dbSelectArea("SPED050")
+											dbSetOrder(1)
+											MsSeek(cIdEnt+(cAlias2)->NFE_ID)
+											If SPED050->(SimpleLock())
+												RecLock("SPED050")
+												SPED050->STATUS := 5
+											Else
+												lFalhou := .T.
+											EndIf
+											
+											dbSelectArea(cAlias2)
+											dbSkip()
+										EndDo
+										If !lFalhou
+											SPED052->STATUS    := 3
+										EndIf
+										dbSelectArea(cAlias2)
+										dbCloseArea()
+										dbSelectArea("SPED054")							
+									EndIf
+								Else
+									If Val(SubStr(SpedGetMv("MV_MODALID",cIdEnt),1,1))<>2
+										NfeNotificacao(cIdEnt,"NFeRetRecepcao",oWs:_URL,oWs:cnfeCabecMsg,oWs:cnfeDadosMsg)
+									EndIf
+									DisarmTransaction()
+								EndIf
+						EndCase
+					EndIf
+					End Transaction
+				EndIf
+				SPED052->(MsUnLock())
+				DbSelectArea(cAlias)
+				DbSkip()		
+			EndDo	
+			dbSelectArea(cAlias)
+			dbCloseArea()
+			DbSelectArea("SPED050")	
+			If cNFeSPED_WF=="1" .Or. (cNFeSPED_WF=="2" .And. nCount>0 )
+				ConOut("Recepcao Lote ("+cIdEnt+"-"+cTime+" a "+Time()+"): "+AllTrim(Str(nCount,10)))
+			EndIf		
+		EndIf
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Cancelamento/Inutilizacao da Nota Fiscal eletronica.                    ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If nIDJob == 3 .Or. nIdJob == 0
+			nCount := 0
+			cTime  := Time()	
+			BeginSql Alias cAlias
+				SELECT R_E_C_N_O_
+				FROM SPED050
+				WHERE 
+				ID_ENT = %Exp:cIdEnt% AND
+				STATUSCANC = 1 AND
+				%NOTDEL%
+			EndSql
+			cIdLote := ""
+			DbSelectArea(cAlias)
+			DbGotop()
+			While !Eof() .And. !KillApp()
+				nTimes := 0
+				DbSelectArea("SPED050")
+				MsGoto((cAlias)->R_E_C_N_O_)
+				If SPED050->(SimpleLock()) .And. SPED050->STATUSCANC == 1
+					cProtocolo:= ""
+					cCodSta   := ""
+					cMsgSta   := ""
+					cXmlProt  := ""
+					nCount++
+					nTotalCount++
+					If NfeConsNfe(SPED050->AMBIENTE,SPED050->MODALIDADE,SpedNfeId(SPED050->XML_ERP,"Id"),@cProtocolo,@cCodSta,@cMsgSta,@cXmlProt,IIf(SPED050->(FieldPos("MODELO"))==0,"",SPED050->MODELO))
+						Begin Transaction
+						//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+						//³ Obtem o proximo numero de lote de transmissao                ³
+						//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+						If Empty(cIdLote)
+							cIdLote := SpedGetMv("MV_NFEIDLT",cIdEnt)
+							DEFAULT cIdLote := "0"
+							cIdLote := StrZero(Val(cIdLote)+1,15)
+							SpedPutMV("MV_NFEIDLT",cIdEnt,cIdLote)
+							//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+							//³ Atualizacao do tabela de lotes                               ³
+							//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ			
+							dbSelectArea("SPED052")
+							dbSetOrder(1)
+							While MsSeek(cIdEnt+cIdLote) .And. !KillApp()
+								cIdLote := StrZero(Val(SpedGetMv("MV_NFEIDLT",cIdEnt))+1,15)
+								SpedPutMV("MV_NFEIDLT",cIdEnt,cIdLote)
+								Sleep(1000)
+							EndDo
+							RecLock("SPED052",.T.)
+							SPED052->ID_ENT    := cIdEnt
+							SPED052->LOTE      := Val(cIdLote)
+							SPED052->DATE_LOTE := Date()
+							SPED052->TIME_LOTE := Time()
+							SPED052->STATUS    := 2
+							SPED052->AMBIENTE  := SPED050->AMBIENTE
+							SPED052->MODALIDADE:= SPED050->MODALIDADE
+						EndIf
+						RecLock("SPED054",.T.)
+						SPED054->ID_ENT    := cIdEnt
+						SPED054->LOTE      := SPED052->LOTE
+						SPED054->NFE_ID    := SPED050->NFE_ID
+						SPED054->NFE_CHV   := SubStr(SpedNfeId(SPED050->XML_ERP,"Id"),4)			
+						//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+						//³ Recuperacao de erro do cancelamento/inutilizacao             ³
+						//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+						If !cCodSta $ "101,102"
+							If !Empty(cProtocolo)					
+								//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+								//³ Montagem da mensagem de cancelamento                         ³
+								//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+								cPrefixo := ""					
+								Do Case
+									Case SPED050->(FieldPos("MODELO"))<>0 .And. SPED050->MODELO == "57"
+										cPrefixo := "CTe"
+									OtherWise
+										cPrefixo := "NFe"
+								EndCase
+								aNFe := NfeCancNfe(StrTran(SpedNfeId(SPED050->XML_ERP,"Id"),cPrefixo,""),cProtocolo,SPED050->AMBIENTE,IIf(SPED050->(FieldPos("MODELO"))==0,"",SPED050->MODELO))
+								cXmlCabMsg := aNFe[1]
+								cXmlDados  := aNFe[2]
+								//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+								//³ Monta o xml de dados                                         ³
+								//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ										
+								If !Empty(cXmlDados)
+									Do Case
+										Case SPED050->(FieldPos("MODELO"))<>0 .And. SPED050->MODELO == "57"
+											oWs := WsCTeCancelamento():New()
+											oWs:_URL := GetURLSef(SPED001->UF,StrZero(SPED050->AMBIENTE,1),"NfeCancelamento",StrZero(SPED052->MODALIDADE,1),IIf(SPED050->(FieldPos("MODELO"))==0,"",SPED050->MODELO))
+											oWs:cCTeCabecMsg := cXmlCabMsg
+											oWs:cCTeDadosMsg := cXmlDados
+											If oWs:CTeCancelamentoNF()
+												oXmlResult := XmlParser(EncodeUTF8(oWs:cCTeCancelamentoNFResult),"_",@cErro,@cAviso)
+												If oXmlResult<>Nil
+													RecLock("SPED050")
+													SPED050->XML_SIGCAN := cXmlDados
+													If oXmlResult:_RETCANCCTe:_INFCANC:_CSTAT:TEXT == "101"	
+														SPED050->STATUSCANC := 2
+														SPED050->NFE_PROT   := oXmlResult:_RETCANCCTe:_INFCANC:_NPROT:TEXT
+														SPED054->CSTAT_SEFR := oXmlResult:_RETCANCCTe:_INFCANC:_CSTAT:TEXT
+														SPED054->XMOT_SEFR  := SubStr(oXmlResult:_RETCANCCTe:_INFCANC:_XMOTIVO:TEXT,1,250)
+														SPED054->DTREC_SEFR := Stod(SubStr(StrTran(oXmlResult:_RETCANCCTe:_INFCANC:_DHRECBTO:TEXT,"-",""),1,8))
+														SPED054->HRREC_SEFR := SubStr(oXmlResult:_RETCANCCTe:_INFCANC:_DHRECBTO:TEXT,12)
+														SPED054->XML_PROT   := NfeProcNfe(,XMLSaveStr(oXmlResult,Type("oXmlResult:Type")=="U"),SpedNfeId(SPED050->XML_ERP,"versao"))
+														SPED054->NFE_PROT   := oXmlResult:_RETCANCCTe:_INFCANC:_NPROT:TEXT
+													Else
+														SPED050->STATUSCANC := 3
+														SPED054->CSTAT_SEFR := oXmlResult:_RETCANCCTe:_INFCANC:_CSTAT:TEXT
+														SPED054->XMOT_SEFR  := SubStr(oXmlResult:_RETCANCCTe:_INFCANC:_XMOTIVO:TEXT,1,250)
+														SPED054->DTREC_SEFR := Date()
+														SPED054->HRREC_SEFR := Time()
+													EndIf
+											    EndIf
+											Else
+												If Val(SubStr(SpedGetMv("MV_MODALID",cIdEnt),1,1))<>2
+													NfeNotificacao(cIdEnt,"NfeCancelamentoNF",oWs:_URL,oWs:cCTeCabecMsg,oWs:cCTeDadosMsg)
+												EndIf
+											EndIf
+										OtherWise
+											oWs := WsNfeCancelamento():New()
+											oWs:_URL := GetURLSef(SPED001->UF,StrZero(SPED050->AMBIENTE,1),"NfeCancelamento",StrZero(SPED052->MODALIDADE,1),IIf(SPED050->(FieldPos("MODELO"))==0,"",SPED050->MODELO))
+											oWs:cnfeCabecMsg := cXmlCabMsg
+											oWs:cnfeDadosMsg := cXmlDados
+											If oWs:nfeCancelamentoNF()
+												oXmlResult := XmlParser(EncodeUTF8(oWs:cnfeCancelamentoNFResult),"_",@cErro,@cAviso)
+												If oXmlResult<>Nil
+													RecLock("SPED050")
+													SPED050->XML_SIGCAN := cXmlDados
+													If oXmlResult:_RETCANCNFE:_INFCANC:_CSTAT:TEXT == "101"	
+														SPED050->STATUSCANC := 2
+														SPED050->NFE_PROT   := oXmlResult:_RETCANCNFE:_INFCANC:_NPROT:TEXT
+														SPED054->CSTAT_SEFR := oXmlResult:_RETCANCNFE:_INFCANC:_CSTAT:TEXT
+														SPED054->XMOT_SEFR  := SubStr(oXmlResult:_RETCANCNFE:_INFCANC:_XMOTIVO:TEXT,1,250)
+														SPED054->DTREC_SEFR := Stod(SubStr(StrTran(oXmlResult:_RETCANCNFE:_INFCANC:_DHRECBTO:TEXT,"-",""),1,8))
+														SPED054->HRREC_SEFR := SubStr(oXmlResult:_RETCANCNFE:_INFCANC:_DHRECBTO:TEXT,12)
+														SPED054->XML_PROT   := NfeProcNfe(,XMLSaveStr(oXmlResult,Type("oXmlResult:Type")=="U"),SpedNfeId(SPED050->XML_ERP,"versao"))
+														SPED054->NFE_PROT   := oXmlResult:_RETCANCNFE:_INFCANC:_NPROT:TEXT
+													Else
+														SPED050->STATUSCANC := 3
+														SPED054->CSTAT_SEFR := oXmlResult:_RETCANCNFE:_INFCANC:_CSTAT:TEXT
+														SPED054->XMOT_SEFR  := SubStr(oXmlResult:_RETCANCNFE:_INFCANC:_XMOTIVO:TEXT,1,250)
+														SPED054->DTREC_SEFR := Date()
+														SPED054->HRREC_SEFR := Time()
+													EndIf
+											    EndIf
+											Else
+												If Val(SubStr(SpedGetMv("MV_MODALID",cIdEnt),1,1))<>2
+													NfeNotificacao(cIdEnt,"NfeCancelamentoNF",oWs:_URL,oWs:cnfeCabecMsg,oWs:cnfeDadosMsg)
+												EndIf
+											EndIf
+									EndCase
+			        			    If SpedGetMv("MV_NOTIFIC",cIdEnt)<>Nil .And. SpedGetMv("MV_NOTIFIC",cIdEnt)=="1"
+					   					cAnexo    := cDirMail+SpedNfeId(SPED050->XML_SIGCAN,"Id")+"-canc.xml"
+										nHdlXml   := FCreate(cAnexo,0)
+										If nHdlXml > 0
+											FWrite(nHdlXml,SPED050->XML_SIGCAN)
+											FClose(nHdlXml)
+										EndIf
+									    NfeNotificacao(cIdEnt,"NfeCancelamentoNF",oWs:_URL,oWs:cnfeCabecMsg,oWs:cnfeDadosMsg,,cAnexo,)
+								    EndIf									
+								EndIf
+					        ElseIf !Empty(SpedNfeId(SPED050->XML_ERP,"Id"))
+								//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+								//³ Montagem da mensagem de inutilizacao                         ³
+								//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+								cPrefixo := ""					
+								Do Case
+									Case SPED050->(FieldPos("MODELO"))<>0 .And. SPED050->MODELO == "57"
+										cPrefixo := "CTe"
+									OtherWise
+										cPrefixo := "NFe"
+								EndCase								
+								aNFe := NfeInutNfe(SPED001->UF,SPED001->CNPJ,SubStr(StrTran(SpedNfeId(SPED050->XML_ERP,"Id"),cPrefixo,""),23,03),SubStr(StrTran(SpedNfeId(SPED050->XML_ERP,"Id"),cPrefixo,""),26,09),SubStr(StrTran(SpedNfeId(SPED050->XML_ERP,"Id"),cPrefixo,""),26,09),SPED050->AMBIENTE,IIf(SPED050->(FieldPos("MODELO"))==0,"",SPED050->MODELO))
+								cXmlCabMsg := aNFe[1]
+								cXmlDados  := aNFe[2]
+								If !Empty(cXmlDados)
+									Do Case
+										Case SPED050->(FieldPos("MODELO"))<>0 .And. SPED050->MODELO == "57"
+											oWs := WsCTeInutilizacao():New()
+											oWs:_URL := GetURLSef(SPED001->UF,StrZero(SPED050->AMBIENTE,1),"NfeInutilizacao",StrZero(SPED052->MODALIDADE,1),IIf(SPED050->(FieldPos("MODELO"))==0,"",SPED050->MODELO))
+											oWs:cCTeCabecMsg := cXmlCabMsg
+											oWs:cCTeDadosMsg := cXmlDados
+											If oWs:CTeInutilizacaoCT()
+												oXmlResult := XmlParser(EncodeUTF8(oWs:cCTeInutilizacaoCTResult),"_",@cErro,@cAviso)
+												If oXmlResult<>Nil
+													RecLock("SPED050")
+													SPED050->XML_SIGCAN := cXmlDados
+													If oXmlResult:_RETINUTCTe:_INFINUT:_CSTAT:TEXT == "102"
+														SPED050->STATUSCANC := 2
+														SPED050->NFE_PROT   := oXmlResult:_RETINUTCTe:_INFINUT:_NPROT:TEXT
+														SPED054->CSTAT_SEFR := oXmlResult:_RETINUTCTe:_INFINUT:_CSTAT:TEXT
+														SPED054->XMOT_SEFR  := SubStr(oXmlResult:_RETINUTCTe:_INFINUT:_XMOTIVO:TEXT,1,250)
+														SPED054->DTREC_SEFR := Stod(SubStr(StrTran(oXmlResult:_RETINUTCTe:_INFINUT:_DHRECBTO:TEXT,"-",""),1,8))
+														SPED054->HRREC_SEFR := SubStr(oXmlResult:_RETINUTCTe:_INFINUT:_DHRECBTO:TEXT,12)
+														SPED054->NFE_PROT   := oXmlResult:_RETINUTCTe:_INFINUT:_NPROT:TEXT
+														SPED054->XML_PROT   := NfeProcNfe(,XMLSaveStr(oXmlResult,Type("oXmlResult:Type")=="U"),SpedNfeId(SPED050->XML_ERP,"versao"))
+													Else
+														SPED050->STATUSCANC := 3
+														SPED054->CSTAT_SEFR := oXmlResult:_RETINUTCTe:_INFINUT:_CSTAT:TEXT
+														SPED054->XMOT_SEFR  := SubStr(oXmlResult:_RETINUTCTe:_INFINUT:_XMOTIVO:TEXT,1,250)
+														SPED054->DTREC_SEFR := Date()
+														SPED054->HRREC_SEFR := Time()
+													EndIf
+											    EndIf
+											Else
+												If Val(SubStr(SpedGetMv("MV_MODALID",cIdEnt),1,1))<>2
+													NfeNotificacao(cIdEnt,"NfeInutilizacaoNF",oWs:_URL,oWs:cCTeCabecMsg,oWs:cCTeDadosMsg)
+												EndIf
+											EndIf										
+										Otherwise
+											oWs := WsNfeInutilizacao():New()
+											oWs:_URL := GetURLSef(SPED001->UF,StrZero(SPED050->AMBIENTE,1),"NfeInutilizacao",StrZero(SPED052->MODALIDADE,1))
+											oWs:cnfeCabecMsg := cXmlCabMsg
+											oWs:cnfeDadosMsg := cXmlDados
+											If oWs:nfeInutilizacaoNF()
+												oXmlResult := XmlParser(EncodeUTF8(oWs:cnfeInutilizacaoNFResult),"_",@cErro,@cAviso)
+												If oXmlResult<>Nil
+													RecLock("SPED050")
+													SPED050->XML_SIGCAN := cXmlDados
+													If oXmlResult:_RETINUTNFE:_INFINUT:_CSTAT:TEXT == "102"
+														SPED050->STATUSCANC := 2
+														SPED050->NFE_PROT   := oXmlResult:_RETINUTNFE:_INFINUT:_NPROT:TEXT
+														SPED054->CSTAT_SEFR := oXmlResult:_RETINUTNFE:_INFINUT:_CSTAT:TEXT
+														SPED054->XMOT_SEFR  := SubStr(oXmlResult:_RETINUTNFE:_INFINUT:_XMOTIVO:TEXT,1,250)
+														SPED054->DTREC_SEFR := Stod(SubStr(StrTran(oXmlResult:_RETINUTNFE:_INFINUT:_DHRECBTO:TEXT,"-",""),1,8))
+														SPED054->HRREC_SEFR := SubStr(oXmlResult:_RETINUTNFE:_INFINUT:_DHRECBTO:TEXT,12)
+														SPED054->NFE_PROT   := oXmlResult:_RETINUTNFE:_INFINUT:_NPROT:TEXT
+														SPED054->XML_PROT   := NfeProcNfe(,XMLSaveStr(oXmlResult,Type("oXmlResult:Type")=="U"),SpedNfeId(SPED050->XML_ERP,"versao"))
+													Else
+														SPED050->STATUSCANC := 3
+														SPED054->CSTAT_SEFR := oXmlResult:_RETINUTNFE:_INFINUT:_CSTAT:TEXT
+														SPED054->XMOT_SEFR  := SubStr(oXmlResult:_RETINUTNFE:_INFINUT:_XMOTIVO:TEXT,1,250)
+														SPED054->DTREC_SEFR := Date()
+														SPED054->HRREC_SEFR := Time()
+													EndIf
+											    EndIf
+											Else
+												If Val(SubStr(SpedGetMv("MV_MODALID",cIdEnt),1,1))<>2
+													NfeNotificacao(cIdEnt,"NfeInutilizacaoNF",oWs:_URL,oWs:cnfeCabecMsg,oWs:cnfeDadosMsg)
+												EndIf
+											EndIf
+									EndCase
+			        			    If SpedGetMv("MV_NOTIFIC",cIdEnt)<>Nil .And. SpedGetMv("MV_NOTIFIC",cIdEnt)=="1"
+					   					cAnexo    := cDirMail+SpedNfeId(SPED050->XML_SIGCAN,"Id")+"-inut.xml"
+										nHdlXml   := FCreate(cAnexo,0)
+										If nHdlXml > 0
+											FWrite(nHdlXml,SPED050->XML_SIGCAN)
+											FClose(nHdlXml)
+										EndIf
+									    NfeNotificacao(cIdEnt,"NfeInutilizacaoNF",oWs:_URL,oWs:cnfeCabecMsg,oWs:cnfeDadosMsg,,cAnexo,)
+								    EndIf									
+							    EndIf
+					        EndIf
+					    Else
+							SPED050->STATUSCANC := 2
+							SPED050->NFE_PROT   := cProtocolo
+							SPED054->CSTAT_SEFR := cCodSta
+							SPED054->XMOT_SEFR  := SubStr(cMsgSta,1,250)
+							SPED054->DTREC_SEFR := Date()
+							SPED054->HRREC_SEFR := Time()
+							SPED054->NFE_PROT   := cProtocolo						
+							SPED054->XML_PROT   := NfeProcNfe(,cXMLProt,SpedNfeId(SPED050->XML_ERP,"versao"))
+					    EndIf
+				        End Transaction
+					EndIf
+				EndIf
+				SPED050->(MsUnLock())
+				DbSelectArea(cAlias)
+				DbSkip()		
+			EndDo	
+			dbSelectArea(cAlias)
+			dbCloseArea()
+			DbSelectArea("SPED050")
+			If cNFeSPED_WF=="1" .Or. (cNFeSPED_WF=="2" .And. nCount>0 )
+				ConOut("Cancelamento/Inutilizacao ("+cIdEnt+"-"+cTime+" a "+Time()+"): "+AllTrim(Str(nCount,10)))
+			EndIf		
+		EndIf
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Distribuicao da NFe                                                     ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If nIdJob == 4
+			nCount := 0
+			cTime  := Time()	
+			BeginSql Alias cAlias
+				SELECT R_E_C_N_O_
+				FROM SPED050 SPED
+				WHERE 
+				SPED.ID_ENT = %Exp:cIdEnt% AND
+				SPED.STATUSMAIL <= 1 AND
+				(SPED.STATUS = 6) AND
+				%NOTDEL%
+			EndSql
+			DbSelectArea(cAlias)
+			DbGotop()
+			While !Eof() .And. !KillApp()
+				nTimes := 0
+				DbSelectArea("SPED050")
+				MsGoto((cAlias)->R_E_C_N_O_)
+				If SPED050->(SimpleLock()) .And. SPED050->STATUSMAIL <= 1
+					nCount++
+					nTotalCount++
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³ Montagem do e-mail de distribuicao                           ³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					cMailError:= ""
+					cErro     := "" 
+					cAviso    := ""
+					cXmlDados := ""
+					dbSelectArea("SPED054")
+					dbSetOrder(3)
+					If !MsSeek(SPED050->ID_ENT+SPED050->NFE_ID+"100")
+						NfeConsNfe(SPED050->AMBIENTE,SPED052->MODALIDADE,SpedNfeId(SPED050->XML_ERP,"Id"),"","","",@cXmlDados)
+					Else
+						cXmlDados := SPED054->XML_PROT
+						If Empty(cXmlDados)
+							cXmlDados := ""
+							NfeConsNfe(SPED050->AMBIENTE,SPED052->MODALIDADE,SpedNfeId(SPED050->XML_ERP,"Id"),"","","",@cXmlDados)
+							Begin Transaction
+							RecLock("SPED054")
+							SPED054->XML_PROT := NfeProcNfe(,cXmlDados,SpedNfeId(SPED050->XML_ERP,"versao"))
+							End Transaction
+						EndIf
+					EndIf
+					cXmlDados := NfeProcNfe(SPED050->XML_SIG,cXMLDados,SpedNfeId(SPED050->XML_ERP,"versao"))
+					oXmlResult:= XmlParser(cXmlDados,"_",@cErro,@cAviso)
+					If Empty(cErro) .And. Empty(cAviso)
+						
+						cAnexo    := cDirMail+SpedNfeId(SPED050->XML_SIG,"Id")+"-procnfe.xml"
+						cAnexo2   := cDirMail+SpedNfeId(SPED050->XML_SIG,"Id")+"-nfe.xml"
+						nHdlXml   := FCreate(cAnexo,0)
+						nHdlXml2  := FCreate(cAnexo2,0)
+						If nHdlXml > 0 .And. nHdlXml2 > 0
+							FWrite(nHdlXml,cXmlDados)
+							FWrite(nHdlXml2,SPED050->XML_SIG)
+							FClose(nHdlXml)
+							FClose(nHdlXml2)
+							SMTPConnect(IIF(Empty(SPED050->EMAIL),Nil,{SPED050->EMAIL}),"NFe Nacional",NfeMail(oXmlResult),@cMailError,cAnexo,cAnexo2)
+							If Empty(cMailError)
+								Begin Transaction
+								RecLock("SPED050")
+								SPED050->STATUSMAIL := 2
+								End Transaction	
+							Else
+								Exit
+							EndIf
+							FErase(cAnexo)
+							FErase(cAnexo2)
+						EndIf
+						FClose(nHdlXml)
+						FClose(nHdlXml2)
+					EndIf
+				EndIf
+				SPED050->(MsUnLock())
+				DbSelectArea(cAlias)
+				DbSkip()
+			EndDo
+			dbSelectArea(cAlias)
+			dbCloseArea()
+			DbSelectArea("SPED050")
+			SMTPDisconnect()
+			If cNFeSPED_WF=="1" .Or. (cNFeSPED_WF=="2" .And. nCount>0 )
+				ConOut("SMTP ("+cIdEnt+"-"+cTime+" a "+Time()+"): "+AllTrim(Str(nCount,10)))
+			EndIf		
+		EndIf
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Recepcao da NFe                                                         ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If nIdJob == 5
+			nCount := 0
+			cTime  := Time()	
+			cErro := ""			
+			PopConnect(@nCountMail,@cErro)
+			If nCountMail > 0 .And. Empty(cErro)
+				nTimes := 0
+				For nX := 1 To nCountMail
+					nCount++
+					nTotalCount++
+					cErro := ""			
+					aMail :=  PopReceive(nX,.F.,@cErro)
+					If Empty(cErro)
+						If !Empty(aMail[7])
+							For nY := 1 To Len(aMail[7])
+								//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+								//³Pesquisa pelo XML                                                       ³
+								//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+								If "XML"$Upper(aMail[7][nY][1])
+									If NfeReadMail(cIdEnt,aMail[7][nY][1])
+										PopReceive(nX,.T.)								
+									EndIf
+								EndIf
+								FErase(aMail[7][nY][1])
+							Next nY
+						EndIf					
+					Else
+						Exit
+					EndIf
+		        Next nX
+			EndIf
+			POPDisconnect()
+			If cNFeSPED_WF=="1" .Or. (cNFeSPED_WF=="2" .And. nCount>0 )
+				ConOut("POP ("+cIdEnt+"-"+cTime+" a "+Time()+"): "+AllTrim(Str(nCount,10)))
+			EndIf		
+		EndIf
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Rotina de espera de processamento - importante para o consumo da CPU    ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If nIdJob <> 4 .And. nIdJob <> 5
+			nMaxFor := IIf(nTimes==0,10,IIf(nTimes==1,nSleepJob,nSleepJob*2))
+			If nTimes <> 0
+				PtInternal(1,"WF DO SPED - Emp: "+cIdEnt+" - Job: "+StrZero(nIdJob,2)+" - Sleeping...("+StrZero(nMaxFor,3)+")")
+			EndIf
+			For nY := 1 To nMaxFor
+				Sleep(1000)
+				If KillApp()
+					Exit
+				EndIf
+			Next nY
+		Else
+			nMaxFor := (nSleepJob*5)
+			PtInternal(1,"WF DO SPED - Emp: "+cIdEnt+" - Job: "+StrZero(nIdJob,2)+" - Sleeping...("+StrZero(nMaxFor,3)+")")
+			For nX := 1 To nMaxFor
+				Sleep(1000)
+				If KillApp()
+					Exit
+				EndIf
+			Next nX
+		EndIf
+		cTimeSPEDWF := Time()
+		
+		oXmlResult := Nil
+		DelClassIntf()		
+
+	EndDo
+	If nIdJob == 0
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Antes de sair, notifica o status da SEFAZ                               ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		nEspera     := Val(SpedGetMV("MV_CFGTIME",cIdEnt))
+		nModalidade := Val(SubStr(SpedGetMv("MV_MODALID",cIdEnt),1,1))
+		nAmbiente   := Val(SpedGetMv("MV_AMBIENT",cIdEnt))
+		cTempoMedio := ""
+		cAnexo      := ""
+		
+		aNFe := NfeStatusSEF(cIdEnt)
+		oWs  := WSNfeStatusServico():New()
+		oWs:_URL := aNFe[3]
+		oWs:cnfeCabecMsg := aNFe[1]
+		oWs:cnfeDadosMsg := aNFe[2]
+		If oWs:nfeStatusServicoNF()
+			oXmlResult := XmlParser(EncodeUTF8(oWs:cnfeStatusServicoNFResult),"_",@cAviso,@cErro)
+			If Empty(cAviso) .And. Empty(cErro)
+				cAnexo := "Ambiente: "+IIF(nAmbiente==1,"Produção","Homogação")+CRLF
+				cAnexo += "Modalidade: "+IIF(nModalidade==1 .And. nModalidade==4,"Normal","Contingência")+CRLF
+				cAnexo += "Versão da mensagem: "+oXmlResult:_RETCONSSTATSERV:_versao:TEXT+CRLF
+				cAnexo += "Código do status: "+oXmlResult:_RETCONSSTATSERV:_CSTAT:TEXT+" - "+GetMsgSef(oXmlResult:_RETCONSSTATSERV:_CSTAT:TEXT)+CRLF
+				If Type("oXmlResult:_RETCONSSTATSERV:_CUF")=="O"
+					If GetUFCode(oXmlResult:_RETCONSSTATSERV:_CUF:TEXT,.T.)<>SPED001->UF
+						cAnexo += "UF: "+GetUFCode(oXmlResult:_RETCONSSTATSERV:_CUF:TEXT,.T.)+"("+SPED001->UF+")"+CRLF
+					Else
+						cAnexo += "UF: "+GetUFCode(oXmlResult:_RETCONSSTATSERV:_CUF:TEXT,.T.)+CRLF
+					EndIf
+				EndIf
+				If Type("oXmlResult:_RETCONSSTATSERV:_TMED")=="O"
+					cAnexo += "Tempo médio(seg): "+oXmlResult:_RETCONSSTATSERV:_TMED:TEXT+CRLF
+					cTempoMedio := oXmlResult:_RETCONSSTATSERV:_TMED:TEXT
+				EndIf
+				cAnexo += "Motivo: "+oXmlResult:_RETCONSSTATSERV:_XMOTIVO:TEXT+CRLF
+				If Type("oXmlResult:_RETCONSSTATSERV:_XOBS:TEXT")<>"U" .And. !Empty(oXmlResult:_RETCONSSTATSERV:_XOBS:TEXT)
+					cAnexo += "Observacao: "+oXmlResult:_RETCONSSTATSERV:_XOBS:TEXT+CRLF
+				EndIf
+				Do Case
+					Case oXmlResult:_RETCONSSTATSERV:_CSTAT:TEXT=='107' .And. Val(cTempoMedio)>=nEspera .And. !Empty(cTempoMedio)
+						If nModalidade == 1 .And. nModalidade == 4
+							cAnexo += "Sugestão Totvs: "+"Entrar em contigência"+" - "+"tempo de espera acima do limite"
+						Else
+							cAnexo := ""
+						EndIf				
+					Case AllTrim(oXmlResult:_RETCONSSTATSERV:_CSTAT:TEXT) <> "107"
+						If nModalidade == 1 .And. nModalidade == 4
+							cAnexo += "Sugestão Totvs: "+"Autorizada operação em contigência"
+						Else
+							cAnexo := ""
+						EndIf
+					Case oXmlResult:_RETCONSSTATSERV:_CSTAT:TEXT == "107"
+						If nModalidade <> 1 .And. nModalidade <> 4
+							cAnexo += "Sugestão Totvs: "+"Sair da contigência"
+						Else
+							cAnexo := ""
+						EndIf
+				EndCase
+				If !Empty(cAnexo)
+					NfeNotificacao(cIdEnt,"NFeStatusServico",oWs:_URL,oWs:cnfeCabecMsg,oWs:cnfeDadosMsg,cAnexo)
+				EndIf
+			Else
+				cAnexo := ""
+				cAnexo += "Codigo do Status: 999 -  Erro na SEFAZ: "+AllTrim(cAviso)+" "+AllTrim(cErro)+CRLF
+				cAnexo += "UF: "+SPED001->UF+CRLF
+				cAnexo += "Sugestão Totvs: Contacte a Totvs e comunique o codigo do status"+CRLF
+				NfeNotificacao(cIdEnt,"NFeStatusServico",oWs:_URL,oWs:cnfeCabecMsg,oWs:cnfeDadosMsg,cAnexo)
+			EndIf
+		Else			
+			NfeNotificacao(cIdEnt,"NFeStatusServico",oWs:_URL,oWs:cnfeCabecMsg,oWs:cnfeDadosMsg)
+		EndIf
+	EndIf
+EndIf
+oXmlResult := Nil
+DelClassIntf()
+FinishSped(.T.,.T.)
+Return(.T.)
+
+Static Function NfeReadMail(cIdEnt,cFile)
+
+Local cID        := ""
+Local cProtocolo := ""
+Local cErro      := ""
+Local cAviso     := ""
+Local cXml       := ""
+Local cCNPJ      := ""
+Local cCPF       := ""
+Local cIE        := ""
+Local cUF        := ""
+Local lBreak     := .F.
+Local lRetorno   := .F.
+Local bErro
+Private oXml       := XmlParserFile(cFile,"_",@cErro,@cAviso)
+
+DbSelectArea("SPED001")
+DbSetOrder(1)
+MsSeek(cIdEnt)	
+
+If Empty(cErro) .And. Empty(cAviso)
+	bErro := ErrorBlock({|| lBreak := .T.})
+	Begin Sequence
+		cID        := oXml:_nfeProc:_ProtNFe:_InfProt:_chNFe:TEXT
+		cProtocolo := Val(oXml:_nfeProc:_ProtNFe:_InfProt:_nProt:TEXT)
+		If Type("oXml:_nfeProc:_NFe:_infNFe:_dest:_CNPJ:TEXT")<>"U"
+			cCNPJ      := oXml:_nfeProc:_NFe:_infNFe:_dest:_CNPJ:TEXT
+		Else
+			cCNPJ      := SPED001->CNPJ
+		EndIf
+		If Type("oXml:_nfeProc:_NFe:_infNFe:_dest:_CPF:TEXT")<>"U"
+		   	cCPF       := oXml:_nfeProc:_NFe:_infNFe:_dest:_CPF:TEXT
+		Else
+			cCPF       := SPED001->CPF
+		EndIf
+		cIE        := oXml:_nfeProc:_NFe:_infNFe:_dest:_IE:TEXT
+		cUF        := oXml:_nfeProc:_NFe:_infNFe:_dest:_enderDest:_UF:TEXT
+		cXml       := NfeLoadTXT(cFile)
+	Recover
+	
+	End Sequence
+	ErrorBlock(bErro)	
+	If !lBreak
+		Begin Transaction
+			If ((Empty(SPED001->CNPJ) .Or. AllTrim(cCNPJ) == AllTrim(SPED001->CNPJ)) .Or.;
+				(Empty(SPED001->CPF) .Or. AllTrim(cCPF) == AllTrim(SPED001->CPF))) .And.;
+				AllTrim(cIE) == AllTrim(SPED001->IE) .And.;
+				AllTrim(cUF) == AllTrim(SPED001->UF)
+				
+				dbSelectArea("SPED060")
+				dbSetOrder(1)
+				If MsSeek(cIdEnt+cID)
+					RecLock("SPED060",.F.)
+				Else
+					RecLock("SPED060",.T.)
+				EndIf
+				If SPED060->STATUS <> 2
+					SPED060->ID_ENT  := cIDEnt
+					SPED060->NFE_CHV := cID
+					SPED060->DATE_NFE:= Date()
+					SPED060->TIME_NFE:= Time()
+					SPED060->XML     := cXml
+					SPED060->STATUS  := 1
+					lRetorno := .T.
+				EndIf
+			EndIf
+		End Transcation
+	EndIf
+EndIf
+Return(lRetorno)

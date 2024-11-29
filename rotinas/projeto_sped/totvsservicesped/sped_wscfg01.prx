@@ -1,0 +1,1768 @@
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "APWEBSRV.CH"
+#INCLUDE "FILEIO.CH"
+
+WSSTRUCT SMTPSERVER
+	WSDATA MailServer             AS STRING
+	WSDATA LoginAccount           AS STRING OPTIONAL
+	WSDATA MailAccount            AS STRING
+	WSDATA MailPassword           AS BASE64BINARY
+	WSDATA AuthenticationRequered AS BOOLEAN OPTIONAL
+	WSDATA MailAdmin              AS STRING OPTIONAL
+ENDWSSTRUCT 
+
+WSSTRUCT POPSERVER
+	WSDATA MailServer             AS STRING
+	WSDATA LoginAccount            AS STRING
+	WSDATA MailPassword           AS BASE64BINARY
+ENDWSSTRUCT 
+
+WSSTRUCT DIGITALCERTIFICATE
+	WSDATA CERTIFICATETYPE     AS INTEGER	
+	WSDATA VERSION             AS STRING
+	WSDATA SUBJECT             AS STRING
+	WSDATA ISSUER              AS BASE64BINARY
+	WSDATA VALIDFROM           AS DATE
+	WSDATA VALIDTO             AS DATE
+ENDWSSTRUCT 
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Definicao do Web Service                                                ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+WSSERVICE SPEDCFGNFE	;
+	DESCRIPTION "<b>Serviço genérico de configuração do SPED-Nfe.</b><br><br>Este serviço permite a configuração dos parÂmetros do projeto SPED, tais como :<br><br> 1) Certificados digitais;<br> 2)Modalidade de emissão;<br> 3)Ambiente;<br> 4)SMTP Server;<br> 5)POP Server"  ;
+	NAMESPACE "http://webservices.totvs.com.br/spedcfgnfe.apw"
+	
+WSDATA USERTOKEN            AS STRING
+WSDATA ID_ENT               AS STRING
+WSDATA Certificate          AS BASE64BINARY
+WSDATA PrivateKey           AS BASE64BINARY
+WSDATA Slot                 AS BASE64BINARY
+WSDATA Label                AS BASE64BINARY
+WSDATA Module               AS BASE64BINARY
+WSDATA PASSWORD             AS BASE64BINARY
+WSDATA Ambiente             AS INTEGER
+WSDATA Modalidade           AS INTEGER
+WSDATA Valor                AS INTEGER
+WSDATA Versao               AS STRING
+WSDATA VersoesNFe           AS STRING
+WSDATA TempoEspera          AS INTEGER
+WSDATA TempoEsperaCfg       AS INTEGER
+WSDATA MSG                  AS STRING
+WSDATA SMTP                 AS SMTPSERVER
+WSDATA POP                  AS POPSERVER
+WSDATA Certificates         AS Array OF DigitalCertificate
+WSDATA Notificacao			AS INTEGER
+
+WSMETHOD CfgTSSVersao         DESCRIPTION "<b>Método que descreve a versao do TSS."
+WSMETHOD CfgConnect           DESCRIPTION "<b>Método para teste de conexão com o Totvs Services.</b><br><br>Este método deve ser utilizado para verificar se o serviço do Totvs Services esta no ar."
+WSMETHOD CfgConnectEx         DESCRIPTION "<b>Método para teste de conexão com o Totvs Services.</b><br><br>Este método deve ser utilizado para verificar se o serviço do Totvs Services esta no ar."
+WSMETHOD CfgReady             DESCRIPTION "<b>Método para verificação da configuração do Totvs Services.</b><br><br>Este método deve ser utilizado para verificar se o serviço do Totvs Services possui os certificados digitais."
+WSMETHOD CfgReadyEx           DESCRIPTION "<b>Método para verificação da configuração do Totvs Services.</b><br><br>Este método deve ser utilizado para verificar se o serviço do Totvs Services possui os certificados digitais."
+WSMETHOD CfgCertificate       DESCRIPTION "<b>Método de administração dos certificados digitais para a nota fiscal eletrônica.</b><br><br>Este método deve ser utilizado para informar ao sistema qual certificado digital deverá ser utilizado para a assinatura da nota fiscal eletrônica.<br>Lembre-se os certificado digital deve ser informado no formato do Apache (extensão PEM)."
+WSMETHOD CfgCertificatePfx    DESCRIPTION "<b>Método de administração dos certificados digitais para a nota fiscal eletrônica.</b><br><br>Este método deve ser utilizado para informar ao sistema qual certificado digital deverá ser utilizado para a assinatura da nota fiscal eletrônica.<br>Lembre-se os certificado digital deve ser informado no formato do pfx."
+WSMETHOD CfgHSM               DESCRIPTION "<b>Método de administração do HSM para a nota fiscal eletrônica.</b><br><br>Este método deve ser utilizado para informar ao sistema o certificado digital do HSM que deve ser utilizado."
+WSMETHOD CfgAmbiente          DESCRIPTION "<b>Método de parametrização do ambiente da nota fiscal eletrônica.</b><br><br>Este método deve ser utilizado para informar ao sistema se o ambiente é de produção(1), homologação(2) ou configuração(0)."
+WSMETHOD CfgModalidade        DESCRIPTION "<b>Método de parametrização da modalidade de emissão da nota fiscal eletrônica.</b><br><br>Este método deve ser utilizado para informar ao sistema se a modalide é normal(1), contingência(2) ou configuração(0)."
+WSMETHOD CfgAmbienteEx        DESCRIPTION "<b>Método de parametrização do ambiente da nota fiscal eletrônica.</b><br><br>Este método deve ser utilizado para informar ao sistema se o ambiente é de produção(1), homologação(2) ou configuração(0)."
+WSMETHOD CfgModalidadeEx      DESCRIPTION "<b>Método de parametrização da modalidade de emissão da nota fiscal eletrônica.</b><br><br>Este método deve ser utilizado para informar ao sistema se a modalide é normal(1), contingência(2) ou configuração(0)."
+WSMETHOD CfgVersao            DESCRIPTION "<b>Método de parametrização da versão do layout do manual de integração (contribuinte) da nota fiscal eletrônica.</b><br><br>Este método deve ser utilizado para informar ao sistema para qual versão o sistema deve converter o XML recebido do ERP. Caso a versão não seja informada o método irá retornar a lista de versões disponíveis. Caso a versão informada seja '0.00' o método irá retornar a versão configurada. Caso a versao informada seja '9.99' o metodo nao ira configurar a versao."
+WSMETHOD CfgVersaoDpec        DESCRIPTION "<b>Método de parametrização da versão do layout do Manual do Sistema de Contingência Eletrônica.</b><br><br>Este método deve ser utilizado para informar ao sistema para qual versão o sistema deve converter o XML recebido do ERP. Caso a versão não seja informada o método irá retornar a lista de versões disponíveis. Caso a versão informada seja '0.00' o método irá retornar a versão configurada. Caso a versao informada seja '9.99' o metodo nao ira configurar a versao."
+WSMETHOD CfgVersaoCTe         DESCRIPTION "<b>Método de parametrização da versão do layout do manual de integração (contribuinte) do conhecimento eletrônico.</b><br><br>Este método deve ser utilizado para informar ao sistema para qual versão o sistema deve converter o XML recebido do ERP. Caso a versão não seja informada o método irá retornar a lista de versões disponíveis. Caso a versão informada seja '0.00' o método irá retornar a versão configurada. Caso a versao informada seja '9.99' o metodo nao ira configurar a versao."
+WSMETHOD CfgTempoEspera       DESCRIPTION "<b>Método de parametrização do tempo de espera de retorno da nota fiscal eletrônica.</b><br><br>Este método deve ser utilizado para informar ao sistema qual o tempo de espera máximo (em minutos) para que o sistema sugira ao usuário entrar em contingência. O tempo mínimo é de 3 minutos, se for informado um valor inferior a este, o parâmetro não será alterado. O web services retorna o tempo de espera configurado anteriormente."
+WSMETHOD CfgSMTPMail          DESCRIPTION "<b>Método de configuracao do servidor SMTP de e-mail da nota fiscal eletrônica.</b><br><br>Este método deve ser utilizado para informar ao sistema os dados necessários para o acesso ao servidor SMTP que será utilizado na transmissão da Nota Fiscal eletrônica para o destinatário da mesma."
+WSMETHOD GetSMTPMail          DESCRIPTION "<b>Método de recuperação da configuracao do servidor SMTP de e-mail da nota fiscal eletrônica.</b><br><br>Este método deve ser utilizado para recuperar os dados informados para o acesso ao servidor SMTP que será utilizado na transmissão da Nota Fiscal eletrônica para o destinatário da mesma."
+WSMETHOD CfgPOPMail           DESCRIPTION "<b>Método de configuracao do servidor POP de e-mail da nota fiscal eletrônica.</b><br><br>Este método deve ser utilizado para informar ao sistema os dados necessários para o acesso ao servidor POP que será utilizado na leitura das Notas Fiscais eletrônicas encaminhadas."
+WSMETHOD GetPOPMail           DESCRIPTION "<b>Método de recuperação da configuracao do servidor POP de e-mail da nota fiscal eletrônica.</b><br><br>Este método deve ser utilizado para recuperar os dados informados para o acesso ao servidor POP que será utilizado na leitura das Notas Fiscais eletrônicas encaminhadas."
+WSMETHOD CfgStatusCertificate DESCRIPTION "<b>Método de verificacao da validade dos certificados digitais da nota fiscal eletrônica.</b><br><br>Este método deve ser utilizado para informar ao sistema o status do certificado digital quanto ao vencimento."
+WSMETHOD CfgNotificacao 	  DESCRIPTION "<b>Método de configuracao do envio de notificacoes da nota fiscal eletrônica.</b><br><br>Este método deve ser utilizado para enviar uma notificacao sobre os cancelamentos e consultas das notas fiscais."
+ENDWSSERVICE
+
+WSMETHOD GetPOPMail    WSRECEIVE USERTOKEN,ID_ENT WSSEND POP WSSERVICE SPEDCFGNFE
+
+	Local lRetorno := .T.
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa o ambiente                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	InitSped()
+	If ::UserToken == "TOTVS" .And. Select("SPED000")<>0
+		If !Empty(::ID_ENT)
+			dbSelectArea("SPED001")
+			dbSetOrder(1)
+			If !MsSeek(::ID_ENT)
+				SetSoapFault("TOTVS SPED Services","001 - Codigo de entidade invalido")
+				lRetorno := .F.
+			EndIf
+		Else
+			SetSoapFault("TOTVS SPED Services","002 - Codigo de entidade em branco")
+			lRetorno := .F.
+		EndIf
+		If lRetorno
+			::POP := WsClassNew("POPSERVER")
+			::POP:MailServer            := SpedGetMV("MV_POPSRV",::ID_ENT)
+			::POP:LoginAccount          := SpedGetMV("MV_POPACC",::ID_ENT)
+			::POP:MailPassWord          := SpedGetMV("MV_POPPSS",::ID_ENT)
+			
+			DEFAULT ::POP:MailServer             := ""
+			DEFAULT ::POP:LoginAccount           := ""
+			DEFAULT ::POP:MailPassWord           := ""
+		EndIf
+	Else
+		If Select("SPED000")==0
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+		Else	
+			SetSoapFault("TOTVS SPED Services","Invalid Token")
+		EndIf
+		lRetorno := .F.
+	EndIf
+	Return(FinishSped(lRetorno))
+
+WSMETHOD CfgPOPMail    WSRECEIVE USERTOKEN,ID_ENT,POP WSSEND MSG WSSERVICE SPEDCFGNFE
+
+	Local lRetorno := .T.
+	Local cError   := ""
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa o ambiente                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	InitSped()
+	::MSG := ""		
+	If ::UserToken == "TOTVS" .And. Select("SPED000")<>0
+		If !Empty(::ID_ENT)
+			dbSelectArea("SPED001")
+			dbSetOrder(1)
+			If !MsSeek(::ID_ENT)
+				SetSoapFault("TOTVS SPED Services","001 - Codigo de entidade invalido")
+				lRetorno := .F.
+			EndIf
+		Else
+			SetSoapFault("TOTVS SPED Services","002 - Codigo de entidade em branco")
+			lRetorno := .F.
+		EndIf
+		If lRetorno
+			If Empty(::POP:MailServer)
+				SetSoapFault("TOTVS SPED Services","003 - Servidor POP não especificado")
+				lRetorno := .F.	
+			EndIf
+		EndIf
+		If lRetorno
+			If Empty(::POP:LoginAccount)
+				SetSoapFault("TOTVS SPED Services","004 - Login não especificado")
+				lRetorno := .F.	
+			EndIf		
+		EndIf
+		If lRetorno
+			If Empty(::POP:MailPassword)
+				SetSoapFault("TOTVS SPED Services","005 - Senha não especificada")
+				lRetorno := .F.	
+			EndIf
+		EndIf
+		If lRetorno
+			SpedPutMV("MV_POPSRV",::ID_ENT,::POP:MailServer)
+			SpedPutMV("MV_POPACC",::ID_ENT,::POP:LoginAccount)	
+			SpedPutMV("MV_POPPSS",::ID_ENT,::POP:MailPassWord)
+			::MSG := "Configurações do servidor POP: Ok"
+			::MSG += CRLF
+			::MSG += "Teste de coneção de email: Ok"
+			::MSG += CRLF
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Teste de recepcao de e-Mail                                             ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			POPConnect(/*nCountMail*/,@cError)
+			POPDisconnect()
+			If !Empty(cError)
+				SpedPutMV("MV_POPSRV",::ID_ENT,"")
+				SpedPutMV("MV_POPACC",::ID_ENT,"")	
+				SpedPutMV("MV_POPPSS",::ID_ENT,"")
+				SetSoapFault("TOTVS SPED Services","006 - Erro no teste de recepção de e-mail: "+cError)
+				lRetorno := .F.
+			EndIf
+		EndIf
+	Else
+		If Select("SPED000")==0
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+		Else	
+			SetSoapFault("TOTVS SPED Services","Invalid Token")
+		EndIf
+		lRetorno := .F.
+	EndIf
+	Return(FinishSped(lRetorno))
+	
+WSMETHOD GetSMTPMail WSRECEIVE USERTOKEN,ID_ENT WSSEND SMTP WSSERVICE SPEDCFGNFE
+
+	Local lRetorno := .T.
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa o ambiente                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	InitSped()
+	If ::UserToken == "TOTVS" .And. Select("SPED000")<>0
+		If !Empty(::ID_ENT)
+			dbSelectArea("SPED001")
+			dbSetOrder(1)
+			If !MsSeek(::ID_ENT)
+				SetSoapFault("TOTVS SPED Services","001 - Codigo de entidade invalido")
+				lRetorno := .F.
+			EndIf
+		Else
+			SetSoapFault("TOTVS SPED Services","002 - Codigo de entidade em branco")
+			lRetorno := .F.
+		EndIf
+		If lRetorno
+			::SMTP := WsClassNew("SMTPSERVER")
+			::SMTP:MailServer             := SpedGetMV("MV_SMTPSRV",::ID_ENT)
+			::SMTP:LoginAccount           := SpedGetMV("MV_SMTPAAC",::ID_ENT)
+			::SMTP:MailAccount            := SpedGetMV("MV_SMTPFAC",::ID_ENT)	
+			::SMTP:MailPassWord           := SpedGetMV("MV_SMTPFPS",::ID_ENT)
+			::SMTP:AuthenticationRequered := SpedGetMV("MV_SMTPAUT",::ID_ENT)=="S"
+			::SMTP:MailAdmin              := SpedGetMV("MV_SMTPADM",::ID_ENT)
+			                                           
+			DEFAULT ::SMTP:MailServer             := ""
+			DEFAULT ::SMTP:LoginAccount           := ""
+			DEFAULT ::SMTP:MailAccount            := ""
+			DEFAULT ::SMTP:MailPassWord           := ""
+			DEFAULT ::SMTP:MailAdmin              := ""
+			DEFAULT ::SMTP:AuthenticationRequered := .F.
+		EndIf
+	Else
+		If Select("SPED000")==0
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+		Else	
+			SetSoapFault("TOTVS SPED Services","Invalid Token")
+		EndIf
+		lRetorno := .F.
+	EndIf
+	Return(FinishSped(lRetorno))	
+
+WSMETHOD CfgSMTPMail WSRECEIVE USERTOKEN,ID_ENT,SMTP WSSEND MSG WSSERVICE SPEDCFGNFE
+
+	Local lRetorno := .T.
+	Local cError   := ""
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa o ambiente                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	DEFAULT ::SMTP:AuthenticationRequered := .F.
+	InitSped()
+	::MSG := ""		
+	If ::UserToken == "TOTVS" .And. Select("SPED000")<>0
+		If !Empty(::ID_ENT)
+			dbSelectArea("SPED001")
+			dbSetOrder(1)
+			If !MsSeek(::ID_ENT)
+				SetSoapFault("TOTVS SPED Services","001 - Codigo de entidade invalido")
+				lRetorno := .F.
+			EndIf
+		Else
+			SetSoapFault("TOTVS SPED Services","002 - Codigo de entidade em branco")
+			lRetorno := .F.
+		EndIf
+		If lRetorno
+			If Empty(::SMTP:MailServer)
+				SetSoapFault("TOTVS SPED Services","003 - Servidor SMTP não especificado")
+				lRetorno := .F.	
+			EndIf
+		EndIf
+		If lRetorno
+			If Empty(::SMTP:LoginAccount)
+				SetSoapFault("TOTVS SPED Services","004 - Login não especificado")
+				lRetorno := .F.	
+			EndIf
+		EndIf
+		If lRetorno
+			If Empty(::SMTP:MailAccount)
+				SetSoapFault("TOTVS SPED Services","005 - E-mail não especificado")
+				lRetorno := .F.	
+			EndIf		
+		EndIf
+		If lRetorno
+			If Empty(::SMTP:MailPassword)
+				SetSoapFault("TOTVS SPED Services","006 - Senha não especificada")
+				lRetorno := .F.	
+			EndIf
+		EndIf
+		If lRetorno
+			SpedPutMV("MV_SMTPSRV",::ID_ENT,::SMTP:MailServer)
+			SpedPutMV("MV_SMTPAAC",::ID_ENT,::SMTP:LoginAccount)
+			SpedPutMV("MV_SMTPFAC",::ID_ENT,::SMTP:MailAccount)
+			SpedPutMV("MV_SMTPFPS",::ID_ENT,::SMTP:MailPassWord)			
+			If !Empty(::SMTP:MailAdmin)
+				SpedPutMV("MV_SMTPADM",::ID_ENT,::SMTP:MailAdmin)
+			EndIf
+			If ::SMTP:AuthenticationRequered
+				SpedPutMV("MV_SMTPAUT",::ID_ENT,"S")
+			Else
+				SpedPutMV("MV_SMTPAUT",::ID_ENT,"N")
+			EndIf
+			::MSG := "Configurações do servidor SMTP: Ok"
+			::MSG += CRLF
+			::MSG += "Teste de transmissão de email: Ok"
+			::MSG += CRLF+CRLF
+			::MSG += "Verifique a caixa de entrada do email: "+AllTrim(::SMTP:MailAccount)
+			If !Empty(::SMTP:MailAdmin)
+				::MSG += CRLF
+				::MSG += "Verifique a caixa de entrada do email de notificação: "+AllTrim(::SMTP:MailAdmin)
+			EndIf
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Teste de Envio de e-Mail                                                ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			SMTPConnect(/*aUsers*/,/*cSubject*/,/*cMensagem*/,@cError)
+			If !Empty(cError)
+				SpedPutMV("MV_SMTPSRV",::ID_ENT,"")
+				SpedPutMV("MV_SMTPAAC",::ID_ENT,"")
+				SpedPutMV("MV_SMTPFAC",::ID_ENT,"")
+				SpedPutMV("MV_SMTPFPS",::ID_ENT,"")	
+				SpedPutMV("MV_SMTPADM",::ID_ENT,"")	
+				SetSoapFault("TOTVS SPED Services","008 - Erro no teste de envio de e-mail: "+cError)
+				lRetorno := .F.
+			EndIf
+			If !Empty(::SMTP:MailAdmin) .And. lRetorno
+				SMTPConnect({SpedGetMV("MV_SMTPADM",::ID_ENT)},/*cSubject*/,/*cMensagem*/,@cError)
+				If !Empty(cError)
+					SpedPutMV("MV_SMTPADM",::ID_ENT,"")	
+					SetSoapFault("TOTVS SPED Services","009 - Erro no teste de envio do e-mail de notificação: "+cError)
+					lRetorno := .F.
+				EndIf
+			EndIf
+			SMTPDisconnect()			
+		EndIf
+	Else
+		If Select("SPED000")==0
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+		Else	
+			SetSoapFault("TOTVS SPED Services","Invalid Token")
+		EndIf
+		lRetorno := .F.
+	EndIf
+	Return(FinishSped(lRetorno))
+
+WSMETHOD CfgConnect     WSRECEIVE USERTOKEN WSSEND MSG WSSERVICE SPEDCFGNFE
+	Local lRetorno := .T.
+	If ::UserToken == "TOTVS" 
+		InitSped()
+		If Select("SPED000")<>0
+			InitNfeSped()
+			::MSG := "Totvs Services ready"
+		Else
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+			lRetorno := .F.
+		EndIf
+	Else
+		SetSoapFault("TOTVS SPED Services","Invalid Token")
+		lRetorno := .F.
+	EndIf
+	Return(FinishSped(lRetorno))
+
+WSMETHOD CfgConnectEx   WSRECEIVE USERTOKEN WSSEND Valor WSSERVICE SPEDCFGNFE
+	Local lRetorno := .T.
+	::Valor := 0
+	If ::UserToken == "TOTVS"
+		InitSped()
+		If Select("SPED000")<>0
+			InitNfeSped()
+			::Valor := 1
+		Else
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+			lRetorno := .F.
+		EndIf
+	Else
+		SetSoapFault("TOTVS SPED Services","Invalid Token")
+		lRetorno := .F.
+	EndIf
+	Return(FinishSped(lRetorno))
+	
+WSMETHOD CfgReady     WSRECEIVE USERTOKEN,ID_ENT WSSEND MSG WSSERVICE SPEDCFGNFE
+	Local lRetorno := .T.
+	Local cDir     := IIf(IsSrvUnix(),"certs/", "certs\")
+	Local cDirSchema := IIf(IsSrvUnix(),"/schemas/", "\schemas\")
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa o ambiente                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	InitSped()
+	::MSG := "Totvs Services ready"
+	If ::UserToken == "TOTVS" .And. Select("SPED000")<>0
+		If !Empty(::ID_ENT)
+			dbSelectArea("SPED001")
+			dbSetOrder(1)
+			If !MsSeek(::ID_ENT)
+				SetSoapFault("TOTVS SPED Services","001 - Codigo de entidade invalido")
+				lRetorno := .F.
+			EndIf
+		Else
+			SetSoapFault("TOTVS SPED Services","002 - Codigo de entidade em branco")
+			lRetorno := .F.
+		EndIf
+		If lRetorno
+			If Empty(SPED001->PASSCERT) .Or. !File(cDir+::ID_ENT+"_key.pem") .Or. !File(cDir+::ID_ENT+"_cert.pem")
+				SetSoapFault("TOTVS SPED Services","003 - Certificado não encontrado")
+				lRetorno := .F.	
+			EndIf
+		EndIf
+		If SpedGetMv("MV_VERSAO",Self:ID_ENT) <> "9.99"
+	   		If (!File(cDirSchema+"NFe_v"+SpedGetMv("MV_VERSAO",Self:ID_ENT)+"NoSig.xsd") .And.;
+	   			 !File(cDirSchema+"NFe_v"+SpedGetMv("MV_VERSAO",Self:ID_ENT)+".xsd"))
+				SetSoapFault("TOTVS SPED Services","004 - schemas da versão "+SpedGetMv("MV_VERSAO",Self:ID_ENT)+" não encontrados")
+				lRetorno := .F.			
+			EndIf
+		EndIf
+		If SpedGetMv("MV_VERCTE",Self:ID_ENT) <> "9.99"
+	   		If (!File(cDirSchema+"CTe_v"+SpedGetMv("MV_VERCTE",Self:ID_ENT)+".xsd"))
+				SetSoapFault("TOTVS SPED Services","004 - schemas da versão "+SpedGetMv("MV_VERCTE",Self:ID_ENT)+" não encontrados")
+				lRetorno := .F.
+			EndIf
+		EndIf
+		If SpedGetMv("MV_VERDPEC",Self:ID_ENT) <> "9.99"
+	   		If (!File(cDirSchema+"envDPEC_v"+SpedGetMv("MV_VERDPEC",Self:ID_ENT)+".xsd"))
+				SetSoapFault("TOTVS SPED Services","004 - schemas da versão "+SpedGetMv("MV_VERCTE",Self:ID_ENT)+" não encontrados")
+				lRetorno := .F.
+			EndIf
+		EndIf
+	Else
+		If Select("SPED000")==0
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+		Else	
+			SetSoapFault("TOTVS SPED Services","Invalid Token")
+		EndIf
+		lRetorno := .F.
+	EndIf
+	Return(FinishSped(lRetorno))
+	
+WSMETHOD CfgReadyEx WSRECEIVE USERTOKEN,ID_ENT WSSEND Valor WSSERVICE SPEDCFGNFE
+	Local lRetorno := .T.
+	Local cDir     := IIf(IsSrvUnix(),"certs/", "certs\")
+	Local cDirSchema := IIf(IsSrvUnix(),"/schemas/", "\schemas\")
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa o ambiente                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	InitSped()
+	::Valor := 1
+	If ::UserToken == "TOTVS" .And. Select("SPED000")<>0
+		If !Empty(::ID_ENT)
+			dbSelectArea("SPED001")
+			dbSetOrder(1)
+			If !MsSeek(::ID_ENT)
+				SetSoapFault("TOTVS SPED Services","001 - Codigo de entidade invalido")
+				lRetorno := .F.
+			EndIf
+		Else
+			SetSoapFault("TOTVS SPED Services","002 - Codigo de entidade em branco")
+			lRetorno := .F.
+		EndIf
+		If lRetorno
+			If Empty(SPED001->PASSCERT) .Or. !File(cDir+::ID_ENT+"_key.pem") .Or. !File(cDir+::ID_ENT+"_cert.pem")
+				SetSoapFault("TOTVS SPED Services","003 - Certificado não encontrado")
+				lRetorno := .F.	
+			EndIf
+		EndIf
+   		If (!File(cDirSchema+"NFe_v"+SpedGetMv("MV_VERSAO",Self:ID_ENT)+"NoSig.xsd") .And.;
+   			 !File(cDirSchema+"NFe_v"+SpedGetMv("MV_VERSAO",Self:ID_ENT)+".xsd"))
+			SetSoapFault("TOTVS SPED Services","004 - Schemas da versão "+SpedGetMv("MV_VERSAO",Self:ID_ENT)+" não encontrados")
+			lRetorno := .F.			
+		EndIf		
+	Else
+		If Select("SPED000")==0
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+		Else	
+			SetSoapFault("TOTVS SPED Services","Invalid Token")
+		EndIf
+		lRetorno := .F.
+	EndIf
+	Return(FinishSped(lRetorno))	
+
+WSMETHOD CfgCertificate WSRECEIVE USERTOKEN,ID_ENT,Certificate,PrivateKey,PASSWORD WSSEND MSG WSSERVICE SPEDCFGNFE
+
+	Local aInfo    := {}
+	Local lRetorno := .T.
+	Local nAt1     := 0
+	Local nAt2     := 0	
+	Local dDataIni := Date()
+	Local dDataFim := Date()
+	Local cRegistro:= ""
+	Local cArqCert := ""
+	Local cArqPem  := ""
+	Local nHandle  := 0
+	Local cDir     := IIf(IsSrvUnix(),"/certs/", "\certs\")
+	Local cXml     := ""
+	Local cCert    := ""
+	Local cRootPath:= StrTran(GetSrvProfString("RootPath","")+IIf(!IsSrvUnix(),"\","/"),IIf(!IsSrvUnix(),"\\","//"),IIf(!IsSrvUnix(),"\","/"))
+	Local lBreak   := .F.
+	Local bErro    := ErrorBlock({|e| lBreak := .T. })	
+	Local cNewFunc  := ""
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa o ambiente                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	cRootPath  := StrTran(cRootPath,IIf(!IsSrvUnix(),"\\","//"),IIf(!IsSrvUnix(),"\","/"))
+	InitSped()
+	::MSG := ""
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Parametros                                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If ::UserToken == "TOTVS" .And. Select("SPED000")<>0
+		If !Empty(::ID_ENT)
+			dbSelectArea("SPED001")
+			dbSetOrder(1)
+			If !MsSeek(::ID_ENT)
+				SetSoapFault("TOTVS SPED Services","001 - Codigo de entidade invalido")
+				lRetorno := .F.
+			EndIf
+		Else
+			SetSoapFault("TOTVS SPED Services","002 - Codigo de entidade em branco")
+			lRetorno := .F.
+		EndIf
+		If Empty(::Certificate) .Or. Empty(::PrivateKey) .Or. Empty(::Password)
+			SetSoapFault("TOTVS SPED Services","003 - Certificado, Privatekey ou Senha em branco não permitido")
+			lRetorno := .F.	
+		EndIf
+		If lRetorno
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Desliga o HSM                                                           ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			SpedPutMV("MV_HSM",::ID_ENT,"0")
+			WritePProString('SSLConfigure','HSM' ,'0', GetAdv97())
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Extração dos certificados                                               ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			MakeDir(cDir)			
+			If PadR(GetBuild(),12) <  "7.00.080307A"
+				cArqCert := cDir+::ID_ENT+"_cert.pem"
+				nHandle := FCreate(cArqCert)
+				If nHandle > 0
+					If fWrite(nHandle,::Certificate) == Len(::Certificate) .And. FClose(nHandle)
+						cCert := MemoRead(cArqCert)
+						If "CERTIFICATE"$cCert
+						    ::MSG +="Certificado - Ok"+CRLF
+						Else
+							::MSG +="Certificado - não reconhecido"+CRLF
+							lBreak := .T.
+						EndIf
+						cArqCert := cDir+::ID_ENT+"_key.pem"
+						nHandle := FCreate(cArqCert)
+						If nHandle > 0
+							If fWrite(nHandle,::PrivateKey) == Len(::PrivateKey) .And. FClose(nHandle)
+								cCert := MemoRead(cArqCert)
+								If "PRIVATE KEY"$cCert
+								    ::MSG +="PrivateKey - Ok"+CRLF
+								Else
+									::MSG +="PrivateKey - não reconhecido"+CRLF
+									lBreak := .T.
+								EndIf
+								Begin Transaction
+								If !lBreak								
+									RecLock("SPED001")
+									SPED001->PASSCERT := Encode64(::PassWord)
+									MsUnLock()
+								EndIf
+								//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+								//³Assina as Nfe pendentes                                                 ³
+								//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+								Begin Sequence
+									If !lBreak
+										cXml := '<NFe xmlns="http://www.portalfiscal.inf.br/nfe">'
+										cXml += '<infNFe versao="0.00" Id="NFe00000000001111111111222222222233333333331234">'
+										cXml += '<ide>teste</ide>'
+										cXml += '</infNFe>'
+										cXml += "</NFe>"
+										cNfe := SpedSignXML(cXml,"infNFe","Id",Self:ID_ENT)
+										If !Empty(cNfe)
+											::MSG +="Password - Ok"+CRLF
+											::MSG += CRLF
+										Else
+											Break
+										EndIf
+									EndIf
+									If lBreak
+										Break
+									EndIf
+	                                cCert := MemoRead(cDir+::ID_ENT+"_cert.pem")
+	                                nAt1 := At(Upper("friendlyName:"),Upper(cCert))
+	                                If nAt1 <> 0
+		                                nAt2 := At(Chr(10),SubStr(cCert,nAt1))
+										::MSG += "Certificado registrado para a empresa: "+SubStr(cCert,nAt1+14,nAt2-15)
+									EndIf
+									If !lBreak
+										If Empty(GetPvProfString('SSLConfigure','CertificateClient','', GetAdv97()))
+											WritePProString('SSLConfigure','HSM','0', GetAdv97())
+											WritePProString('SSLConfigure','SSL2','0', GetAdv97())
+											WritePProString('SSLConfigure','SSL3','1', GetAdv97())
+											WritePProString('SSLConfigure','TLS1','1', GetAdv97())
+											WritePProString('SSLConfigure','BUGS','1', GetAdv97())
+											WritePProString('SSLConfigure','CertificateClient',cRootPath+SubStr(cDir,2)+::ID_ENT+"_cert.pem", GetAdv97())
+											WritePProString('SSLConfigure','KeyClient',cRootPath+SubStr(cDir,2)+::ID_ENT+"_key.pem", GetAdv97())
+											//WritePProString('SSLConfigure','PassPhrase',::PassWord, GetAdv97())
+										EndIf
+									EndIf
+								Recover
+									FErase(cDir+::ID_ENT+"_cert.pem")
+									FErase(cDir+::ID_ENT+"_key.pem")
+									::MSG +="Password - Invalida"+CRLF
+									::MSG += CRLF
+									::MSG += "Certificado não registrado!!!"
+									lRetorno := .F.
+									SetSoapFault("TOTVS SPED Services",::MSG)
+								End Sequence
+								End Transaction
+							Else
+								lRetorno := .F.	
+					        EndIf
+						Else
+							lRetorno := .F.		
+						EndIf	
+					Else
+						lRetorno := .F.	
+					EndIf
+				Else
+					lRetorno := .F.		
+				EndIf
+			Else
+				Begin Sequence
+				FErase(cDir+::ID_ENT+"_pem.pem")
+				FErase(cDir+::ID_ENT+"_all.pem")
+				FErase(cDir+::ID_ENT+"_ca.pem")
+				FErase(cDir+::ID_ENT+"_cert.pem")
+				FErase(cDir+::ID_ENT+"_key.pem")
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³Grava o Certificado pem recebido                                        ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ	
+				cArqPEM := cDir+::ID_ENT+"_all.pem"
+				nHandle := FCreate(cArqPEM)
+				If !nHandle > 0
+					Break
+				EndIf
+				If !(fWrite(nHandle,::Certificate) == Len(::Certificate) .And. FClose(nHandle))
+					Break
+				EndIf
+				cCert := MemoRead(cArqPEM)
+				If "CERTIFICATE"$cCert
+				    ::MSG +="Certificado - Ok"+CRLF
+				Else
+					::MSG +="Certificado - não reconhecido"+CRLF
+					lBreak := .T.
+				EndIf
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³Analisa ha presença das autoridades certificadoras                      ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				cNewFunc  := "PEMGETCERT"
+				aInfo := &cNewFunc.(cArqPEM,::PassWord)
+				If Len(aInfo) > 1
+				    ::MSG +="Autoridades certificadoras convertidas para formato apache - Ok"+CRLF
+				    If !Empty(aInfo[1][06])
+					    MemoWrite(cDir+::ID_ENT+"_cert.pem",aInfo[1][06])
+						cCert := MemoRead(cDir+::ID_ENT+"_cert.pem")
+					Else
+						MemoWrite(cDir+::ID_ENT+"_cert.pem",cCert)
+						cCert := MemoRead(cDir+::ID_ENT+"_cert.pem")
+					EndIf
+					If "CERTIFICATE"$cCert
+					    ::MSG +="Certificado convertido para formato apache - Ok"+CRLF
+					Else
+						::MSG +="Certificado não convertido"+CRLF
+						Break
+					EndIf
+				Else
+					::MSG +="Autoridades certificadoras ausentes ou senha inválida"+CRLF
+					Break
+				EndIf
+				cArqCert := cDir+::ID_ENT+"_key.pem"
+				nHandle := FCreate(cArqCert)
+				If !nHandle > 0
+					Break
+				EndIf
+				If !(fWrite(nHandle,::PrivateKey) == Len(::PrivateKey) .And. FClose(nHandle))
+					Break
+				EndIf
+				cCert := MemoRead(cArqCert)
+				If "PRIVATE KEY"$cCert
+				    ::MSG +="PrivateKey convertida para formato apache - Ok"+CRLF
+				Else
+					::MSG +="PrivateKey - não reconhecido"+CRLF
+					Break
+				EndIf
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³Assina as Nfe pendentes                                                 ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				cXml := '<NFe xmlns="http://www.portalfiscal.inf.br/nfe">'
+				cXml += '<infNFe versao="0.00" Id="NFe00000000001111111111222222222233333333331234">'
+				cXml += '<ide>teste</ide>'
+				cXml += '</infNFe>'
+				cXml += "</NFe>"
+				cNfe := SpedSignXML(cXml,"infNFe","Id",Self:ID_ENT)
+				If !Empty(cNfe)
+					::MSG +="Password - Ok"+CRLF
+					::MSG += CRLF
+				Else
+					Break
+				EndIf
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³Analisa as informacoes do certificado digital                           ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				cNewFunc := "PemInfo"
+				aInfo := &cNewFunc.(cArqPEM,::PassWord)
+				If Len(aInfo) > 0 .And. Len(aInfo[1])>=5
+					dDataIni := Ctod(SubStr(aInfo[1][4],5,2)+"/"+SubStr(aInfo[1][4],3,2)+"/20"+SubStr(aInfo[1][4],1,2))
+					dDataFim := Ctod(SubStr(aInfo[1][5],5,2)+"/"+SubStr(aInfo[1][5],3,2)+"/20"+SubStr(aInfo[1][5],1,2))
+					cRegistro:= aInfo[1][2]
+					If At("/CN=",cRegistro) >= 0
+						cRegistro:= SubStr(cRegistro,At("/CN=",cRegistro)+4)
+					EndIf
+					::MSG +="Registrado para: "+cRegistro+CRLF
+					::MSG +="Validade de "+Dtoc(dDataIni)+" ate "+Dtoc(dDataFim)+CRLF
+					If dDataFim < Date()
+						::MSG +="Certificado vencido"+CRLF
+						Break
+					EndIf
+				EndIf				
+				If !lBreak
+					RecLock("SPED001")
+					SPED001->PASSCERT := Encode64(::PassWord)
+					MsUnLock()
+					If GetPvProfString('SSLConfigure','CertificateClient',cRootPath+SubStr(cDir,2)+::ID_ENT+"_all.pem", GetAdv97()) == cRootPath+SubStr(cDir,2)+::ID_ENT+"_all.pem"
+						WritePProString('SSLConfigure','HSM','0', GetAdv97())
+						WritePProString('SSLConfigure','SSL2','0', GetAdv97())
+						WritePProString('SSLConfigure','SSL3','1', GetAdv97())
+						WritePProString('SSLConfigure','TLS1','1', GetAdv97())
+						WritePProString('SSLConfigure','BUGS','1', GetAdv97())
+						WritePProString('SSLConfigure','CertificateClient',cRootPath+SubStr(cDir,2)+::ID_ENT+"_all.pem", GetAdv97())
+						WritePProString('SSLConfigure','KeyClient',cRootPath+SubStr(cDir,2)+::ID_ENT+"_key.pem", GetAdv97())
+						//WritePProString('SSLConfigure','PassPhrase',::PassWord, GetAdv97())
+						cNewFunc := "HttpSSLClient"
+						&cNewFunc.(0,1,1,::PassWord,cDir+::ID_ENT+"_all.pem",cDir+::ID_ENT+"_key.pem")
+					EndIf
+				EndIf
+				Recover
+					FErase(cDir+::ID_ENT+"_pem.pem")
+					FErase(cDir+::ID_ENT+"_all.pem")
+					FErase(cDir+::ID_ENT+"_ca.pem")
+					FErase(cDir+::ID_ENT+"_cert.pem")
+					FErase(cDir+::ID_ENT+"_key.pem")
+					If Empty(cArqPem)
+						::MSG := "Falha de gravação. Verifique os direitos de acesso ao diretório do Totvs Services"
+					Else
+						::MSG += CRLF
+						::MSG += "Certificado não registrado!!!"
+					EndIf
+					lRetorno := .F.
+					SetSoapFault("TOTVS SPED Services",::MSG)
+				End Sequence
+			EndIf
+		EndIf
+	Else
+		If Select("SPED000")==0
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+		Else	
+			SetSoapFault("TOTVS SPED Services","Invalid Token")
+		EndIf
+		lRetorno := .F.
+	EndIf
+	ErrorBlock(bErro)	
+	Return(FinishSped(lRetorno))
+	
+WSMETHOD CfgCertificatePfx WSRECEIVE USERTOKEN,ID_ENT,Certificate,PASSWORD WSSEND MSG WSSERVICE SPEDCFGNFE
+
+	Local aInfo     := {}
+	Local cArqPFX   := ""
+	Local cArqCert  := ""
+	Local cLocalFile:= ""
+	Local cExtFile  := ""
+	Local cRegistro := ""
+	Local nHandle   := 0
+	Local nAt1      := 0
+	Local nAt2      := 0	
+	Local cDir      := IIf(IsSrvUnix(),"/certs/", "\certs\")
+	Local cXml      := ""
+	Local cCert     := ""
+	Local cCertAll  := ""	
+	Local cRootPath := StrTran(GetSrvProfString("RootPath","")+IIf(!IsSrvUnix(),"\","/"),IIf(!IsSrvUnix(),"\\","//"),IIf(!IsSrvUnix(),"\","/"))
+	Local cErro     := ""
+	Local dDataIni  := Date()
+	Local dDataFim  := Date()
+	Local lBreak    := .F.
+	Local lRetorno  := .T.	
+	Local bErro     := ErrorBlock({|e| lBreak := .T. })	
+	Local cNewFunc  := ""
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa o ambiente                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	cRootPath  := StrTran(cRootPath,IIf(!IsSrvUnix(),"\\","//"),IIf(!IsSrvUnix(),"\","/"))
+	InitSped()
+	::MSG := ""
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Parametros                                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If ::UserToken == "TOTVS" .And. Select("SPED000")<>0
+		If !Empty(::ID_ENT)
+			dbSelectArea("SPED001")
+			dbSetOrder(1)
+			If !MsSeek(::ID_ENT)
+				SetSoapFault("TOTVS SPED Services","001 - Codigo de entidade invalido")
+				lRetorno := .F.
+			EndIf
+		Else
+			SetSoapFault("TOTVS SPED Services","002 - Codigo de entidade em branco")
+			lRetorno := .F.
+		EndIf
+		If Empty(::Certificate) .Or. Empty(::Password)
+			SetSoapFault("TOTVS SPED Services","003 - Certificado, Privatekey ou Senha em branco não permitido")
+			lRetorno := .F.
+		EndIf
+		If PadR(GetBuild(),12) <  "7.00.080307A" .And. IsSrvUnix()
+			SetSoapFault("TOTVS SPED Services","004 - PFX não aceito em servidor Linux para esta versão de binário")
+			lRetorno := .F.	
+		EndIf
+		If lRetorno
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Desliga o HSM                                                           ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			SpedPutMV("MV_HSM",::ID_ENT,"0")
+			WritePProString('SSLConfigure','HSM' ,'0', GetAdv97())		
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Extração dos certificados                                               ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			MakeDir(cDir)
+			If PadR(GetBuild(),12) <  "7.00.080307A"
+				Begin Sequence
+					cArqPFX := cDir+::ID_ENT+"_pfx.pfx"
+					nHandle := FCreate(cArqPFX)
+					If !nHandle > 0
+						Break					
+					EndIf
+					If !(fWrite(nHandle,::Certificate) == Len(::Certificate) .And. FClose(nHandle))
+						Break
+					EndIf
+					::MSG +="Certificado (PFX)- Ok"+CRLF
+					cNewFunc := "PFXCa2PEM"
+					If !Empty(&cNewFunc.(cArqPFX,::PassWord))
+						Break
+					EndIf
+					cArqCert := cDir+::ID_ENT+"_ca.pem"
+					FErase(cArqCert)
+					FRename(cArqPFX+"_ca.pem",cArqCert)
+					cCert    := MemoRead(cArqCert)
+					If Len(cCert)>0
+					    ::MSG +="Autoridades certificadoras convertidas para formato apache - Ok"+CRLF
+					Else
+						::MSG +="Autoridades certificadoras ausentes ou senha inválida"+CRLF
+					EndIf				
+					cNewFunc := "PFXCert2PEM"
+					If !Empty(&cNewFunc.(cArqPFX,::PassWord))
+						Break
+					EndIf
+					cArqCert := cDir+::ID_ENT+"_cert.pem"
+					FErase(cArqCert)
+					FRename(cArqPFX+"_cert.pem",cArqCert)
+					cCert := MemoRead(cArqCert)			    
+					If "CERTIFICATE"$cCert
+					    ::MSG +="Certificado convertido para formato apache - Ok"+CRLF
+					Else
+						::MSG +="Certificado não convertido"+CRLF
+						Break
+					EndIf
+					cNewFunc := "PFXKey2PEM"
+					If !Empty(&cNewFunc.(cArqPFX,::PassWord))
+						Break
+					EndIf
+					cArqCert := cDir+::ID_ENT+"_key.pem"
+					FErase(cArqCert)
+					FRename(cArqPFX+"_key.pem",cArqCert)
+					cCert    := MemoRead(cArqCert)
+					If "PRIVATE KEY"$cCert
+					    ::MSG +="PrivateKey convertida para formato apache - Ok"+CRLF
+					Else
+						::MSG +="PrivateKey - não reconhecido"+CRLF
+						Break
+					EndIf
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³Assina as Nfe pendentes                                                 ³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					cXml := '<NFe xmlns="http://www.portalfiscal.inf.br/nfe">'
+					cXml += '<infNFe versao="0.00" Id="NFe00000000001111111111222222222233333333331234">'
+					cXml += '<ide>teste</ide>'
+					cXml += '</infNFe>'
+					cXml += "</NFe>"
+					cNfe := SpedSignXML(cXml,"infNFe","Id",Self:ID_ENT)
+					If !Empty(cNfe)
+						::MSG +="Password - Ok"+CRLF
+						::MSG += CRLF
+					Else
+						Break
+					EndIf
+	                cCert := MemoRead(cDir+::ID_ENT+"_cert.pem")
+	                nAt1 := At(Upper("friendlyName:"),Upper(cCert))
+	                If nAt1 <> 0
+		                nAt2 := At(Chr(10),SubStr(cCert,nAt1))
+						::MSG += "Certificado registrado para a empresa: "+SubStr(cCert,nAt1+14,nAt2-15)
+					EndIf
+					If !lBreak
+						Begin Transaction
+							RecLock("SPED001")
+							SPED001->PASSCERT := Encode64(::PassWord)
+							MsUnLock()
+						End Transaction
+					EndIf
+					If !lBreak
+						If Empty(GetPvProfString('SSLConfigure','CertificateClient','', GetAdv97()))
+							WritePProString('SSLConfigure','HSM' ,'0', GetAdv97())
+							WritePProString('SSLConfigure','SSL2','0', GetAdv97())
+							WritePProString('SSLConfigure','SSL3','1', GetAdv97())
+							WritePProString('SSLConfigure','TLS1','1', GetAdv97())
+							WritePProString('SSLConfigure','BUGS','1', GetAdv97())
+							WritePProString('SSLConfigure','CertificateClient',cRootPath+SubStr(cDir,2)+::ID_ENT+"_cert.pem", GetAdv97())
+							WritePProString('SSLConfigure','KeyClient',cRootPath+SubStr(cDir,2)+::ID_ENT+"_key.pem", GetAdv97())
+							//WritePProString('SSLConfigure','PassPhrase',::PassWord, GetAdv97())
+						EndIf
+					EndIf				
+				Recover
+					FErase(cDir+::ID_ENT+"_cert.pem")
+					FErase(cDir+::ID_ENT+"_key.pem")
+					If Empty(cArqPfx)
+						::MSG := "Falha de gravação. Verifique os direitos de acesso ao diretório do Totvs Services"
+					Else
+						::MSG +="Password - Invalida"+CRLF
+						::MSG += CRLF
+						::MSG += "Certificado não registrado!!!"
+					EndIf
+					lRetorno := .F.
+					SetSoapFault("TOTVS SPED Services",::MSG)
+				End Sequence
+			Else
+				Begin Sequence
+					FErase(cDir+::ID_ENT+"_pfx.pfx")
+					FErase(cDir+::ID_ENT+"_all.pem")
+					FErase(cDir+::ID_ENT+"_ca.pem")
+					FErase(cDir+::ID_ENT+"_cert.pem")
+					FErase(cDir+::ID_ENT+"_key.pem")
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³Grava o Certificado pfx recebido                                        ³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ					
+					cArqPFX := cDir+::ID_ENT+"_pfx.pfx"
+					nHandle := FCreate(cArqPFX)
+					If !nHandle > 0
+						Break
+					EndIf
+					If !(fWrite(nHandle,::Certificate) == Len(::Certificate) .And. FClose(nHandle))
+						Break
+					EndIf
+					::MSG +="Certificado (PFX)- Ok"+CRLF
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³Analisa ha presença das autoridades certificadoras                      ³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					cArqCert   := cDir+::ID_ENT+"_ca.pem"
+					cNewFunc := "PFXCa2PEM"
+					&cNewFunc.(cArqPFX,cArqCert,@cErro,::PassWord)
+					If !Empty(cErro)
+						::MSG += cErro
+						Break
+					EndIf
+					cCert := MemoRead(cArqCert)
+					cCertAll := cCert
+					If Len(cCert)>0
+					    ::MSG +="Autoridades certificadoras convertidas para formato apache - Ok"+CRLF
+					Else
+						::MSG +="Autoridades certificadoras ausentes ou senha inválida"+CRLF
+						Break
+					EndIf
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³Extrai o certificado digital                                            ³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					cArqCert   := cDir+::ID_ENT+"_cert.pem"
+					cNewFunc := "PFXCert2PEM"
+					&cNewFunc.(cArqPFX,cArqCert,@cErro,::PassWord)					
+					If !Empty(cErro)
+						::MSG += cErro
+						Break
+					EndIf
+					cCert    := MemoRead(cArqCert)
+					cCertAll := cCert + cCertAll
+					If "CERTIFICATE"$cCert
+					    ::MSG +="Certificado convertido para formato apache - Ok"+CRLF
+					Else
+						::MSG +="Certificado não convertido"+CRLF
+						Break
+					EndIf
+					MemoWrite(cDir+::ID_ENT+"_all.pem",cCertAll)
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³Extrai a Private Key                                                    ³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					cArqCert   := cDir+::ID_ENT+"_key.pem"
+					cNewFunc := "PFXKey2PEM"
+					&cNewFunc.(cArqPFX,cArqCert,@cErro,::PassWord)
+					If !Empty(cErro)
+						Break
+					EndIf
+					cCert    := MemoRead(cArqCert)
+					If "PRIVATE KEY"$cCert
+					    ::MSG +="PrivateKey convertida para formato apache - Ok"+CRLF
+					Else
+						::MSG +="PrivateKey - não reconhecido"+CRLF
+						Break
+					EndIf
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³Assina as Nfe pendentes                                                 ³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					cXml := '<NFe xmlns="http://www.portalfiscal.inf.br/nfe">'
+					cXml += '<infNFe versao="0.00" Id="NFe00000000001111111111222222222233333333331234">'
+					cXml += '<ide>teste</ide>'
+					cXml += '</infNFe>'
+					cXml += "</NFe>"
+					cNfe := SpedSignXML(cXml,"infNFe","Id",Self:ID_ENT)
+					If !Empty(cNfe)
+						::MSG +="Password - Ok"+CRLF
+						::MSG += CRLF
+					Else
+						Break
+					EndIf
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³Analisa as informacoes do certificado digital                           ³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					cNewFunc  := "PfxInfo"
+					aInfo := &cNewFunc.(cArqPFX,::PassWord)
+					If Len(aInfo) > 0 .And. Len(aInfo[1])>=5
+						dDataIni := Ctod(SubStr(aInfo[1][4],5,2)+"/"+SubStr(aInfo[1][4],3,2)+"/20"+SubStr(aInfo[1][4],1,2))
+						dDataFim := Ctod(SubStr(aInfo[1][5],5,2)+"/"+SubStr(aInfo[1][5],3,2)+"/20"+SubStr(aInfo[1][5],1,2))
+						cRegistro:= aInfo[1][2]
+						If At("/CN=",cRegistro) >= 0
+							cRegistro:= SubStr(cRegistro,At("/CN=",cRegistro)+4)
+						EndIf
+						::MSG +="Registrado para: "+cRegistro+CRLF
+						::MSG +="Validade de "+Dtoc(dDataIni)+" ate "+Dtoc(dDataFim)+CRLF
+						If dDataFim < Date()
+							::MSG +="Certificado vencido"+CRLF
+							Break
+						EndIf
+					EndIf
+					If !lBreak
+						RecLock("SPED001")
+						SPED001->PASSCERT := Encode64(::PassWord)
+						MsUnLock()
+						If GetPvProfString('SSLConfigure','CertificateClient',cRootPath+SubStr(cDir,2)+::ID_ENT+"_all.pem", GetAdv97()) == cRootPath+SubStr(cDir,2)+::ID_ENT+"_all.pem"
+							WritePProString('SSLConfigure','HSM' ,'0', GetAdv97())
+							WritePProString('SSLConfigure','SSL2','0', GetAdv97())
+							WritePProString('SSLConfigure','SSL3','1', GetAdv97())
+							WritePProString('SSLConfigure','TLS1','1', GetAdv97())
+							WritePProString('SSLConfigure','BUGS','1', GetAdv97())
+							WritePProString('SSLConfigure','CertificateClient',cRootPath+SubStr(cDir,2)+::ID_ENT+"_all.pem", GetAdv97())
+							WritePProString('SSLConfigure','KeyClient',cRootPath+SubStr(cDir,2)+::ID_ENT+"_key.pem", GetAdv97())
+							//WritePProString('SSLConfigure','PassPhrase',::PassWord, GetAdv97())
+							cNewFunc := "HttpSSLClient"
+							&cNewFunc.(0,1,1,::PassWord,cDir+::ID_ENT+"_all.pem",cDir+::ID_ENT+"_key.pem")
+						EndIf
+					EndIf				
+				Recover
+					FErase(cDir+::ID_ENT+"_pem.pem")
+					FErase(cDir+::ID_ENT+"_all.pem")
+					FErase(cDir+::ID_ENT+"_ca.pem")
+					FErase(cDir+::ID_ENT+"_cert.pem")
+					FErase(cDir+::ID_ENT+"_key.pem")
+					If Empty(cArqPfx)
+						::MSG := "Falha de gravação. Verifique os direitos de acesso ao diretório do Totvs Services"
+					Else
+						::MSG += CRLF
+						::MSG += "Certificado não registrado!!!"
+					EndIf
+					lRetorno := .F.
+					SetSoapFault("TOTVS SPED Services",::MSG)
+				End Sequence
+			EndIf			
+		EndIf
+	Else
+		If Select("SPED000")==0
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+		Else	
+			SetSoapFault("TOTVS SPED Services","Invalid Token")
+		EndIf
+		lRetorno := .F.
+	EndIf
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Recupera a integridade da rotina                                        ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ	
+	FErase(cDir+::ID_ENT+"_pfx.pfx")
+	ErrorBlock(bErro)	
+	Return(FinishSped(lRetorno))
+
+WSMETHOD CfgHSM WSRECEIVE USERTOKEN,ID_ENT,Slot,Label,Module,PASSWORD WSSEND MSG WSSERVICE SPEDCFGNFE
+
+	Local aInfo     := {}
+	Local cRegistro := ""
+	Local cRootPath := StrTran(GetSrvProfString("RootPath","")+IIf(!IsSrvUnix(),"\","/"),IIf(!IsSrvUnix(),"\\","//"),IIf(!IsSrvUnix(),"\","/"))
+	Local nHandle   := 0
+	Local cDir      := IIf(IsSrvUnix(),"hsm/", "hsm\")
+	Local cXml      := ""
+	Local dDataIni  := Date()
+	Local dDataFim  := Date()
+	Local lBreak    := .F.
+	Local lRetorno  := .T.	
+	Local bErro     := ErrorBlock({|e| lBreak := .T. })	
+	Local cNewFunc  := ""
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa o ambiente                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	InitSped()	
+	cRootPath  := StrTran(cRootPath,IIf(!IsSrvUnix(),"\\","//"),IIf(!IsSrvUnix(),"\","/"))
+	::MSG := ""
+	::Slot := AllTrim(::Slot)
+	::Label := AllTrim(::Label)
+	::PassWord := AllTrim(::Password)
+	::Module := AllTrim(::Module)
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Parametros                                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If ::UserToken == "TOTVS" .And. Select("SPED000")<>0
+		If !Empty(::ID_ENT)
+			dbSelectArea("SPED001")
+			dbSetOrder(1)
+			If !MsSeek(::ID_ENT)
+				SetSoapFault("TOTVS SPED Services","001 - Codigo de entidade invalido")
+				lRetorno := .F.
+			EndIf
+		Else
+			SetSoapFault("TOTVS SPED Services","002 - Codigo de entidade em branco")
+			lRetorno := .F.
+		EndIf
+		If Empty(::Slot) .Or. Empty(::Label) .Or. Empty(::Password)
+			SetSoapFault("TOTVS SPED Services","003 - Slot, Label ou Senha em branco não permitido")
+			lRetorno := .F.
+		EndIf
+		If !File(cDir+IIf(!IsSrvUnix(),"\","/")+::Module) 
+			SetSoapFault("TOTVS SPED Services","004 - Não identificada o modulo de controle do HSM no diretório \hsm\")
+			lRetorno := .F.
+		EndIf
+		If !FindFunction("HsmInitialize")
+			SetSoapFault("TOTVS SPED Services","005 - A build do TotvsAppServer deve ser superior a 7.00.080806P - Nov 17 2008 - 16:57:38")
+			lRetorno := .F.			
+		EndIf
+		If lRetorno
+			Begin Sequence
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Atualiza as chaves do HSM                                               ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			WritePProString('SSLConfigure','HSM' ,'1', GetAdv97())
+			WritePProString('SSLConfigure','SSL2','0', GetAdv97())
+			WritePProString('SSLConfigure','SSL3','1', GetAdv97())
+			WritePProString('SSLConfigure','TLS1','1', GetAdv97())
+			WritePProString('SSLConfigure','BUGS','1', GetAdv97())
+			WritePProString('SSLConfigure','MODULE',cRootPath+cDir+::Module, GetAdv97())
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Verifica a comunicacao com o HSM                                        ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ			
+			cNewFunc := "HttpSSLClient"
+			&cNewFunc.(0,1,1,AllTrim(::Password),"slot_"+::Slot+"-label_"+::Label,"slot_"+::Slot+"-label_"+::Label,1)
+			cNewFunc := "HsmInitialize('"+cRootPath+cDir+::Module+"')"
+			&(cNewFunc)
+						
+			::MSG +="HSM Connect - Ok"+CRLF
+			::MSG += CRLF
+
+			cNewFunc := "HSMGETCERTFILE"
+			FErase(cDir+::Label+".pem")			
+			&cNewFunc.("slot_"+::Slot+"-label_"+::Label,cDir+::Label+".pem")
+			If File(cDir+::Label+".pem")
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³Analisa as informacoes do certificado digital                           ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				cNewFunc := "PemInfo"
+				aInfo := &cNewFunc.(cDir+::Label+".pem",::PassWord)
+				If Len(aInfo) > 0 .And. Len(aInfo[1])>=5
+					dDataIni := Ctod(SubStr(aInfo[1][4],5,2)+"/"+SubStr(aInfo[1][4],3,2)+"/20"+SubStr(aInfo[1][4],1,2))
+					dDataFim := Ctod(SubStr(aInfo[1][5],5,2)+"/"+SubStr(aInfo[1][5],3,2)+"/20"+SubStr(aInfo[1][5],1,2))
+					cRegistro:= aInfo[1][2]
+					If At("/CN=",cRegistro) >= 0
+						cRegistro:= SubStr(cRegistro,At("/CN=",cRegistro)+4)
+					EndIf
+					::MSG +="Registrado para: "+cRegistro+CRLF
+					::MSG +="Validade de "+Dtoc(dDataIni)+" ate "+Dtoc(dDataFim)+CRLF
+					If dDataFim < Date()
+						::MSG +="Certificado vencido"+CRLF
+						Break
+					EndIf
+				EndIf			
+			Else
+				Break				
+			EndIf
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Assina as Nfe pendentes                                                 ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			cXml := '<NFe xmlns="http://www.portalfiscal.inf.br/nfe">'
+			cXml += '<infNFe versao="0.00" Id="NFe00000000001111111111222222222233333333331234">'
+			cXml += '<ide>teste</ide>'
+			cXml += '</infNFe>'
+			cXml += "</NFe>"
+			cNfe := SpedSignXML(cXml,"infNFe","Id",Self:ID_ENT)
+			If !Empty(cNfe)
+				::MSG +="Teste de assinatura - Ok"+CRLF
+				::MSG += CRLF
+			Else
+				Break
+			EndIf
+			If !lBreak
+				RecLock("SPED001")
+				SPED001->PASSCERT := Encode64(::PassWord)
+				MsUnLock()
+				
+				SpedPutMV("MV_HSM",::ID_ENT,"1")
+				SpedPutMV("MV_HSMLABE",::ID_ENT,::Label)
+				SpedPutMV("MV_HSMSLOT",::ID_ENT,::Slot)				
+				
+				WritePProString('SSLConfigure','CertificateClient',"slot_"+SpedGetMv("MV_HSMSLOT",SPED001->ID_ENT)+"-label_"+SpedGetMv("MV_HSMLABE",SPED001->ID_ENT),GetAdv97())
+				WritePProString('SSLConfigure','KeyClient',"slot_"+SpedGetMv("MV_HSMSLOT",SPED001->ID_ENT)+"-label_"+SpedGetMv("MV_HSMLABE",SPED001->ID_ENT), GetAdv97())					
+				
+				cNewFunc := "HttpSSLClient"
+				&cNewFunc.(0,1,1,Decode64(AllTrim(SPED001->PASSCERT)),"slot_"+SpedGetMv("MV_HSMSLOT",SPED001->ID_ENT)+"-label_"+SpedGetMv("MV_HSMLABE",SPED001->ID_ENT),"slot_"+SpedGetMv("MV_HSMSLOT",SPED001->ID_ENT)+"-label_"+SpedGetMv("MV_HSMLABE",SPED001->ID_ENT),1)
+			EndIf				
+			Recover
+				If Empty(cDir+::Label+".pem")
+					::MSG := "Falha de gravação. Verifique os direitos de acesso ao diretório do Totvs Services"
+				Else
+					::MSG += CRLF
+					::MSG += "Certificado não registrado!!!"
+				EndIf
+				lRetorno := .F.
+				SetSoapFault("TOTVS SPED Services",::MSG)
+				
+				WritePProString('SSLConfigure','HSM'   ,'0', GetAdv97())
+				WritePProString('SSLConfigure','SSL2'  ,'0', GetAdv97())
+				WritePProString('SSLConfigure','SSL3'  ,'1', GetAdv97())
+				WritePProString('SSLConfigure','TLS1'  ,'1', GetAdv97())
+				WritePProString('SSLConfigure','BUGS'  ,'1', GetAdv97())
+				WritePProString('SSLConfigure','MODULE','',GetAdv97())
+				
+				SpedPutMV("MV_HSM",::ID_ENT,"0")
+				SpedPutMV("MV_HSMLABE",::ID_ENT,"")
+				SpedPutMV("MV_HSMSLOT",::ID_ENT,"")
+				
+			End Sequence
+		EndIf
+	Else
+		If Select("SPED000")==0
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+		Else	
+			SetSoapFault("TOTVS SPED Services","Invalid Token")
+		EndIf
+		lRetorno := .F.
+	EndIf
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Recupera a integridade da rotina                                        ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ	
+	ErrorBlock(bErro)	
+	Return(FinishSped(lRetorno))
+	
+WSMETHOD CfgAmbiente WSRECEIVE USERTOKEN,ID_ENT,Ambiente WSSEND MSG WSSERVICE SPEDCFGNFE
+
+	Local lRetorno := .T.
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa o ambiente                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	InitSped()
+	::MSG := ""
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Parametros                                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If ::UserToken == "TOTVS" .And. Select("SPED000")<>0
+		If !Empty(::ID_ENT)
+			dbSelectArea("SPED001")
+			dbSetOrder(1)
+			If !MsSeek(::ID_ENT)
+				SetSoapFault("TOTVS SPED Services","001 - Codigo de entidade invalido")
+				lRetorno := .F.
+			EndIf
+		Else
+			SetSoapFault("TOTVS SPED Services","002 - Codigo de entidade em branco")
+			lRetorno := .F.
+		EndIf
+		If !(::Ambiente >= 0 .And. ::Ambiente <= 2)
+			SetSoapFault("TOTVS SPED Services","003 - Codigo do ambiente inválido. Valores válidos: 0-Configuração,1-Produção,2-Homologação")
+			lRetorno := .F.	
+		EndIf
+		If lRetorno .And. (::Ambiente >= 1 .And. ::Ambiente <= 2)
+			SpedPutMV("MV_AMBIENT",::ID_ENT,Str(::Ambiente,1))
+		EndIf
+		::MSG := IIf(SpedGetMv("MV_AMBIENT",::ID_ENT)=="1","1-Produção","2-Homologação")
+	Else
+		If Select("SPED000")==0
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+		Else	
+			SetSoapFault("TOTVS SPED Services","Invalid Token")
+		EndIf
+		lRetorno := .F.
+	EndIf
+	Return(FinishSped(lRetorno))
+	
+WSMETHOD CfgAmbienteEx WSRECEIVE USERTOKEN,ID_ENT,Ambiente WSSEND Valor WSSERVICE SPEDCFGNFE
+
+	Local lRetorno := .T.
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa o ambiente                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	InitSped()
+	::Valor := 0
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Parametros                                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If ::UserToken == "TOTVS" .And. Select("SPED000")<>0
+		If !Empty(::ID_ENT)
+			dbSelectArea("SPED001")
+			dbSetOrder(1)
+			If !MsSeek(::ID_ENT)
+				SetSoapFault("TOTVS SPED Services","001 - Codigo de entidade invalido")
+				lRetorno := .F.
+			EndIf
+		Else
+			SetSoapFault("TOTVS SPED Services","002 - Codigo de entidade em branco")
+			lRetorno := .F.
+		EndIf
+		If !(::Ambiente >= 0 .And. ::Ambiente <= 2)
+			SetSoapFault("TOTVS SPED Services","003 - Codigo do ambiente inválido. Valores válidos: 0-Configuração,1-Produção,2-Homologação")
+			lRetorno := .F.	
+		EndIf
+		If lRetorno .And. (::Ambiente >= 1 .And. ::Ambiente <= 2)
+			SpedPutMV("MV_AMBIENT",::ID_ENT,Str(::Ambiente,1))
+		EndIf
+		::Valor := Val(SpedGetMv("MV_AMBIENT",::ID_ENT))
+	Else
+		If Select("SPED000")==0
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+		Else	
+			SetSoapFault("TOTVS SPED Services","Invalid Token")
+		EndIf
+		lRetorno := .F.
+	EndIf
+	Return(FinishSped(lRetorno))	
+	
+WSMETHOD CfgModalidade WSRECEIVE USERTOKEN,ID_ENT,Modalidade WSSEND MSG WSSERVICE SPEDCFGNFE
+	
+	Local lRetorno := .T.
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa o ambiente                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	InitSped()
+	::MSG := ""
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Parametros                                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If ::UserToken == "TOTVS" .And. Select("SPED000")<>0
+		If !Empty(::ID_ENT)
+			dbSelectArea("SPED001")
+			dbSetOrder(1)
+			If !MsSeek(::ID_ENT)
+				SetSoapFault("TOTVS SPED Services","001 - Codigo de entidade invalido")
+				lRetorno := .F.
+			EndIf
+		Else
+			SetSoapFault("TOTVS SPED Services","002 - Codigo de entidade em branco")
+			lRetorno := .F.
+		EndIf
+		If !(::Modalidade >= 0 .And. ::Modalidade <= 5)
+			SetSoapFault("TOTVS SPED Services","003 - Codigo da modalidade inválido. Valores válidos: 0-Configuração,1-Normal,2-Contingência off-line,3-Contingência SCAN,4-Ambiente Nacional,5-Contingência DPEC")
+			lRetorno := .F.	
+		EndIf
+		If lRetorno .And. (::Modalidade >= 1 .And. ::Modalidade <= 5)
+			SpedPutMV("MV_MODALID",::ID_ENT,Str(::Modalidade,1))
+		EndIf
+		Do Case
+			Case SpedGetMv("MV_MODALID",::ID_ENT)=="1"
+				::MSG := "1-Normal"
+			Case SpedGetMv("MV_MODALID",::ID_ENT)=="2"
+				::MSG := "2-Contingência off-line"
+			Case SpedGetMv("MV_MODALID",::ID_ENT)=="3"							
+				::MSG := "3-Contingência SCAN"			
+			Case SpedGetMv("MV_MODALID",::ID_ENT)=="4"				
+				::MSG := "4-Ambiente Nacional"
+			OtherWise
+				::MSG := "5-Contingência DPEC"
+		EndCase
+	Else
+		If Select("SPED000")==0
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+		Else	
+			SetSoapFault("TOTVS SPED Services","Invalid Token")
+		EndIf
+		lRetorno := .F.
+	EndIf
+	Return(FinishSped(lRetorno))
+	
+WSMETHOD CfgModalidadeEx WSRECEIVE USERTOKEN,ID_ENT,Modalidade WSSEND Valor WSSERVICE SPEDCFGNFE
+	
+	Local lRetorno := .T.
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa o ambiente                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	InitSped()
+	::Valor := 0
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Parametros                                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If ::UserToken == "TOTVS" .And. Select("SPED000")<>0
+		If !Empty(::ID_ENT)
+			dbSelectArea("SPED001")
+			dbSetOrder(1)
+			If !MsSeek(::ID_ENT)
+				SetSoapFault("TOTVS SPED Services","001 - Codigo de entidade invalido")
+				lRetorno := .F.
+			EndIf
+		Else
+			SetSoapFault("TOTVS SPED Services","002 - Codigo de entidade em branco")
+			lRetorno := .F.
+		EndIf
+		If !(::Modalidade >= 0 .And. ::Modalidade <= 5)
+			SetSoapFault("TOTVS SPED Services","003 - Codigo da modalidade inválido. Valores válidos: 0-Configuração,1-Normal,2-Contingência off-line,3-Contingência SCAN,4-Ambiente Nacional,5-Contingência DPEC")
+			lRetorno := .F.	
+		EndIf
+		If lRetorno .And. (::Modalidade >= 1 .And. ::Modalidade <= 5)
+			SpedPutMV("MV_MODALID",::ID_ENT,Str(::Modalidade,1))
+		EndIf
+		::Valor := Val(SpedGetMv("MV_MODALID",::ID_ENT))
+	Else
+		If Select("SPED000")==0
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+		Else	
+			SetSoapFault("TOTVS SPED Services","Invalid Token")
+		EndIf
+		lRetorno := .F.
+	EndIf
+	Return(FinishSped(lRetorno))	
+
+WSMETHOD CfgVersao WSRECEIVE USERTOKEN,ID_ENT,Versao WSSEND VersoesNFe WSSERVICE SPEDCFGNFE
+
+	Local lRetorno := .T.
+	Local aVersao  := {}
+	Local nX       := 0
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa o ambiente                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	aadd(aVersao,"9.99")
+	aadd(aVersao,"1.07")
+	aadd(aVersao,"1.10")
+	aadd(aVersao,"1.11")
+	aadd(aVersao,"1.12")	
+	::VersoesNfe := ""
+	If Empty(::Versao)
+		For nX := 1 To Len(aVersao)
+			::VersoesNfe := aVersao[nX]+"|"
+		Next nX
+	EndIf
+	InitSped()
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Parametros                                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If ::UserToken == "TOTVS" .And. Select("SPED000")<>0
+		If !Empty(::ID_ENT)
+			dbSelectArea("SPED001")
+			dbSetOrder(1)
+			If !MsSeek(::ID_ENT)
+				SetSoapFault("TOTVS SPED Services","001 - Codigo de entidade invalido")
+				lRetorno := .F.
+			EndIf
+		Else
+			SetSoapFault("TOTVS SPED Services","002 - Codigo de entidade em branco")
+			lRetorno := .F.
+		EndIf
+		If lRetorno 	
+			Do Case
+				Case ::Versao == "0.00"
+					::VersoesNfe := SpedGetMV("MV_VERSAO",::ID_ENT)
+				Case !Empty(::Versao) .And. aScan(aVersao,::Versao)==0
+					SetSoapFault("TOTVS SPED Services","003 - Versao incorreta")
+					lRetorno := .F.	
+				Case Empty(::Versao)
+				
+				OtherWise
+					SpedPutMV("MV_VERSAO",::ID_ENT,::Versao)
+			EndCase
+		EndIf
+	Else
+		If Select("SPED000")==0
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+		Else	
+			SetSoapFault("TOTVS SPED Services","Invalid Token")
+		EndIf
+		lRetorno := .F.
+	EndIf
+	Return(FinishSped(lRetorno))
+
+WSMETHOD CfgVersaoCTe WSRECEIVE USERTOKEN,ID_ENT,Versao WSSEND VersoesNFe WSSERVICE SPEDCFGNFE
+
+	Local lRetorno := .T.
+	Local aVersao  := {}
+	Local nX       := 0
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa o ambiente                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	aadd(aVersao,"9.99")
+	aadd(aVersao,"1.02")
+	::VersoesNfe := ""
+	If Empty(::Versao)
+		For nX := 1 To Len(aVersao)
+			::VersoesNfe := aVersao[nX]+"|"
+		Next nX
+	EndIf
+	InitSped()
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Parametros                                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If ::UserToken == "TOTVS" .And. Select("SPED000")<>0
+		If !Empty(::ID_ENT)
+			dbSelectArea("SPED001")
+			dbSetOrder(1)
+			If !MsSeek(::ID_ENT)
+				SetSoapFault("TOTVS SPED Services","001 - Codigo de entidade invalido")
+				lRetorno := .F.
+			EndIf
+		Else
+			SetSoapFault("TOTVS SPED Services","002 - Codigo de entidade em branco")
+			lRetorno := .F.
+		EndIf
+		If lRetorno 	
+			Do Case
+				Case ::Versao == "0.00"
+					::VersoesNfe := SpedGetMV("MV_VERCTE",::ID_ENT)
+				Case !Empty(::Versao) .And. aScan(aVersao,::Versao)==0
+					SetSoapFault("TOTVS SPED Services","003 - Versao incorreta")
+					lRetorno := .F.	
+				Case Empty(::Versao)
+				
+				OtherWise
+					SpedPutMV("MV_VERCTE",::ID_ENT,::Versao)
+			EndCase
+		EndIf
+	Else
+		If Select("SPED000")==0
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+		Else	
+			SetSoapFault("TOTVS SPED Services","Invalid Token")
+		EndIf
+		lRetorno := .F.
+	EndIf
+	Return(FinishSped(lRetorno))
+	
+WSMETHOD CfgVersaoDpec WSRECEIVE USERTOKEN,ID_ENT,Versao WSSEND VersoesNFe WSSERVICE SPEDCFGNFE
+
+	Local lRetorno := .T.
+	Local aVersao  := {}
+	Local nX       := 0
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa o ambiente                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	aadd(aVersao,"9.99")
+	aadd(aVersao,"1.00")
+	aadd(aVersao,"1.01")
+	::VersoesNfe := ""
+	If Empty(::Versao)
+		For nX := 1 To Len(aVersao)
+			::VersoesNfe := aVersao[nX]+"|"
+		Next nX
+	EndIf
+	InitSped()
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Parametros                                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If ::UserToken == "TOTVS" .And. Select("SPED000")<>0
+		If !Empty(::ID_ENT)
+			dbSelectArea("SPED001")
+			dbSetOrder(1)
+			If !MsSeek(::ID_ENT)
+				SetSoapFault("TOTVS SPED Services","001 - Codigo de entidade invalido")
+				lRetorno := .F.
+			EndIf
+		Else
+			SetSoapFault("TOTVS SPED Services","002 - Codigo de entidade em branco")
+			lRetorno := .F.
+		EndIf
+		If lRetorno 	
+			Do Case
+				Case ::Versao == "0.00"
+					::VersoesNfe := SpedGetMV("MV_VERDPEC",::ID_ENT)
+				Case !Empty(::Versao) .And. aScan(aVersao,::Versao)==0
+					SetSoapFault("TOTVS SPED Services","003 - Versao incorreta")
+					lRetorno := .F.	
+				Case Empty(::Versao)
+				
+				OtherWise
+					SpedPutMV("MV_VERDPEC",::ID_ENT,::Versao)
+				EndCase
+		EndIf
+	Else
+		If Select("SPED000")==0
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+		Else	
+			SetSoapFault("TOTVS SPED Services","Invalid Token")
+		EndIf
+		lRetorno := .F.
+	EndIf
+	Return(FinishSped(lRetorno))
+	
+
+WSMETHOD CfgTempoEspera    WSRECEIVE USERTOKEN,ID_ENT,TempoEspera WSSEND TempoEsperaCfg WSSERVICE SPEDCFGNFE
+
+	Local lRetorno := .T.
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa o ambiente                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	InitSped()
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Parametros                                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If ::UserToken == "TOTVS" .And. Select("SPED000")<>0
+		If !Empty(::ID_ENT)
+			dbSelectArea("SPED001")
+			dbSetOrder(1)
+			If !MsSeek(::ID_ENT)
+				SetSoapFault("TOTVS SPED Services","001 - Codigo de entidade invalido")
+				lRetorno := .F.
+			EndIf
+		Else
+			SetSoapFault("TOTVS SPED Services","002 - Codigo de entidade em branco")
+			lRetorno := .F.
+		EndIf
+		If lRetorno	
+			::TempoEsperaCfg := Val(SpedGetMV("MV_CFGTIME",::ID_ENT))/60
+			If ::TempoEspera>3
+				SpedPutMV("MV_CFGTIME",::ID_ENT,AllTrim(Str(::TempoEspera*60,18)))
+			EndIf
+		EndIf
+	Else
+		If Select("SPED000")==0
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+		Else	
+			SetSoapFault("TOTVS SPED Services","Invalid Token")
+		EndIf
+		lRetorno := .F.
+	EndIf
+	Return(FinishSped(lRetorno))
+
+WSMETHOD CfgStatusCertificate WSRECEIVE USERTOKEN,ID_ENT WSSEND Certificates WSSERVICE SPEDCFGNFE
+
+	Local lRetorno := .T.
+	Local aInfo    := {}
+	Local cDir     := IIf(IsSrvUnix(),"certs/", "certs\")
+	Local cRootPath:= StrTran(GetSrvProfString("RootPath","")+IIf(!IsSrvUnix(),"\","/"),IIf(!IsSrvUnix(),"\\","//"),IIf(!IsSrvUnix(),"\","/"))
+	Local dDataIni := Date()
+	Local dDataFim := dDataIni
+	Local cNewFunc := ""
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa o ambiente                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	cRootPath  := StrTran(cRootPath,IIf(!IsSrvUnix(),"\\","//"),IIf(!IsSrvUnix(),"\","/"))
+	InitSped()
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Parametros                                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If ::UserToken == "TOTVS" .And. Select("SPED000")<>0
+		If !Empty(::ID_ENT)
+			dbSelectArea("SPED001")
+			dbSetOrder(1)
+			If !MsSeek(::ID_ENT)
+				SetSoapFault("TOTVS SPED Services","001 - Codigo de entidade invalido")
+				lRetorno := .F.
+			EndIf
+		Else
+			SetSoapFault("TOTVS SPED Services","002 - Codigo de entidade em branco")
+			lRetorno := .F.
+		EndIf
+		If lRetorno
+			If (!(Empty(SPED001->PASSCERT) .Or. !File(cDir+::ID_ENT+"_key.pem") .Or. !File(cDir+::ID_ENT+"_cert.pem"))) .And. PadR(GetBuild(),12) >=  "7.00.080307A"
+				cNewFunc := "PemInfo"
+				aInfo := &cNewFunc.(cDir+::ID_ENT+"_cert.pem",Decode64(SPED001->PASSCERT))
+				If Len(aInfo)>0
+					dDataIni := Ctod(SubStr(aInfo[1][4],5,2)+"/"+SubStr(aInfo[1][4],3,2)+"/20"+SubStr(aInfo[1][4],1,2))
+					dDataFim := Ctod(SubStr(aInfo[1][5],5,2)+"/"+SubStr(aInfo[1][5],3,2)+"/20"+SubStr(aInfo[1][5],1,2))									
+					aadd(::Certificates,WsClassNew("DIGITALCERTIFICATE"))
+					Atail(::Certificates):CertificateType := 2
+					Atail(::Certificates):VERSION         := AllTrim(Str(aInfo[1][1],10))
+					Atail(::Certificates):SUBJECT         := aInfo[1][2]
+					Atail(::Certificates):ISSUER          := aInfo[1][3]
+					Atail(::Certificates):VALIDFROM       := dDataIni
+					Atail(::Certificates):VALIDTO         := dDataFim
+				EndIf
+				If !Empty(GetPvProfString('SSLConfigure','CertificateClient','', GetAdv97())) .And. "_all"$GetPvProfString('SSLConfigure','CertificateClient','', GetAdv97())
+					cNewFunc := "PemInfo"
+					aInfo := &cNewFunc.(StrTran(Lower(GetPvProfString('SSLConfigure','CertificateClient','', GetAdv97())),Lower(cRootPath),""),GetPvProfString('SSLConfigure','PassPhrase','ERR',GetAdv97()))
+					If Len(aInfo)>1
+						dDataIni := Ctod(SubStr(aInfo[1][4],5,2)+"/"+SubStr(aInfo[1][4],3,2)+"/20"+SubStr(aInfo[1][4],1,2))
+						dDataFim := Ctod(SubStr(aInfo[1][5],5,2)+"/"+SubStr(aInfo[1][5],3,2)+"/20"+SubStr(aInfo[1][5],1,2))					
+						aadd(::Certificates,WsClassNew("DIGITALCERTIFICATE"))
+						Atail(::Certificates):CertificateType := 1
+						Atail(::Certificates):VERSION         := AllTrim(Str(aInfo[1][1],10))
+						Atail(::Certificates):SUBJECT         := aInfo[1][2]
+						Atail(::Certificates):ISSUER          := aInfo[1][3]
+						Atail(::Certificates):VALIDFROM       := dDataIni
+						Atail(::Certificates):VALIDTO         := dDataFim
+						If dDataFim <= Date()						
+							WritePProString('SSLConfigure','CertificateClient',"",GetAdv97())
+							WritePProString('SSLConfigure','KeyClient',"", GetAdv97())
+							//WritePProString('SSLConfigure','PassPhrase',"", GetAdv97())							
+						EndIf
+					EndIf
+				EndIf
+				If Len(::Certificates) == 0
+					SetSoapFault("TOTVS SPED Services","Certificado sem informações")
+					lRetorno := .F.				
+				EndIf
+			Else
+				SetSoapFault("TOTVS SPED Services","Certificado ausente")
+				lRetorno := .F.
+			EndIf
+		EndIf
+	Else
+		If Select("SPED000")==0
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+		Else	
+			SetSoapFault("TOTVS SPED Services","Invalid Token")
+		EndIf
+		lRetorno := .F.
+	EndIf
+	Return(FinishSped(lRetorno))
+
+WSMETHOD CfgTSSVersao WSRECEIVE USERTOKEN WSSEND MSG WSSERVICE SPEDCFGNFE
+
+	Local lRetorno := .T.
+	If ::UserToken == "TOTVS"
+		::MSG := GetTssVersao()
+	Else
+		SetSoapFault("TOTVS SPED Services","Invalid Token")
+		lRetorno := .F.
+	EndIf
+	Return(lRetorno)
+WSMETHOD CfgNotificacao WSRECEIVE USERTOKEN,ID_ENT,Notificacao WSSEND MSG WSSERVICE SPEDCFGNFE
+	
+	Local lRetorno := .T.
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa o ambiente                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	InitSped()
+	::MSG := ""
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Parametros                                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If ::UserToken == "TOTVS" .And. Select("SPED000")<>0
+		If !Empty(::ID_ENT)
+			dbSelectArea("SPED001")
+			dbSetOrder(1)
+			If !MsSeek(::ID_ENT)
+				SetSoapFault("TOTVS SPED Services","001 - Codigo de entidade invalido")
+				lRetorno := .F.
+			EndIf
+		Else
+			SetSoapFault("TOTVS SPED Services","002 - Codigo de entidade em branco")
+			lRetorno := .F.
+		EndIf
+		If !(::Notificacao >= 1 .And. ::Notificacao <= 2)
+			SetSoapFault("TOTVS SPED Services","003 - Opcao de notificacao inválida. Valores válidos: 1-Sim,2=Nao")
+			lRetorno := .F.	
+		EndIf
+		If lRetorno .And. (::Notificacao >= 1 .And. ::Notificacao <= 2)
+			SpedPutMV("MV_NOTIFIC",::ID_ENT,Str(::Notificacao,1))
+		EndIf
+		Do Case
+			Case SpedGetMv("MV_NOTIFIC",::ID_ENT)=="1"
+				::MSG := "1-Sim"
+			Otherwise 			
+				::MSG := "2-Nao"
+		EndCase
+	Else
+		If Select("SPED000")==0
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+		Else	
+			SetSoapFault("TOTVS SPED Services","Invalid Token")
+		EndIf
+		lRetorno := .F.
+	EndIf
+	Return(FinishSped(lRetorno))
+
+Function GetTssVersao()
+Return("1.14f")

@@ -1,0 +1,1420 @@
+#INCLUDE "PROTHEUS.CH"
+#DEFINE RDDSPED "TOPCONN"
+#DEFINE MAXINDEX IIF("INFORMIX"$TcGetDB(),40,250)
+
+Static __nConecta
+Static lInitSped := .F.
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³InitSped  ³ Rev.  ³Eduardo Riera          ³ Data ³11.05.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Inicializacao do ambiente SPED                              ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³Esta rotina tem como objetivo efetuar a inicializacao do    ³±±
+±±³          ³ambiente sped no Protheus.                                  ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Observacao³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Totvs SPED Services Gateway                                ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function InitSped()
+
+Local bError := ErrorBlock({|e| ConOut("Totvs Sped Services - Internal error:"+e:errorstack),DisarmTransaction(),MS_QUIT()})
+
+If !lInitSped
+	lInitSped := .T.
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Configura os parametros iniciais                     ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	PUBLIC __TTSINUSE   := .T.
+	PUBLIC __cLogSiga   :="NNNNNN"
+	PUBLIC __TTSBREAK   := .f.
+	PUBLIC __TTSPush    := {}
+	Public __lFkInUse   := .F.
+	PUBLIC __TTSCommit
+	PUBLIC __lACENTO    := .F.
+	PUBLIC __Language   := 'PORTUGUESE'
+	PUBLIC lMsFinalAuto := .T.
+	PUBLIC __LocalDriver:= "DBFCDX"
+	SET DELETED ON
+	SET SCOREBOARD OFF
+	SET DATE BRITISH
+	SET(4,"DD/MM/YYYY")	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Carrega as tabelas                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	LoadDicSPED("SPED000")   //Parametros
+	LoadDicSPED("SPED001")   //Sociedade Empresarial
+	LoadDicSPED("SPED001A")  
+	LoadDicSPED("SPED001B")  //Inscricoes da sociedade empresarial
+	LoadDicSPED("SPED002")   //Participante
+	LoadDicSPED("SPED002A")
+	LoadDicSPED("SPED002B")
+	LoadDicSPED("SPED002C")
+	LoadDicSPED("SPED050")   //Nota Fiscal Eletronica - Saida
+	LoadDicSPED("SPED052")   //Lote de transmissao Nota Fiscal Eletronica
+	LoadDicSPED("SPED054")   //Nota Fiscal Eletronica x Lote de Transmissao
+	LoadDicSPED("SPED060")   //Nota Fiscal Eletronica - Entrada
+	LoadDicSPED("SPED100")   //Plano de Contas
+	LoadDicSPED("SPED100A")
+	LoadDicSPED("SPED110")   //Centro de Custo
+	LoadDicSPED("SPED110A")
+	LoadDicSPED("SPED120")   //Plano de conta referencial
+	LoadDicSPED("SPED130")   //Historico Padrao
+	LoadDicSPED("SPED140")   //Plano de contas dos demonstrativos
+	LoadDicSPED("SPED200")
+	LoadDicSPED("SPED210")
+	LoadDicSPED("SPED220")
+	LoadDicSPED("SPED220A")
+	LoadDicSPED("SPED230")   //Razao auxiliar
+	LoadDicSPED("SPED230A")  //LayOut do Razao auxiliar
+	LoadDicSPED("SPED240")   //Detalhe do Razao auxiliar
+	LoadDicSPED("SPED240A")   //Detalhe do Razao auxiliar
+	LoadDicSPED("SPED300") //Demonstracoes Contabeis
+	LoadDicSPED("SPED300A") //Balanço Patrimonial e DRE
+	LoadDicSPED("SPED300B") //Outras Demonstracoes - RTF
+EndIf
+Return(.T.)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³LoadDicSpe³ Rev.  ³Eduardo Riera          ³ Data ³11.05.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Funcao de criacao, manutencao e abertura das tabelas do SPED³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³Esta rotina tem como objetivo efetuar o gerenciamento do    ³±±
+±±³          ³dicionario do SPED.                                         ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Observacao³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Totvs SPED Services Gateway                                ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function LoadDicSped(cTable)
+
+Local aCampos := {}
+Local aArqStru:= {}
+Local aIndices:= {}
+Local aTemp   := {}
+
+Local cUnique := ""
+Local cDriver := RDDSPED
+Local cOrd    := ""
+Local cOrdName:= ""
+
+Local cDataBase := ""
+Local cAlias    := ""
+Local cServer   := ""
+Local cConType  := ""
+Local cHasMapper:= ""
+Local cProtect  := ""
+Local CTSerial:= ""
+
+Local nPort     := 0
+Local nX
+
+Local lBuildIndex:= .F.
+Local lUnique
+Local lCreate := .F.
+Local lLock   := .F.
+Local nWait   := 0
+
+Do Case
+	Case cTable == "SPED000"
+		cUnique := "ID_ENT+PARAMETRO"
+		
+		aadd(aCampos,{"ID_ENT"    ,"C",006,0})
+		aadd(aCampos,{"PARAMETRO" ,"C",010,0})
+		aadd(aCampos,{"CONTEUDO"  ,"C",250,0})
+		
+		aadd(aIndices,{cUnique,"PK"})
+
+	Case cTable == "SPED001"
+		cUnique := "ID_ENT"
+		
+		aadd(aCampos,{"ID_ENT"    ,"C",06,0})
+		aadd(aCampos,{"ID_MATRIZ" ,"C",06,0})
+		aadd(aCampos,{"CNPJ"      ,"C",14,0})
+		aadd(aCampos,{"CPF"       ,"C",11,0})
+		aadd(aCampos,{"IE"        ,"C",18,0})
+		aadd(aCampos,{"UF"        ,"C",02,0})
+		aadd(aCampos,{"INDSITESP" ,"C",01,0})
+		aadd(aCampos,{"PASSCERT"  ,"C",250,0})
+		
+		aadd(aIndices,{cUnique,"PK"})
+		aadd(aIndices,{"CNPJ+CPF+IE+UF","UNQ"})
+		aadd(aIndices,{"ID_MATRIZ","03"})
+		
+	Case cTable == "SPED001A"
+		cUnique := "ID_ENT+DTOS(DTULTALT)"
+		
+		aadd(aCampos,{"ID_ENT"    ,"C",006,0})
+		aadd(aCampos,{"DTULTALT"  ,"D",008,0})
+		aadd(aCampos,{"COD_MUN"   ,"C",007,0})
+		aadd(aCampos,{"COD_PAIS"  ,"C",005,0})
+		aadd(aCampos,{"IM"        ,"C",018,0})
+		aadd(aCampos,{"SUFRAMA"   ,"C",018,0})
+		aadd(aCampos,{"NIT"       ,"C",011,0})
+		aadd(aCampos,{"NIRE"      ,"C",011,0})
+		aadd(aCampos,{"DTRE"      ,"D",008,0})
+		aadd(aCampos,{"NOME"      ,"C",250,0})
+		aadd(aCampos,{"FANTASIA"  ,"C",250,0})
+		aadd(aCampos,{"CEP"       ,"C",008,0})
+		aadd(aCampos,{"ENDER"     ,"C",250,0})
+		aadd(aCampos,{"NUM"       ,"C",006,0})
+		aadd(aCampos,{"COMPL"     ,"C",250,0})
+		aadd(aCampos,{"BAIRRO"    ,"C",250,0})
+		aadd(aCampos,{"MUN"       ,"C",250,0})
+		aadd(aCampos,{"CEP_CP"    ,"C",008,0})
+		aadd(aCampos,{"CP"        ,"C",250,0})
+		aadd(aCampos,{"DDD"       ,"C",003,0})
+		aadd(aCampos,{"FONE"      ,"C",015,0})
+		aadd(aCampos,{"FAX"       ,"C",015,0})
+		aadd(aCampos,{"EMAIL"     ,"C",250,0})
+		
+		aadd(aIndices,{cUnique,"PK"})
+	Case cTable == "SPED001B"
+		cUnique := "ID_ENT+ENT_REF"
+		
+		aadd(aCampos,{"ID_ENT"    ,"C",006,0})
+		aadd(aCampos,{"ENT_REF"   ,"C",002,0})
+		aadd(aCampos,{"INSCR"     ,"C",250,0})
+		
+		aadd(aIndices,{cUnique,"PK"})
+	Case cTable == "SPED002"
+		cUnique := "ID_ENT+ID_PART"
+		
+		aadd(aCampos,{"ID_ENT"    ,"C",006,0})
+		aadd(aCampos,{"ID_PART"   ,"C",006,0})
+		aadd(aCampos,{"CNPJ      ","C",014,0})
+		aadd(aCampos,{"CPF       ","C",011,0})
+		aadd(aCampos,{"IE        ","C",018,0})
+		aadd(aCampos,{"UF        ","C",002,0})
+		aadd(aCampos,{"DTINI     ","D",008,0})
+		aadd(aCampos,{"DTFIM     ","D",008,0})
+		aadd(aCampos,{"COD_REL   ","C",002,0})
+		
+		aadd(aIndices,{cUnique,"PK"})
+		aadd(aIndices,{"ID_ENT+CNPJ+CPF+IE+UF+COD_REL","UNQ"})
+	Case cTable == "SPED002A"
+		cUnique := "ID_ENT+ID_PART+DTULTALT"
+		
+		aadd(aCampos,{"ID_ENT"    ,"C",006,0})
+		aadd(aCampos,{"ID_PART "  ,"C",006,0})
+		aadd(aCampos,{"DTULTALT  ","D",008,0})
+		aadd(aCampos,{"NOME      ","C",250,0})
+		aadd(aCampos,{"NIT       ","C",011,0})
+		aadd(aCampos,{"IM        ","C",018,0})
+		aadd(aCampos,{"IE_ST     ","C",018,0})
+		aadd(aCampos,{"SUFRAMA   ","C",009,0})
+		aadd(aCampos,{"DDD       ","C",003,0})
+		aadd(aCampos,{"FONE      ","C",015,0})
+		aadd(aCampos,{"FAX       ","C",015,0})
+		
+		aadd(aIndices,{cUnique,"PK"})
+
+	Case cTable == "SPED002B"
+		cUnique := "ID_ENT+ID_PART+DTULTALT"
+		
+		aadd(aCampos,{"ID_ENT"    ,"C",006,0})
+		aadd(aCampos,{"ID_PART"   ,"C",006,0})
+		aadd(aCampos,{"DTULTALT"  ,"D",008,0})
+		aadd(aCampos,{"CEP"       ,"C",008,0})
+		aadd(aCampos,{"COD_PAIS"  ,"C",005,0})
+		aadd(aCampos,{"COD_MUN   ","C",007,0})
+		aadd(aCampos,{"ENDER     ","C",250,0})
+		aadd(aCampos,{"NUM       ","C",006,0})
+		aadd(aCampos,{"COMPL     ","C",250,0})
+		aadd(aCampos,{"BAIRRO    ","C",250,0})
+		aadd(aCampos,{"MUN       ","C",250,0})
+		aadd(aCampos,{"CEP_CP    ","C",008,0})
+		aadd(aCampos,{"CP        ","C",250,0})
+		
+		aadd(aIndices,{cUnique,"PK"})
+
+	Case cTable == "SPED002C"
+		cUnique := "ID_ENT+ID_PART"
+		
+		aadd(aCampos,{"ID_ENT"    ,"C",006,0})
+		aadd(aCampos,{"ID_PART"   ,"C",006,0})
+		aadd(aCampos,{"QUALIF    ","C",250,0})
+		aadd(aCampos,{"CODASSIN  ","C",003,0})
+		aadd(aCampos,{"CRC       ","C",011,0})
+		
+		aadd(aIndices,{cUnique,"PK"})
+	Case cTable == "SPED050"
+		cUnique := "ID_ENT+NFE_ID"
+		
+		aadd(aCampos,{"ID_ENT    ","C",006,0})
+		aadd(aCampos,{"NFE_ID    ","C",250,0})
+		aadd(aCampos,{"DATE_NFE  ","D",008,0})
+		aadd(aCampos,{"TIME_NFE  ","C",008,0})
+		aadd(aCampos,{"XML_ERP   ","M",010,0})
+		aadd(aCampos,{"XML_SIG   ","M",010,0})
+		aadd(aCampos,{"XML_SIGCAN","M",010,0})	
+		aadd(aCampos,{"AMBIENTE  ","N",001,0})
+		aadd(aCampos,{"MODALIDADE","N",001,0})
+		aadd(aCampos,{"STATUS    ","N",001,0})
+		aadd(aCampos,{"STATUSCANC","N",001,0})		
+		aadd(aCampos,{"STATUSMAIL","N",001,0})		
+		aadd(aCampos,{"NFE_PROT  ","C",015,0})
+		aadd(aCampos,{"DELETEDATE","D",008,0})
+		aadd(aCampos,{"EMAIL"     ,"C",250,0})
+		aadd(aCampos,{"MODELO"    ,"C",002,0})
+		aadd(aCampos,{"XML_DPEC  ","M",010,0})
+		aadd(aCampos,{"CNPJDEST"  ,"C",014,0})
+		aadd(aCampos,{"REG_DPEC  ","N",015,0})
+		
+		aadd(aIndices,{cUnique,"PK"})
+		aadd(aIndices,{"ID_ENT+DTOS(DATE_NFE)+TIME_NFE","01"})
+
+	Case cTable == "SPED052"
+		cUnique := "ID_ENT+STR(LOTE,15)"
+		
+		aadd(aCampos,{"ID_ENT    ","C",006,0})
+		aadd(aCampos,{"LOTE      ","N",015,0})
+		aadd(aCampos,{"AMBIENTE  ","N",001,0})
+		aadd(aCampos,{"MODALIDADE","N",001,0})
+		aadd(aCampos,{"DATE_LOTE ","D",008,0})
+		aadd(aCampos,{"TIME_LOTE ","C",008,0})
+		aadd(aCampos,{"CSTAT_SEF" ,"C",003,0})
+		aadd(aCampos,{"XMOT_SEF"  ,"C",250,0})	
+		aadd(aCampos,{"RECIBO_SEF","N",015,0})
+		aadd(aCampos,{"DTREC_SEF" ,"D",008,0})
+		aadd(aCampos,{"HRREC_SEF" ,"C",008,0})
+		aadd(aCampos,{"TEMPO_SEF" ,"N",004,0})
+		aadd(aCampos,{"CSTAT_SEFR","C",003,0})
+		aadd(aCampos,{"XMOT_SEFR ","C",250,0})
+		aadd(aCampos,{"STATUS    ","N",001,0})
+		aadd(aCampos,{"XML_LOTE  ","M",010,0})
+		aadd(aCampos,{"NRCNS_SEFR","N",005,0})
+		aadd(aCampos,{"MODELO"    ,"C",002,0})
+		aadd(aCampos,{"DPEC      ","M",010,0})
+		aadd(aCampos,{"HRREC_DPEC","C",008,0})
+		aadd(aCampos,{"DTREC_DPEC","D",008,0})			                         
+				
+		aadd(aIndices,{cUnique,"PK"})
+				
+	Case cTable == "SPED054"
+		cUnique := "ID_ENT+STR(LOTE,15)+NFE_ID"
+		
+		aadd(aCampos,{"ID_ENT    ","C",006,0})
+		aadd(aCampos,{"LOTE      ","N",015,0})
+		aadd(aCampos,{"NFE_ID    ","C",250,0})
+		aadd(aCampos,{"NFE_CHV   ","C",044,0})
+		aadd(aCampos,{"CSTAT_SEFR","C",003,0})
+		aadd(aCampos,{"XMOT_SEFR ","C",250,0})
+		aadd(aCampos,{"DTREC_SEFR","D",008,0})
+		aadd(aCampos,{"HRREC_SEFR","C",008,0})
+		aadd(aCampos,{"NFE_PROT  ","C",015,0})
+		aadd(aCampos,{"XML_PROT  ","M",010,0})	
+				
+		aadd(aIndices,{cUnique,"PK"})
+		aadd(aIndices,{"ID_ENT+STR(LOTE,15)+NFE_CHV","02"})
+		aadd(aIndices,{"ID_ENT+NFE_ID+CSTAT_SEFR","03"})
+
+	Case cTable == "SPED060"
+		cUnique := "ID_ENT+NFE_CHV"
+		
+		aadd(aCampos,{"ID_ENT    ","C",006,0})
+		aadd(aCampos,{"NFE_CHV   ","C",044,0})
+		aadd(aCampos,{"DATE_NFE  ","D",008,0})
+		aadd(aCampos,{"TIME_NFE  ","C",008,0})
+		aadd(aCampos,{"XML       ","M",010,0})
+		aadd(aCampos,{"STATUS    ","N",001,0})
+		aadd(aCampos,{"DELETEDATE","D",008,0})
+		
+		aadd(aIndices,{cUnique,"PK"})
+
+	Case cTable == "SPED100"
+		cUnique := "ID_ENT+CODCTA"
+		
+		aadd(aCampos,{"ID_ENT    ","C",006,0})
+		aadd(aCampos,{"CODCTA    ","C",MAXINDEX,0})
+		aadd(aCampos,{"CODCTASUP ","C",MAXINDEX,0})
+		
+		aadd(aIndices,{cUnique,"PK"})
+
+	Case cTable == "SPED100A"
+		cUnique := "ID_ENT+CODCTA+DTULTALT"
+		
+		aadd(aCampos,{"ID_ENT    ","C",006,0})
+		aadd(aCampos,{"CODCTA    ","C",MAXINDEX,0})
+		aadd(aCampos,{"DTULTALT  ","D",008,0})
+		aadd(aCampos,{"COD_NAT   ","C",002,0})
+		aadd(aCampos,{"IND_CTA   ","C",001,0})
+		aadd(aCampos,{"NIVEL     ","N",002,0})
+		aadd(aCampos,{"DESCRI    ","C",250,0})
+		aadd(aCampos,{"CODAUXRES ","C",001,0})
+						
+		aadd(aIndices,{cUnique,"PK"})
+
+	Case cTable == "SPED110"
+		cUnique := "ID_ENT+CCUSTO"
+		
+		aadd(aCampos,{"ID_ENT    ","C",006,0})
+		aadd(aCampos,{"CCUSTO    ","C",MAXINDEX,0})
+		
+		aadd(aIndices,{cUnique,"PK"})
+
+	Case cTable == "SPED110A"
+		cUnique := "ID_ENT+CCUSTO+DTULTALT"
+		
+		aadd(aCampos,{"ID_ENT    ","C",006,0})
+		aadd(aCampos,{"CCUSTO    ","C",MAXINDEX,0})
+		aadd(aCampos,{"DTULTALT  ","D",008,0})
+		aadd(aCampos,{"DESCRI    ","C",250,0})
+						
+		aadd(aIndices,{cUnique,"PK"})
+
+	Case cTable == "SPED120"
+		cUnique := "ID_ENT+CODCTA+CCUSTO+COD_ENTREF+COD_CTAREF"
+		
+		aadd(aCampos,{"ID_ENT    ","C",006,0})
+		aadd(aCampos,{"CODCTA    ","C",MAXINDEX,0})
+		aadd(aCampos,{"CCUSTO    ","C",MAXINDEX,0})
+		aadd(aCampos,{"COD_ENTREF","C",002,0})
+		aadd(aCampos,{"COD_CTAREF","C",MAXINDEX,0})
+		
+		aadd(aIndices,{cUnique,"PK"})
+
+	Case cTable == "SPED130"
+		cUnique := "ID_ENT+COD_HIST"
+		
+		aadd(aCampos,{"ID_ENT    ","C",006,0})
+		aadd(aCampos,{"COD_HIST  ","C",MAXINDEX,0})		
+		aadd(aCampos,{"DESCRI    ","C",250,0})
+		
+		aadd(aIndices,{cUnique,"PK"})
+
+	Case cTable == "SPED140"
+		cUnique := "ID_ENT+CODCTA+CCUSTO+COD_AGL"
+		
+		aadd(aCampos,{"ID_ENT    ","C",006,0})
+		aadd(aCampos,{"CODCTA    ","C",MAXINDEX,0})
+		aadd(aCampos,{"CCUSTO    ","C",MAXINDEX,0})
+		aadd(aCampos,{"COD_AGL   ","C",MAXINDEX,0})
+		aadd(aCampos,{"COD_AGLSUP","C",MAXINDEX,0})		
+		aadd(aCampos,{"COD_NAT   ","C",002,0})
+		
+		aadd(aIndices,{cUnique,"PK"})
+		aadd(aIndices,{"ID_ENT+COD_AGL","02"})
+		
+	Case cTable == "SPED200"
+		cUnique := "ID_ENT+STR(ORDEM,18)+IND_ESC"
+		
+		aadd(aCampos,{"ID_ENT    ","C",006,0})
+		aadd(aCampos,{"ORDEM     ","N",018,0})
+		aadd(aCampos,{"ORDEMSUP  ","N",018,0})
+		aadd(aCampos,{"IND_ESC   ","C",001,0})
+		aadd(aCampos,{"TIPO_ESC  ","C",001,0})
+		aadd(aCampos,{"NATUREZA  ","C",080,0})
+		aadd(aCampos,{"DTARQ     ","D",008,0})
+		aadd(aCampos,{"DTARQCONV ","D",008,0})		
+
+		aadd(aIndices,{cUnique,"PK"})
+		aadd(aIndices,{"ID_ENT+STR(ORDEMSUP,18)","02"})
+		
+	Case cTable == "SPED210"
+		cUnique := "ID_ENT+STR(ORDEM,18)+DTOS(DTINI)+DTOS(DTFIM)+CODCTA+CCUSTO"
+		
+		aadd(aCampos,{"ID_ENT    ","C",006,0})
+		aadd(aCampos,{"ORDEM     ","N",018,0})		
+		aadd(aCampos,{"DTINI     ","D",008,0})
+		aadd(aCampos,{"DTFIM     ","D",008,0})
+		aadd(aCampos,{"CODCTA    ","C",MAXINDEX,0})
+		aadd(aCampos,{"CCUSTO    ","C",MAXINDEX,0})
+		aadd(aCampos,{"VLSLDINI  ","N",018,2})
+		aadd(aCampos,{"VLSLDFIN  ","N",018,2})
+		aadd(aCampos,{"VLDEB     ","N",018,2})
+		aadd(aCampos,{"VLCRED    ","N",018,2})
+		aadd(aCampos,{"DCINI     ","C",001,0})
+		aadd(aCampos,{"DCFIN     ","C",001,0})
+		
+		aadd(aIndices,{cUnique,"PK"})
+
+	Case cTable == "SPED220"
+		cUnique := "ID_ENT+STR(ORDEM,18)+NUMLCTO"
+		
+		aadd(aCampos,{"ID_ENT    ","C",006,0})
+		aadd(aCampos,{"ORDEM     ","N",018,0})
+		aadd(aCampos,{"NUMLCTO   ","C",MAXINDEX,0})
+		aadd(aCampos,{"DTLCTO    ","D",008,0})
+		aadd(aCampos,{"VLLCTO    ","N",018,2})
+		aadd(aCampos,{"INDLCTO   ","C",001,0})
+		
+		aadd(aIndices,{cUnique,"PK"})
+
+
+	Case cTable == "SPED220A"
+		cUnique := "ID_ENT+STR(ORDEM,18)+NUMLCTO+NUMARQ+EMPORI+FILORI"
+		
+		aadd(aCampos,{"ID_ENT    ","C",006,0})
+		aadd(aCampos,{"ORDEM     ","N",018,0})
+		aadd(aCampos,{"NUMLCTO   ","C",MAXINDEX,0})
+		aadd(aCampos,{"CODCTA    ","C",MAXINDEX,0})
+		aadd(aCampos,{"CCUSTO    ","C",MAXINDEX,0})
+		aadd(aCampos,{"VALOR     ","N",018,2})
+		aadd(aCampos,{"DC        ","C",001,0})
+		aadd(aCampos,{"NUMARQ    ","C",MAXINDEX,0})
+		aadd(aCampos,{"COD_HIST  ","C",250,0})
+		aadd(aCampos,{"HISTORICO ","C",250,0})
+		aadd(aCampos,{"ID_PART   ","C",006,0})
+		aadd(aCampos,{"EMPORI    ","C",002,0})
+		aadd(aCampos,{"FILORI    ","C",002,0})
+		
+		aadd(aIndices,{cUnique,"PK"})
+
+	Case cTable == "SPED230"
+		cUnique := "ID_ENT+ID_LAYOUT"
+		
+		aadd(aCampos,{"ID_ENT    ","C",006,0})
+		aadd(aCampos,{"ID_LAYOUT ","C",MAXINDEX,0})
+		
+		aadd(aIndices,{cUnique,"PK"})
+
+
+	Case cTable == "SPED230A"
+		cUnique := "ID_ENT+ID_LAYOUT+CAMPO"
+		
+		aadd(aCampos,{"ID_ENT    ","C",006,0})
+		aadd(aCampos,{"ID_LAYOUT ","C",MAXINDEX,0})
+		aadd(aCampos,{"CAMPO     ","C",016,0})
+		aadd(aCampos,{"DESCRI    ","C",050,0})
+		aadd(aCampos,{"TIPO      ","C",001,0})
+		aadd(aCampos,{"TAMANHO   ","N",003,0})
+		aadd(aCampos,{"TAMDECIMAL","N",002,0})
+		aadd(aCampos,{"LARGURA   ","N",003,0})
+		
+		aadd(aIndices,{cUnique,"PK"})
+
+	Case cTable == "SPED240"
+		cUnique := "ID_ENT+ID_LAYOUT+STR(ORDEM,18)+DTOS(DTINI)+DTOS(DTFIM)+STR(LINHA,18,0)"
+		
+		aadd(aCampos,{"ID_ENT    ","C",006,0})
+		aadd(aCampos,{"ORDEM     ","N",018,0})
+		aadd(aCampos,{"ID_LAYOUT ","C",MAXINDEX,0})
+		aadd(aCampos,{"DTINI     ","D",008,0})
+		aadd(aCampos,{"DTFIM     ","D",008,0})		
+		aadd(aCampos,{"LINHA     ","N",018,0})
+		aadd(aCampos,{"QUEBRA    ","C",255,0})
+		aadd(aCampos,{"CONTEUDO  ","C",255,0})
+
+		aadd(aIndices,{cUnique,"PK"})
+
+	Case cTable == "SPED240A"
+		cUnique := "ID_ENT+ID_LAYOUT+STR(ORDEM,18)+QUEBRA"
+		
+		aadd(aCampos,{"ID_ENT    ","C",006,0})
+		aadd(aCampos,{"ORDEM     ","N",018,0})
+		aadd(aCampos,{"ID_LAYOUT ","C",MAXINDEX,0})
+		aadd(aCampos,{"QUEBRA    ","C",255,0})
+		aadd(aCampos,{"CONTEUDO  ","C",255,0})
+
+		aadd(aIndices,{cUnique,"PK"})
+
+	Case cTable == "SPED300"
+		cUnique := "ID_ENT+STR(ORDEM,18)+DTOS(DTINI)+DTOS(DTFIM)"
+		
+		aadd(aCampos,{"ID_ENT    ","C",006,0})
+		aadd(aCampos,{"ORDEM     ","N",018,0})
+		aadd(aCampos,{"DTINI     ","D",008,0})
+		aadd(aCampos,{"DTFIM     ","D",008,0})		
+		aadd(aCampos,{"CABDEM    ","M",010,0})
+
+		aadd(aIndices,{cUnique,"PK"})
+
+	Case cTable == "SPED300A"
+		cUnique := "ID_ENT+STR(ORDEM,18)+DTOS(DTINI)+DTOS(DTFIM)+TIPO_DEM+COD_AGL"
+		
+		aadd(aCampos,{"ID_ENT    ","C",006,0})
+		aadd(aCampos,{"ORDEM     ","N",018,0})
+		aadd(aCampos,{"DTINI     ","D",008,0})
+		aadd(aCampos,{"DTFIM     ","D",008,0})		
+		aadd(aCampos,{"TIPO_DEM  ","C",001,0})
+		aadd(aCampos,{"COD_AGL   ","C",MAXINDEX,0})
+		aadd(aCampos,{"NIVEL     ","N",002,0})
+		aadd(aCampos,{"DESCRI    ","C",250,0})
+		aadd(aCampos,{"INDVALOR  ","C",001,0})
+		aadd(aCampos,{"VALOR     ","N",018,2})
+		
+		aadd(aIndices,{cUnique,"PK"})
+
+	Case cTable == "SPED300B"
+		cUnique := "ID_ENT+STR(ORDEM,18)+DTOS(DTINI)+DTOS(DTFIM)+NOMEDEM"
+		
+		aadd(aCampos,{"ID_ENT    ","C",006,0})
+		aadd(aCampos,{"ORDEM     ","N",018,0})
+		aadd(aCampos,{"DTINI     ","D",008,0})
+		aadd(aCampos,{"DTFIM     ","D",008,0})
+		aadd(aCampos,{"NOMEDEM   ","C",MAXINDEX,0})
+		aadd(aCampos,{"ARQRTF    ","M",010,0})
+		
+		aadd(aIndices,{cUnique,"PK"})
+	
+EndCase
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ RDD CTRE                                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If cDriver == "CTREECDX"
+	If (AllTrim(upper(GetPvProfString("general","ctreemode","local",GetAdv97()))) $ "SERVER,BOUNDSERVER")
+		CTSerial := CTSerialNumber()
+		If !CTChkSerial(CTSerial)
+			UserException('CTreeServer license limited to ISAM / SXS files only. Serial Number ['+CTSerial+']')
+		EndIf
+	EndIf
+EndIf
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ RDD TOP                                              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If cDriver == "TOPCONN"
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Conecta no TopConn                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If __nConecta == Nil
+		cDataBase  := GetPvProfString("TopConnect","DataBase","ERROR",GetADV97())
+		cAlias	   := GetPvProfString("TopConnect","Alias","ERROR",GetADV97())
+		cServer	   := GetPvProfString("TopConnect","Server","ERROR",GetADV97())
+		cConType   := Upper(GetPvProfString("TopConnect","Contype","TCPIP",GetADV97()))
+		cHasMapper := Upper(GetPvProfString("TopConnect","Mapper","ON",GetADV97()))
+		cProtect   := GetPvProfString("TopConnect","ProtheusOnly","0",GetADV97())
+		nPort      := Val(GetPvProfString("TopConnect","Port","0",GetADV97()))
+		
+		cDataBase  := GetSrvProfString("TopDataBase",cDataBase)
+		cAlias	   := GetSrvProfString("TopAlias",cAlias)
+		cServer	   := GetSrvProfString("TopServer",cServer)
+		cConType   := Upper(GetSrvProfString("TopContype",cConType))
+		cHasMapper := Upper(GetSrvProfString("TopMapper",cHasMapper))
+		cProtect   := GetSrvProfString("TopProtheusOnly",cProtect)
+		nPort      := Val(GetSrvProfString("TopPort",StrZero(nPort,4,0)))
+		
+		If cProtect == "1"
+			cProtect := "@@__@@"    //Assinatura para o TOP
+		Else
+			cProtect := ""
+		EndIf
+		If ! ( AllTrim(cContype) $ 'TCPIP/NPIPE' )
+			Conout('TOPConnect (INI Protheus Server)','Contype: '+cConType)
+			Ms_Quit()
+		EndIf
+		If ( 'ERROR' $ cDatabase )
+			ConOut('TOPConnect (INI Protheus Server)', 'Database: '+cDatabase)
+			Ms_Quit()
+		EndIf
+		If ( 'ERROR' $ cAlias )
+			ConOut('TOPConnect (INI Protheus Server)', 'Alias: '+cAlias)
+			Ms_Quit()
+		EndIf
+		If ( 'ERROR' $ cServer )
+			ConOut('TOPConnect (INI Protheus Server)','Server: '+cServer )
+			Ms_Quit()
+		EndIf
+		TCConType(cConType)
+		If (("AS" $ cAlias) .And. ("400" $ cAlias))
+			While ( !KillApp() .and. !GlbLock() )
+				Sleep(100)
+			EndDo
+			__nConecta := TCLink(cDataBase,cServer,nPort)
+			TcInternal( 12, 'ON' )
+			GlbUnlock()
+		Else
+			__nConecta := -1
+			__nConecta := TCLink(cProtect+"@!!@"+cDataBase+"/"+cAlias,cServer,nPort)
+			TcInternal( 12, 'ON' )
+			If (__nConecta < 0)
+				Do Case
+					Case ( __nConecta == -34 )
+						ConOut("No license") //TOPConnect - Excedeu licenças.
+						Ms_Quit()
+					Case ( __nConecta == -99 )
+						ConOut("incompatible version") //"A versao do TOPConnect e incompativel com o servidor Protheus, atualize o TOPConnect"
+						Ms_Quit()
+					OtherWise
+						ConOut("Connection failed - DataBase:"+cDataBase+" Server:"+cServer+" Port:"+AllTrim(Str(nPort,10))) // 'TOPConnect - Falha de conexao' ## Erro
+						Ms_Quit()
+				EndCase
+			EndIf
+			TcInternal( 8, "Totvs Services SPED Gateway" )
+		EndIf
+	EndIf
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Criacao de tabelas conforme definicao                ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	lLock := .F.
+	While !lLock .And. nWait < 5 .And. !KillApp()
+		lLock := LockByName(cTable+cDriver,.F.,.F.,.T.)
+		Sleep(nWait*1000)
+		nWait++
+	EndDo	
+	If ( lLock )
+		If !MSFile(RetArq(cDriver,cTable,.T.), ,cDriver)
+			lCreate := .T.
+			If TcSrvType() == "AS/400"
+				TcCommit(5,.T.)
+				DbCreate(cTable,aCampos,"TOPCONN")
+				TcCommit(5,.F.)
+				TcSysExe("CHGOBJOWN OBJ("+AllTrim(cTable)+") OBJTYPE(*FILE) NEWOWN(QUSER)")
+			Else
+				DBCreate(cTable, aCampos, cDriver)
+			EndIf
+			DbUseArea(.T.,cDriver,cTable,'__CREATETMP',.F.)
+			If !Empty(cUnique) .And. !"AS"$TCSrvType()
+				cUnique := ClearKey(cUnique)
+				lUnique := TcCanOpen(cTable,cTable+"_UNQ")
+				If ( lUnique .And. Empty(cUnique) ) .Or. (!lUnique .and. !Empty(cUnique) )
+					If TcUnique(cTable,cUnique) <> 0
+						UserException('Unique index creation error on table '+cTable+'. '+TCSQLError()+" or table is in use by other connection")
+					EndIf
+				EndIf
+			EndIf
+			DbCloseArea()
+		Else
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Verifica se houve alteracao na tabela                ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			Use &(cTable) Alias &(cTable) EXCLUSIVE NEW Via cDriver
+			If !NetErr()
+				aArqStru := dbStruct()
+				dbCloseArea()
+				If CompStru(aCampos,aArqStru)
+					lBuildIndex := .T.
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³ Verifica se houve alteracao na tabela                ³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					aTemp := aCampos
+					If aScan(aArqStru,{|x| AllTrim(x[1])=="DATE"})<>0 .And. aScan(aArqStru,{|x| AllTrim(x[1])=="DATE_NFE"})==0
+						aadd(aCampos,{"DATE","D",8,0})
+						aadd(aCampos,{"TIME","C",8,0})
+					EndIf
+					If !TcAlter(cTable,aArqStru,aCampos)
+						UserException('Alter table in '+cTable+' is not possible!')
+					ElseIf aScan(aCampos,{|x| AllTrim(x[1])=="DATE"})<>0 .And. aScan(aCampos,{|x| AllTrim(x[1])=="DATE_NFE"})==0
+						TcSqlExec("UPDATE "+cTable+" SET DATE_NFE = DATE ")
+						TcSqlExec("UPDATE "+cTable+" SET TIME_NFE = TIME ")
+						If !TcAlter(cTable,aArqStru,aTemp)
+							UserException('Alter table in '+cTable+' is not possible!')
+						EndIf
+					EndIf
+				EndIf
+				Use &(cTable) Alias &(cTable) EXCLUSIVE NEW Via cDriver
+				If !NetErr() .And. !Empty(cUnique) .And. !MsFile(cTable,cTable+"_UNQ",cDriver)
+					lBuildIndex := .T.
+					cUnique := ClearKey(cUnique)
+					lUnique := TcCanOpen(cTable,cTable+"_UNQ")
+					If ( lUnique .And. Empty(cUnique) ) .Or. (!lUnique .and. !Empty(cUnique) )
+						If TcUnique(cTable,cUnique) <> 0
+							UserException('Unique index creation error on table '+cTable+'. '+TCSQLError()+" or table is in use by other connection")
+						EndIf
+					EndIf
+				EndIf
+				DbCloseArea()									
+			EndIf			
+		EndIf		
+	EndIf
+	UnLockByName(cTable+cDriver,.F.,.F.,.T.)
+Else
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ RDD CTREE                                            ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Criacao de tabelas conforme definicao                ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If !MSFile(RetArq(cDriver,cTable,.T.), ,cDriver)
+		If ( LockByName(cTable+cDriver,.F.,.F.,.T.) )
+			lCreate := .T.
+			cOrdName := FileNoExt(cTable)+RetIndExt()
+			If ( File(cOrdName) )
+				If ( FErase(cOrdName) <> 0 )
+					ConOut("Delete Index error. File in use.")
+					Ms_Quit()
+				EndIf
+			EndIf
+			DBCreate(cTable, aStruct, cDriver)
+			UnLockByName(cTable+cDriver,.F.,.F.,.T.)
+		EndIf
+	EndIf
+EndIf
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica se os indices estao criados                 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cOrd := "00"
+For nX := 1 To Len(aIndices)
+	cOrd     := Soma1(cOrd)
+	cOrdName := RetArq(cDriver,cTable+cOrd,.F.)
+	If ( !MsFile(cTable,cOrdName,cDriver) )
+		lBuildIndex := .T.
+		Exit
+	EndIf
+Next nX
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Criacao de indices conforme definicao                ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If lBuildIndex
+	If ( LockByName(cTable+cDriver,.F.,.F.,.T.) )
+		DbUseArea(.T.,cDriver,cTable,'__CREATETMP',.F.)
+		If !NetErr()
+			dbClearIndex()
+			If cDriver == "TOPCONN"
+				cOrd := "00"
+				For nX := 1 To Len(aIndices)
+					cOrd := Soma1(cOrd,2)
+					cOrdName := cTable+cOrd
+					If ( TcCanOpen(cTable,cOrdName) )
+						cQuery := 'DROP INDEX ' + cTable + '.' + cOrdName
+						If TcSqlExec( cQuery ) <> 0
+							cQuery := 'DROP INDEX ' + cOrdName
+							TcSqlExec('DROP INDEX ' + cOrdName)
+						EndIf
+                	EndIf															
+				Next nX
+				TcRefresh( cTable )
+				cOrd := "00"
+				For nX := 1 To Len(aIndices)
+					cOrd := Soma1(cOrd,2)
+					cOrdName := cTable+cOrd
+					If ( !TcCanOpen(cTable,cOrdName) )
+						INDEX ON &(ClearKey(aIndices[nX][1])) TO &(cOrdName)
+                	EndIf
+				Next nX				
+			Else
+				If lBuildIndex
+					CTreeDelIdx()
+					cOrd := "00"
+					For nX := 1 To Len(aIndices)
+						cOrd     := Soma1(cOrd)
+						cOrdName := cTable+cOrd+RetIndExt()
+						INDEX ON &(aIndices[nX][1]) TAG &(cOrdName) TO &(FileNoExt(cTable))
+					Next nX
+				EndIf
+			EndIf
+			DbCloseArea()
+		EndIf
+		UnLockByName(cTable+cDriver,.F.,.F.,.T.)
+	EndIf
+EndIf
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Abertura de tabelas                                  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Use &(cTable) Alias &(cTable) SHARED NEW Via cDriver
+nX := 1
+While nX <= 10 .And. NetErr() .And. !KillApp()
+	Sleep(1000)
+	Sleep(1000)
+	Use &(cTable) Alias &(cTable) SHARED NEW Via cDriver
+	nX++
+EndDo
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Abertura de indices                                  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If cDriver == "TOPCONN"
+	cOrd := "00"
+	For nX := 1 To Len(aIndices)
+		cOrd := Soma1(cOrd,2)
+		cOrdName := cTable+cOrd
+		DbSetIndex(cOrdName)
+		DbSetNickName(OrdName(nX),cOrdName)
+	Next nX
+Else
+	nX   := 1
+	cOrd := "00"
+	While ( ! Empty(OrdName(nX)) )
+		cOrdName := cTable+cOrd
+		If ( nX > Len(aIndices) )
+			ConOut("Index OF "+cTable+" Corrupted")
+			Ms_Quit()
+		EndIf
+		DbSetNickName(OrdName(nX),cOrdName)
+		nX++
+	EndDo
+EndIf
+DbSetOrder(1)
+Return(.T.)
+
+Static Function CompStru(aTarget,aSource)
+Local nI		:= 0
+Local nPos		:= 0
+Local lUnlike	:= .F.
+Local nIntS, nIntT
+For nI := 1 To Len( aTarget )
+	nPos := Ascan( aSource, { |x| AllTrim( x[1] ) == AllTrim( aTarget [nI][1]) } )
+	If ( nPos == 0 )
+		lUnlike	:= .T.
+	Else
+		nIntS := aSource[nPos,3]-aSource[nPos,4]
+		nIntT := aTarget[ni,3]-aTarget[ni,4]
+		If aSource[npos,2] != "N"
+			nIntS := aSource[nPos,3]
+		EndIf
+		If aTarget[ni,2] != "N"
+			nIntT := aTarget[ni,3]
+		EndIf
+		If ( aSource [nPos][2] == aTarget[nI][2] )
+			If nIntT == nIntS
+				If ( aSource [nPos][4] <> aTarget[nI][4] )
+					lUnlike	:= .T.
+				EndIf
+			Else
+				If ( nIntS > nIntT )
+				EndIf
+				lUnlike	:= .T.
+			EndIf
+		Else
+            lUnlike	:= .T.
+		EndIf
+	EndIf
+	If ( lUnlike )
+		Exit
+	EndIf
+Next
+If ( ! lUnlike )
+	For nI := 1 To Len( aSource )
+		nPos := Ascan( aTarget, { |x| AllTrim( x[1] ) == AllTrim( aSource [nI][1]) } )
+		If ( nPos == 0 )
+			lUnLike := .T.
+		EndIf
+	Next
+EndIf
+Return( lUnlike )
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³FinishSped³ Rev.  ³Eduardo Riera          ³ Data ³11.05.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Finalizacao do ambiente SPED                                ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpL1: Parametro de retorno do WS                           ³±±
+±±³          ³ExpL2: Finaliza a thread?                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ExpL1: Parametro de retorno do WS                           ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³Esta rotina tem como objetivo efetuar a finalizar o         ³±±
+±±³          ³ambiente sped no Protheus.                                  ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Observacao³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Totvs SPED Services Gateway                                ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function FinishSped(lRetorno,lQuit)
+
+DEFAULT lQuit := .F.
+DEFAULT __nConecta := 0
+DisarmTransaction()
+If lQuit
+	dbCloseAll()
+	If __nConecta > 0
+		TCUnLink(__nConecta)
+	EndIf
+	__nConecta := Nil
+	lInitSped := .F.
+EndIf
+Return(lRetorno)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³InitNfeSpe³ Rev.  ³Eduardo Riera          ³ Data ³19.06.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Inicializacao do ambiente SPED para a NFE                   ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³Esta rotina tem como objetivo efetuar a inicializacao do    ³±±
+±±³          ³ambiente sped no Protheus para a NFE                        ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Observacao³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Totvs SPED Services Gateway                                ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function InitNfeSped()
+
+Local cDir      := IIf(IsSrvUnix(),"certs/", "certs\")
+Local cRootPath := StrTran(GetSrvProfString("RootPath","")+IIf(!IsSrvUnix(),"\","/"),IIf(!IsSrvUnix(),"\\","//"),IIf(!IsSrvUnix(),"\","/"))
+
+If SpedGetMV("MV_CFGTIME",Space(Len(SPED000->ID_ENT)))==Nil
+	SpedPutMv("MV_CFGTIME",Space(Len(SPED000->ID_ENT)),"180")
+EndIf
+If SpedGetMV("MV_VERSAO",Space(Len(SPED000->ID_ENT)))==Nil
+	SpedPutMv("MV_VERSAO",Space(Len(SPED000->ID_ENT)),"1.10")
+EndIf
+If SpedGetMV("MV_VERCTE",Space(Len(SPED000->ID_ENT)))==Nil
+	SpedPutMv("MV_VERCTE",Space(Len(SPED000->ID_ENT)),"9.99")
+EndIf
+If SpedGetMV("MV_VERDPEC",Space(Len(SPED000->ID_ENT)))==Nil
+	SpedPutMv("MV_VERDPEC",Space(Len(SPED000->ID_ENT)),"9.99")
+EndIf 
+If SpedGetMV("MV_AMBIENT",Space(Len(SPED000->ID_ENT)))==Nil
+	SpedPutMv("MV_AMBIENT",Space(Len(SPED000->ID_ENT)),"2")
+EndIf
+If SpedGetMV("MV_MODALID",Space(Len(SPED000->ID_ENT)))==Nil
+	SpedPutMv("MV_MODALID",Space(Len(SPED000->ID_ENT)),"2")
+EndIf
+If SpedGetMV("MV_HSMSLOT",Space(Len(SPED000->ID_ENT)))==Nil
+	SpedPutMv("MV_HSMSLOT",Space(Len(SPED000->ID_ENT)),"")
+EndIf
+If SpedGetMV("MV_HSMLABE",Space(Len(SPED000->ID_ENT)))==Nil
+	SpedPutMv("MV_HSMLABE",Space(Len(SPED000->ID_ENT)),"")
+EndIf
+
+If Empty(GetGlbValue("_INITSPEDSSL_"))
+	If GetPvProfString('SSLConfigure','HSM','', GetAdv97())=="1"
+		If GetPvProfString('SSLConfigure','CertificateClient','', GetAdv97())=="slot_"+SpedGetMv("MV_HSMSLOT",SPED001->ID_ENT)+"-label_"+SpedGetMv("MV_HSMLABE",SPED001->ID_ENT)
+			cNewFunc := "HttpSSLClient"
+			&cNewFunc.(0,1,1,Decode64(AllTrim(SPED001->PASSCERT)),"slot_"+SpedGetMv("MV_HSMSLOT",SPED001->ID_ENT)+"-label_"+SpedGetMv("MV_HSMLABE",SPED001->ID_ENT),"slot_"+SpedGetMv("MV_HSMSLOT",SPED001->ID_ENT)+"-label_"+SpedGetMv("MV_HSMLABE",SPED001->ID_ENT),1)
+			cNewFunc := "HsmInitialize('"+GetPvProfString('SSLConfigure','MODULE','', GetAdv97())+"')"
+			&(cNewFunc)
+						
+			PutGlbValue("_INITSPEDSSL_","INIT")
+		EndIf
+	Else
+		If GetPvProfString('SSLConfigure','CertificateClient','', GetAdv97())==cRootPath+cDir+SPED001->ID_ENT+"_all.pem"
+			cNewFunc := "HttpSSLClient"
+			&cNewFunc.(0,1,1,Decode64(AllTrim(SPED001->PASSCERT)),IIf(!IsSrvUnix(),"\","/")+cDir+SPED001->ID_ENT+"_all.pem",IIf(!IsSrvUnix(),"\","/")+cDir+SPED001->ID_ENT+"_key.pem")			
+			PutGlbValue("_INITSPEDSSL_","INIT")			
+		EndIf
+	EndIf
+EndIf	
+
+If FindFunction("WsCTimeOut")
+	WsCTimeOut(30)
+EndIf
+
+Return(.T.)
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³FinishNfeS³ Rev.  ³Eduardo Riera          ³ Data ³19.05.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Finalizacao do ambiente SPED para a NFE                     ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpL1: Parametro de retorno do WS                           ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ExpL1: Parametro de retorno do WS                           ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³Esta rotina tem como objetivo efetuar a finalizar o         ³±±
+±±³          ³ambiente sped no Protheus.                                  ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Observacao³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Totvs SPED Services Gateway                                ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function FinishNfeSped()
+
+Return(.T.)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³SpedGetMV ³ Rev.  ³Eduardo Riera          ³ Data ³19.05.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Funcao de obtencao dos parametros genericos do SPED         ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1: Parametro                                            ³±±
+±±³          ³ExpC2: Codigo da Entidade                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ExpX1: Conteudo                                             ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³Esta rotina tem como objetivo de retornar os parametros do  ³±±
+±±³          ³ambiente sped no Protheus.                                  ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Observacao³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Totvs SPED Services Gateway                                ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function SpedGetMV(cParam,cIdEnt)
+             
+Local aArea := GetArea()
+cParam := PadR(UPPER(cParam),10)
+dbSelectArea("SPED000")
+dbSetOrder(1)
+If MsSeek(cIdEnt+cParam,.F.)
+	Return(AllTrim(SPED000->CONTEUDO))
+Else
+	dbSelectArea("SPED000")
+	dbSetOrder(1)
+	If MsSeek(Space(Len(SPED000->ID_ENT))+cParam,.F.)
+		Return(AllTrim(SPED000->CONTEUDO))
+	EndIf
+EndIf
+RestArea(aArea)
+Return(Nil)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³SpedPutMV ³ Rev.  ³Eduardo Riera          ³ Data ³19.05.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Funcao de atualizacao dos parametros genericos do SPED      ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1: Parametro                                            ³±±
+±±³          ³ExpC2: Codigo da Entidade                                   ³±±
+±±³          ³ExpC3: Valor                                                ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ExpX1: Conteudo                                             ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³Esta rotina tem como objetivo de atualizacao dos parametros ³±±
+±±³          ³do ambiente sped no Protheus.                               ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Observacao³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Totvs SPED Services Gateway                                ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function SpedPutMV(cParam,cIdEnt,cConteudo)
+Local aArea := GetArea()
+
+DEFAULT cIdEnt := Space(Len(SPED000->ID_ENT))
+
+cParam := PadR(UPPER(cParam),10)
+
+Begin Transaction
+
+dbSelectArea("SPED000")
+dbSetOrder(1)
+If MsSeek(cIdEnt+cParam,.F.)
+	RecLock("SPED000",.F.)
+Else
+	RecLock("SPED000",.T.)
+EndIf
+SPED000->ID_ENT   := cIdEnt
+SPED000->PARAMETRO:= cParam
+SPED000->CONTEUDO := cConteudo
+
+End Transaction
+RestArea(aArea)
+Return(.T.)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³FsDateConv³ Autor ³Eduardo Riera          ³ Data ³20.10.2006³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Funcao de conversao de data para string em varios formatos  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ExpC1: String                                               ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpD1: Alias do arquivo temporario                          ³±±
+±±³          ³ExpC2: Formato onde:                                        ³±±
+±±³          ³       DD = Dia                                             ³±±
+±±³          ³       MM = Mes                                             ³±±
+±±³          ³       YYYY ou YY = Ano                                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao Efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function SpedDateConv(dData,cMasc)
+
+Local cDia    := ""
+Local cMes    := ""
+Local cAno    := ""
+Local cData   := Dtos(dData)
+Local cResult := ""
+Local cAux    := ""
+
+DEFAULT cMasc := "DDMMYYYY"
+
+cDia := SubStr(cData,7,2)
+cMes := SubStr(cData,5,2)
+cAno := SubStr(cData,1,4)
+
+While !Empty(cMasc)
+	cAux := SubStr(cMasc,1,2)
+	Do Case
+		Case cAux == "DD"
+			cResult += cDia
+		Case cAux == "MM"
+			cResult += cMes
+		Case cAux == "YY"
+			If SubStr(cMasc,1,4) == "YYYY"
+				cResult += cAno
+				cMasc := SubStr(cMasc,3)
+			Else
+				cResult += SubStr(cAno,3)
+			EndIf			
+	EndCase
+	cMasc := SubStr(cMasc,3)
+EndDo
+Return(cResult)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³SpedQuery ³ Autor ³ Eduardo Riera         ³ Data ³16/01/2003  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Rotina de selecao de registros atraves de comandos SQL      	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametro ³ExpA1: Array de controle                                    	³±±
+±±³          ³       [1] Alias da tabela principal                          ³±±
+±±³          ³       [2] Controle Interno ( ExpC )                          ³±±
+±±³          ³       [3] Novo alias                                    (TOP)³±±
+±±³          ³ExpN2: [1] Inicializacao                                    	³±±
+±±³          ³       [2] Finalizacao                                        ³±±
+±±³          ³ExpC3: Expressao SQL ( WHERE )                           (OPC)³±±
+±±³          ³ExpC4: Expressao SQL ( IN    )                           (OPC)³±±
+±±³          ³ExpC5: Expressao SQL ( JOIN  )                           (OPC)³±±
+±±³          ³ExpC6: Expressao SQL ( SELECT  )                         (OPC)³±±
+±±³          ³ExpC7: Expressao SQL ( GROUP BY  )                       (OPC)³±±
+±±³          ³ExpC8: Expressao SQL ( FROM  )                           (OPC)³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ExpA [1] Quantidade do Produto                              	³±±
+±±³          ³     [2] Valor do Produto                                   	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ ATUALIZACOES SOFRIDAS DESDE A CONSTRUCAO INICIAL.                     	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ PROGRAMADOR  ³ DATA   ³ BOPS ³  MOTIVO DA ALTERACAO                   	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function SpedQuery(aControle,nTipo,cWhere,cKey,aIN,aJoin,cSelect,cGroupBy,aFrom)
+
+Local aStru     := {}
+Local aStruJoin := {}
+Local cQuery    := ""
+Local nX        := 0
+DEFAULT aIn     := {}
+DEFAULT aJoin   := {}
+DEFAULT cSelect := ""
+DEFAULT cGroupBy:= ""
+DEFAULT aFrom   := {}
+
+If nTipo == 1
+	aStru := (aControle[1])->(dbStruct())
+
+	For nX := 1 To Len(aStru)
+		cQuery += ","+aControle[1]+"."+aStru[nX][1]
+	Next nX
+	If !Empty( aJoin )
+		aStruJoin := (aJoin[1])->(dbStruct())
+		For nX := 1 To Len(aStruJoin)
+			If aScan(aStru,{|x| x[1] == aStruJoin[nX][1]})==0
+				cQuery += ","+aJoin[1]+"."+aStruJoin[nX][1]
+			EndIf
+		Next nX
+		If Empty(cSelect)
+			cQuery := "SELECT "+SubStr(cQuery,2)+" "
+		Else
+			cQuery := "SELECT "+cSelect+" "
+		EndIf
+		cQuery += "FROM "+aControle[1]+" "
+		cQuery += "INNER JOIN "+aJoin[1]+" "
+		cQuery += "ON " + ajoin[2] + " "
+	Else
+		If Empty(cSelect)
+			cQuery := "SELECT "+SubStr(cQuery,2)+" "
+		Else
+			cQuery := "SELECT "+cSelect+" "
+		EndIf
+		cQuery += "FROM "+aControle[1]+" "
+	EndIf
+	cQuery += "WHERE "
+	If !Empty(cWhere)
+		cQuery += cWhere+" AND "
+	EndIf
+
+	If !empty( aIN )
+		cQuery += " "+aIn[1]+" IN " +aIn[2] + " AND "
+	EndIf
+	cQuery += aControle[1]+".D_E_L_E_T_=' ' "
+	
+	If Len(aFrom)>0
+		cQuery := "SELECT "+aFrom[1]+" FROM ("+cQuery+") " + Iif( TcGetDB() $ "MSSQL/MSSQL7/MYSQL"	, " AS " , "" ) + " ABCDE "
+		If !Empty(cGroupBy)
+			cQuery += "GROUP BY "+cGroupBy+" "
+		EndIf
+		If !Empty(cKey)
+			cQuery += "ORDER BY "+cKey
+		EndIf		
+	Else
+		If !Empty(cGroupBy)
+			cQuery += "GROUP BY "+cGroupBy+" "
+		EndIf
+		If !Empty(cKey)
+			cQuery += "ORDER BY "+cKey
+		EndIf
+	EndIf
+	cQuery := ChangeQuery(cQuery)
+
+	If Select(aControle[2])<>0
+		(aControle[2])->(dbCloseArea())
+	EndIf
+
+	dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),aControle[2])
+	For nX := 1 To Len(aStru)
+		If aStru[nX][2] <> "C" .And. FieldPos(aStru[nX][1])<>0
+			TcSetField(aControle[2],aStru[nX][1],aStru[nX][2],aStru[nX][3],aStru[nX][4])
+		EndIf
+	Next nX	
+Else
+	dbSelectArea(aControle[2])
+	dbCloseArea()
+	dbSelectArea(aControle[1])
+EndIf
+Return(.T.)
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³SpedGrvTmp³ Autor ³Eduardo Riera          ³ Data ³07.09.2006³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Funcao de conversao de Array para arquivo temporario        ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1: Alias do arquivo temporario                          ³±±
+±±³          ³ExpN2: nOperacao 1-Cria/2-Destroi                           ³±±
+±±³          ³ExpA3: Estrutura                                            ³±±
+±±³          ³ExpA4: Array com a seguinte estrutura                       ³±±
+±±³          ³       [1] Registro                                         ³±±
+±±³          ³       [1][n] Campos do arquivo                             ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao Efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function SpedGrvTmp(cAlias,nOper,aStru,aArray)
+
+Local aArea := GetArea()
+Local nX    := 0
+Local nY    := 0
+
+Static cArquivo
+
+If nOper == 1
+    cArquivo := CriaTrab(aStru,.T.)
+    dbUseArea(.T.,"DBFCDX",cArquivo,cAlias)
+    	
+	dbSelectArea(cAlias)	
+	For nX := 1 To Len(aArray)
+		RecLock(cAlias,.T.)
+		For nY := 1 To Len(aArray[nX])
+			FieldPut(nY,aArray[nX][nY])
+		Next nY
+		MsUnLock()	
+	Next nX
+Else
+	dbSelectArea(cAlias)
+	dbCloseArea()
+	FErase(cArquivo+".DBF")
+EndIf
+RestArea(aArea)
+Return(.T.)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³FsLoadTxt ³ Autor ³Eduardo Riera          ³ Data ³24.10.2006³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Funcao de leitura de arquivo texto para anexar ao layout    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ExC1: Arquivo texto                                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1: Nome do arquivo texto com path                       ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao Efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function FsLoadTXT(cFileXml)
+
+Local cTexto     := ""
+Local nHandle    := 0
+Local nTamanho   := 0
+nHandle := FOpen(cFileXml)
+If nHandle > 0
+	nTamanho := Fseek(nHandle,0,FS_END)
+	FSeek(nHandle,0,FS_SET)
+	FRead(nHandle,@cTexto,nTamanho)
+	FClose(nHandle)
+EndIf
+Return(cTexto)

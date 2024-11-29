@@ -1,0 +1,2641 @@
+#INCLUDE "SPEDNFE.ch"
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "APWIZARD.CH"
+#INCLUDE "FILEIO.CH"
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³SPEDNFe   ³ Autor ³ Eduardo Riera         ³ Data ³18.06.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Programa de transmissao da Nota fiscal eletronica           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ ATUALIZACOES SOFRIDAS DESDE A CONSTRUCAO INICIAL.                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ PROGRAMADOR  ³ DATA   ³ BOPS ³  MOTIVO DA ALTERACAO                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³              ³        ³      ³                                        ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function SPEDNFe()
+
+Local aArea     := GetArea()
+Local lRetorno  := .T.
+Local nVezes    := 0
+
+PRIVATE lBtnFiltro:= .F.
+
+While lRetorno
+	lBtnFiltro:= .F.
+    lRetorno := SpedNfe2(nVezes==0)
+    nVezes++
+    If !lBtnFiltro
+    	Exit
+    EndIf
+EndDo
+RestArea(aArea)
+Return Nil
+
+Static Function SPEDNFe2(lInit,cAlias)
+
+Local aPerg     := {}
+Local aCores    := {}
+Local lRetorno  := .T.
+Local aIndArq   := {}
+
+PRIVATE cCondicao := ""
+PRIVATE aRotina   := MenuDef()
+PRIVATE cCadastro := STR0001 //"Monitoramento da NFe-SEFAZ"
+PRIVATE bFiltraBrw
+
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Montagem das perguntas                                                  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+aadd(aPerg,{2,STR0075,"",{STR0076,STR0077},120,".T.",.T.,".T."}) //"Tipo de NFe"###"1-Saída"###"2-Entrada"
+aadd(aPerg,{2,STR0082,"",{STR0084,STR0083,STR0110,STR0111,STR0112},120,".T.",.T.,".T."}) //"Filtra"###"1-Autorizadas"###"2-Sem filtro"###"3-Não Autorizadas"###"4-Transmitidas"###"5-Não Transmitidas"
+aadd(aPerg,{1,STR0010,PadR("",Len(SF2->F2_SERIE)),"",".T.","",".T.",30,.F.})	//"Serie da Nota Fiscal"
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica se o serviço foi configurado - Somente o Adm pode configurar   ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If lInit
+	If (!IsReady() .Or. !IsReady(,2))
+		If PswAdmin( /*cUser*/, /*cPsw*/,RetCodUsr()) == 0
+			SpedNFeCFG()
+		Else
+			HelProg(,"FISTRFNFe")
+		EndIf
+	EndIf	
+EndIf
+If !lInit .Or. IsReady()
+	If ParamBox(aPerg,"SPED - NFe",,,,,,,,"SPEDNFE",.T.,.T.)
+		If SubStr(MV_PAR01,1,1) == "1"
+			aCores    := {{"F2_FIMP==' ' .AND. AllTrim(F2_ESPECIE)=='SPED'",'DISABLE' },;	//NF não transmitida
+						  {"F2_FIMP=='S'",'ENABLE'},;									//NF Autorizada
+						  {"F2_FIMP=='T'",'BR_AZUL'},;									//NF Transmitida
+						  {"F2_FIMP=='D'",'BR_CINZA'},;									//NF Uso Denegado
+						  {"F2_FIMP=='N'",'BR_PRETO'}}									//NF nao autorizada
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Realiza a Filtragem                                                     ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ			
+			cCondicao := "F2_FILIAL=='"+xFilial("SF2")+"'"
+			If !Empty(MV_PAR03)
+				cCondicao += ".AND.F2_SERIE=='"+MV_PAR03+"'"
+			EndIf
+			If SubStr(MV_PAR02,1,1) == "1" //"1-NF Autorizada"
+				cCondicao += ".AND. F2_FIMP$'S' "
+			ElseIf SubStr(MV_PAR02,1,1) == "3" //"3-Não Autorizadas"
+				cCondicao += ".AND. F2_FIMP$'N' "
+			ElseIf SubStr(MV_PAR02,1,1) == "4" //"4-Transmitidas"
+				cCondicao += ".AND. F2_FIMP$'T' "
+			ElseIf SubStr(MV_PAR02,1,1) == "5" //"5-Não Transmitidas"
+				cCondicao += ".AND. F2_FIMP$' ' "				
+			EndIf
+			bFiltraBrw := {|| FilBrowse("SF2",@aIndArq,@cCondicao) }
+			Eval(bFiltraBrw)
+			mBrowse( 6, 1,22,75,"SF2",,,,,,aCores,/*cTopFun*/,/*cBotFun*/,/*nFreeze*/,/*bParBloco*/,/*lNoTopFilter*/,.F.,.F.,)
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Restaura a integridade da rotina                                ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			dbSelectArea("SF2")
+			RetIndex("SF2")
+			dbClearFilter()
+			aEval(aIndArq,{|x| Ferase(x[1]+OrdBagExt())})			
+		Else
+			If SF1->(FieldPos("F1_FIMP"))>0
+				aCores    := {{"F1_FIMP==' ' .AND. AllTrim(F1_ESPECIE)=='SPED'",'DISABLE' },;	//NF não transmitida
+							  {"F1_FIMP=='S'",'ENABLE'},;									//NF Autorizada
+							  {"F1_FIMP=='T'",'BR_AZUL'},;									//NF Transmitida
+							  {"F1_FIMP=='D'",'BR_CINZA'},;									//NF Uso Denegado							  
+							  {"F1_FIMP=='N'",'BR_PRETO'}}									//NF nao autorizada		
+			Else
+				aCores := Nil
+			EndIf
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Realiza a Filtragem                                                     ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			cCondicao := "F1_FILIAL=='"+xFilial("SF1")+"' .AND. "
+			cCondicao += "F1_FORMUL=='S'"
+			If !Empty(MV_PAR03)
+				cCondicao += ".AND.F1_SERIE=='"+MV_PAR03+"'"
+			EndIf
+			If SubStr(MV_PAR02,1,1) == "1" .And. SF1->(FieldPos("F1_FIMP"))>0 //"1-NF Autorizada"
+				cCondicao += ".AND. F1_FIMP$'S' "
+			ElseIf SubStr(MV_PAR02,1,1) == "3" .And. SF1->(FieldPos("F1_FIMP"))>0 //"3-Não Autorizadas"
+				cCondicao += ".AND. F1_FIMP$'N' "
+			ElseIf SubStr(MV_PAR02,1,1) == "4" .And. SF1->(FieldPos("F1_FIMP"))>0 //"4-Transmitidas"
+				cCondicao += ".AND. F1_FIMP$'T' "
+			ElseIf SubStr(MV_PAR02,1,1) == "5" .And. SF1->(FieldPos("F1_FIMP"))>0 //"5-Não Transmitidas"
+				cCondicao += ".AND. F1_FIMP$' ' "				
+			EndIf
+			bFiltraBrw := {|| FilBrowse("SF1",@aIndArq,@cCondicao) }
+			Eval(bFiltraBrw)
+			mBrowse( 6, 1,22,75,"SF1",,,,,,aCores,/*cTopFun*/,/*cBotFun*/,/*nFreeze*/,/*bParBloco*/,/*lNoTopFilter*/,.F.,.F.,)
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Restaura a integridade da rotina                                ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			dbSelectArea("SF1")
+			RetIndex("SF1")
+			dbClearFilter()
+			aEval(aIndArq,{|x| Ferase(x[1]+OrdBagExt())})			
+		EndIf	
+	Else
+		lRetorno := .F.
+	EndIf
+Else
+	HelProg(,"FISTRFNFe")
+	lRetorno := .F.
+EndIf
+Return(lRetorno)
+
+/*/
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³SpedNfeLeg³Autor  ³ Eduardo Riera         ³ Data ³02.08.2007 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³Demonstra a legenda das cores da mbrowse                     ³±±
+±±³          ³                                                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³Nenhum                                                       ³±±
+±±³          ³                                                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                       ³±±
+±±³          ³                                                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³Esta rotina monta uma dialog com a descricao das cores da    ³±±
+±±³          ³Mbrowse.                                                     ³±±
+±±³          ³                                                             ³±±
+±±³          ³                                                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Materiais                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function SpedNfeLeg()
+Local aLegenda := {}
+				aCores    := {{"F1_FIMP==' ' .AND. AllTrim(F1_ESPECIE)=='SPED'",'DISABLE' },;	//NF não transmitida
+							  {"F1_FIMP=='S','ENABLE'"},;									//NF Autorizada
+							  {"F1_FIMP=='T','BR_AZUL'"},;									//NF Transmitida
+							  {"F1_FIMP=='D','BR_CINZA'"},;									//NF Uso Denegado
+							  {"F1_FIMP=='N','BR_PRETO'"}}									//NF nao autorizada
+
+Aadd(aLegenda, {"ENABLE"    ,STR0078}) //"NF autorizada"
+Aadd(aLegenda, {"DISABLE"   ,STR0079}) //"NF não transmitida"
+Aadd(aLegenda, {"BR_AZUL"   ,STR0080}) //"NF Transmitida"
+Aadd(aLegenda, {"BR_PRETO"  ,STR0081})	//"NF nao autorizada"
+Aadd(aLegenda, {"BR_CINZA"  ,STR0138})	//"NF Uso Denegado"
+BrwLegenda(cCadastro,STR0117,aLegenda) //"Legenda"
+
+Return(.T.)
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³MenuDef   ³ Autor ³Eduardo Riera          ³ Data ³18.06.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Utilizacao de menu Funcional                               ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Array com opcoes da rotina.                                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³Parametros do array a Rotina:                               ³±±
+±±³          ³1. Nome a aparecer no cabecalho                             ³±±
+±±³          ³2. Nome da Rotina associada                                 ³±±
+±±³          ³3. Reservado                                                ³±±
+±±³          ³4. Tipo de Transa‡„o a ser efetuada:                        ³±±
+±±³          ³	  1 - Pesquisa e Posiciona em um Banco de Dados           ³±±
+±±³          ³    2 - Simplesmente Mostra os Campos                       ³±±
+±±³          ³    3 - Inclui registros no Bancos de Dados                 ³±±
+±±³          ³    4 - Altera o registro corrente                          ³±±
+±±³          ³    5 - Remove o registro corrente do Banco de Dados        ³±±
+±±³          ³5. Nivel de acesso                                          ³±±
+±±³          ³6. Habilita Menu Funcional                                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function MenuDef()
+
+Local aRotina2  := { {STR0002,"SpedNFe1Mnt",0,2},; //"Faixa"
+                     {STR0003,"SpedNFe2Mnt",0,2},; //"Tempo"
+                     {STR0099,"SpedNFe3Mnt",0,2},; //"Estatísticas"
+                     {STR0107,"SpedNfe4Mnt",0,2},; //"Consulta NFe"
+                     {STR0140,"SpedNfe5Mnt",0,2}}
+
+Private aRotina := {	    {STR0004,"PesqBrw"       ,0,1,0,.F.},; //"Pesquisar"
+							{STR0005,"SpedNFeCfg"    ,0,2,0 ,NIL},; //"Wiz.Config."
+							{SubStr(STR0006,1,1)+"&"+SubStr(STR0006,2),"SpedNFePar"    ,0,2,0 ,NIL},; //"Parâmetros"
+							{STR0007,"SpedNFeStatus" ,0,2,0 ,NIL},; //"Status SEFAZ"
+							{STR0008,"SpedNFeRemessa",0,2,0 ,NIL},; //"Transmissão"
+							{"DANFE","SpedDanfe"     ,0,2,0 ,NIL},;
+							{STR0009,aRotina2        ,0,2,0 ,NIL},; //"Monitor"
+							{STR0109,"SpedVisualDoc" ,0,2,0 ,NIL},; //"Visualiza Doc."
+							{STR0113,"SpedFiltro"	 ,0,3,0 ,NIL},; //"Filtro"
+							{STR0116,"SpedExport"    ,0,2,0 ,NIL},; //"Exportar"
+							{STR0117,"SpedNfeLeg"    ,0,2,0 ,NIL}}  //"Legenda"
+	
+If ExistBlock("FISTRFNFE")
+	ExecBlock("FISTRFNFE",.F.,.F.)
+EndIf
+
+Return(aRotina)
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³SpedDanfe ³ Autor ³Eduardo Riera          ³ Data ³27.06.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Rotina de chamada do WS de impressao da DANFE               ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function SpedDanfe()
+
+Local cIdEnt
+If IsReady() 
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Obtem o codigo da entidade                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ	
+	cIdEnt := GetIdEnt()
+	u_PrtNfeSef(cIdEnt)
+EndIf
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³SpedNFeRem³ Autor ³Eduardo Riera          ³ Data ³21.06.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Rotina de remessa da Nota fiscal eletronica para o Totvs    ³±±
+±±³          ³Service SPED                                                ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function SpedNFeRemessa()
+
+SpedNFeRe2()
+
+Return
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³SpedNFeRe2³ Autor ³Eduardo Riera          ³ Data ³21.06.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Rotina de remessa da Nota fiscal eletronica para o Totvs    ³±±
+±±³          ³Service SPED - utilizada em personalizacoes                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1: Serie da NF                                          ³±±
+±±³          ³ExpC2: Nota inicial                                         ³±±
+±±³          ³ExpC3: Nota final                                           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function SpedNFeRe2(cSerie,cNotaIni,cNotaFim)
+
+Local aArea       := GetArea()
+Local aPerg       := {}
+Local aParam      := {Space(Len(SF2->F2_SERIE)),Space(Len(SF2->F2_DOC)),Space(Len(SF2->F2_DOC))}
+Local aTexto      := {}
+Local aXML        := {}
+Local cRetorno    := ""
+Local cIdEnt      := ""
+Local cModalidade := ""
+Local cAmbiente   := ""
+Local cVersao     := ""
+Local cVersaoCTe  := ""
+Local cVersaoDpec := ""
+Local cMonitorSEF := ""
+Local cSugestao   := ""
+Local cURL        := PadR(GetNewPar("MV_SPEDURL","http://"),250)
+Local nX          := 0
+Local lOk         := .T.
+Local oWs
+Local oWizard
+
+If cSerie == Nil
+	MV_PAR01 := aParam[01] := PadR(ParamLoad("SPEDNFEREM",aPerg,1,aParam[01]),Len(SF2->F2_SERIE))
+	MV_PAR02 := aParam[02] := PadR(ParamLoad("SPEDNFEREM",aPerg,2,aParam[02]),Len(SF2->F2_DOC))
+	MV_PAR03 := aParam[03] := PadR(ParamLoad("SPEDNFEREM",aPerg,3,aParam[03]),Len(SF2->F2_DOC))
+Else
+	MV_PAR01 := aParam[01] := cSerie
+	MV_PAR02 := aParam[02] := cNotaIni
+	MV_PAR03 := aParam[03] := cNotaFim
+EndIf
+
+aadd(aPerg,{1,STR0010,aParam[01],"",".T.","",".T.",30,.F.})	//"Serie da Nota Fiscal"
+aadd(aPerg,{1,STR0011,aParam[02],"",".T.","",".T.",30,.T.})	//"Nota fiscal inicial"
+aadd(aPerg,{1,STR0012,aParam[03],"",".T.","",".T.",30,.T.}) //"Nota fiscal final"
+
+If IsReady()
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Obtem o codigo da entidade                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	cIdEnt := GetIdEnt()
+	If !Empty(cIdEnt)
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Obtem o ambiente de execucao do Totvs Services SPED                     ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		oWS := WsSpedCfgNFe():New()
+		oWS:cUSERTOKEN := "TOTVS"
+		oWS:cID_ENT    := cIdEnt
+		oWS:nAmbiente  := 0	
+		oWS:_URL       := AllTrim(cURL)+"/SPEDCFGNFe.apw"
+		lOk := oWS:CFGAMBIENTE()
+		cAmbiente := oWS:cCfgAmbienteResult
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Obtem a modalidade de execucao do Totvs Services SPED                   ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If lOk
+			oWS:cUSERTOKEN := "TOTVS"
+			oWS:cID_ENT    := cIdEnt
+			oWS:nModalidade:= 0
+			oWS:_URL       := AllTrim(cURL)+"/SPEDCFGNFe.apw"
+			lOk := oWS:CFGModalidade()
+			cModalidade    := oWS:cCfgModalidadeResult
+		EndIf
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Obtem a versao de trabalho da NFe do Totvs Services SPED                ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If lOk
+			oWS:cUSERTOKEN := "TOTVS"
+			oWS:cID_ENT    := cIdEnt
+			oWS:cVersao    := "0.00"
+			oWS:_URL       := AllTrim(cURL)+"/SPEDCFGNFe.apw"
+			lOk := oWS:CFGVersao()
+			cVersao        := oWS:cCfgVersaoResult
+		EndIf	
+		If lOk
+			oWS:cUSERTOKEN := "TOTVS"
+			oWS:cID_ENT    := cIdEnt
+			oWS:cVersao    := "0.00"
+			oWS:_URL       := AllTrim(cURL)+"/SPEDCFGNFe.apw"
+			lOk := oWS:CFGVersaoCTe()
+			cVersaoCTe     := oWS:cCfgVersaoCTeResult
+		EndIf	
+		If lOk
+			oWS:cUSERTOKEN := "TOTVS"
+			oWS:cID_ENT    := cIdEnt
+			oWS:cVersao    := "0.00"
+			oWS:_URL       := AllTrim(cURL)+"/SPEDCFGNFe.apw"
+			lOk := oWS:CFGVersaoDpec()
+			cVersaoDpec	   := oWS:cCfgVersaoDpecResult
+		EndIf	
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Verifica o status na SEFAZ                                              ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If lOk
+			oWS:= WSNFeSBRA():New()
+			oWS:cUSERTOKEN := "TOTVS"
+			oWS:cID_ENT    := cIdEnt
+			oWS:_URL       := AllTrim(cURL)+"/NFeSBRA.apw"
+			lOk := oWS:MONITORSEFAZMODELO()
+			If lOk
+				aXML := oWS:oWsMonitorSefazModeloResult:OWSMONITORSTATUSSEFAZMODELO
+				For nX := 1 To Len(aXML)
+					Do Case
+						Case aXML[nX]:cModelo == "55"
+							cMonitorSEF += "- NFe"+CRLF
+							cMonitorSEF += STR0017+cVersao+CRLF	//"Versao do layout: "
+							If !Empty(aXML[nX]:cSugestao)
+								cSugestao += STR0125+"(NFe)"+": "+aXML[nX]:cSugestao+CRLF //"Sugestão"
+							EndIf
+							
+						Case aXML[nX]:cModelo == "57"
+							cMonitorSEF += "- CTe"+CRLF
+							cMonitorSEF += STR0017+cVersaoCTe+CRLF	//"Versao do layout: "
+							If !Empty(aXML[nX]:cSugestao)
+								cSugestao += STR0125+"(CTe)"+": "+aXML[nX]:cSugestao+CRLF //"Sugestão"
+							EndIf
+					EndCase
+					cMonitorSEF += Space(6)+STR0129+": "+aXML[nX]:cVersaoMensagem+CRLF //"Versão da mensagem"
+					cMonitorSEF += Space(6)+STR0120+": "+aXML[nX]:cStatusCodigo+"-"+aXML[nX]:cStatusMensagem+CRLF //"Código do Status"
+	                cMonitorSEF += Space(6)+STR0121+": "+aXML[nX]:cUFOrigem //"UF Origem"
+	                If !Empty(aXML[nX]:cUFResposta)
+		                cMonitorSEF += "("+aXML[nX]:cUFResposta+")"+CRLF //"UF Resposta"
+		   			Else
+		   				cMonitorSEF += CRLF
+		   			EndIf
+	                If aXML[nX]:nTempoMedioSEF <> Nil
+						cMonitorSEF += Space(6)+STR0071+": "+Str(aXML[nX]:nTempoMedioSEF,6)+CRLF //"Tempo de espera"
+					EndIf
+					If !Empty(aXML[nX]:cMotivo)
+						cMonitorSEF += Space(6)+STR0123+": "+aXML[nX]:cMotivo+CRLF //"Motivo"
+					EndIf
+					If !Empty(aXML[nX]:cObservacao)
+						cMonitorSEF += Space(6)+STR0124+": "+aXML[nX]:cObservacao+CRLF //"Observação"
+					EndIf
+				Next nX
+			EndIf
+		EndIf	
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Montagem da Interface                                                  ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If (lOk == .T. .or. lOk == Nil)
+			aadd(aTexto,{})
+			aTexto[1] := STR0013+" " //"Esta rotina tem como objetivo auxilia-lo na transmissão da Nota Fiscal eletrônica para o serviço Totvs Services SPED. "
+			aTexto[1] += STR0014+CRLF+CRLF //"Neste momento o Totvs Services SPED, está operando com a seguinte configuração: "
+			aTexto[1] += STR0015+cAmbiente+CRLF //"Ambiente: "
+			aTexto[1] += STR0016+cModalidade+CRLF	//"Modalidade de emissão: "
+			If !Empty(cSugestao)
+				aTexto[1] += CRLF
+				aTexto[1] += cSugestao
+				aTexto[1] += CRLF
+			EndIf			
+			aTexto[1] += cMonitorSEF
+			
+			aadd(aTexto,{})
+		
+			DEFINE WIZARD oWizard ;
+				TITLE STR0018;
+				HEADER STR0019;
+				MESSAGE STR0020;
+				TEXT aTexto[1] ;
+				NEXT {|| .T.} ;
+				FINISH {||.T.}
+		
+			CREATE PANEL oWizard  ;
+				HEADER STR0018 ;//"Assistente de transmissão da Nota Fiscal Eletrônica"
+				MESSAGE ""	;
+				BACK {|| .T.} ;
+				NEXT {|| ParamSave("SPEDNFEREM",aPerg,"1"),Processa({|lEnd| cRetorno := SpedNFeTrf(aArea[1],aParam[1],aParam[2],aParam[3],cIdEnt,cAmbiente,cModalidade,cVersao,@lEnd)}),aTexto[02]:= cRetorno,.T.} ;
+				PANEL
+		    ParamBox(aPerg,"SPED - NFe",@aParam,,,,,,oWizard:oMPanel[2],"SPEDNFEREM",.T.,.T.)
+		
+			CREATE PANEL oWizard  ;
+				HEADER STR0018;//"Assistente de configuração da Nota Fiscal Eletrônica"
+				MESSAGE "";
+				BACK {|| .T.} ;
+				FINISH {|| .T.} ;
+				PANEL
+			@ 010,010 GET aTexto[2] MEMO SIZE 270, 115 READONLY PIXEL OF oWizard:oMPanel[3]
+			ACTIVATE WIZARD oWizard CENTERED
+		EndIf
+	EndIf
+Else
+
+	Aviso("SPED",STR0021,{STR0114},3) //"Execute o módulo de configuração do serviço, antes de utilizar esta opção!!!"
+
+EndIf
+
+RestArea(aArea)
+Return
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³SpedNFeTrf³ Autor ³Eduardo Riera          ³ Data ³21.06.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Rotina de remessa da Nota fiscal eletronica para o Totvs    ³±±
+±±³          ³Service SPED                                                ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ExpC1: Mensagem de retorno                                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1: Alias da tabela da Mbrowse                           ³±±
+±±³          ³ExpC2: Serie                                                ³±±
+±±³          ³ExpC3: Nota inicial                                         ³±±
+±±³          ³ExpC4: Nota final                                           ³±±
+±±³          ³ExpC5: Id da entidade empresarial                           ³±±
+±±³          ³ExpC6: Ambiente de emissao da NFe                           ³±±
+±±³          ³ExpC7: Modalidade de emissao da NFe                         ³±±
+±±³          ³ExpC8: Versa da NFe                                         ³±±
+±±³          ³ExpL9: Controle de encerramento                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function SpedNFeTrf(cAlias,cSerie,cNotaIni,cNotaFim,cIDEnt,cAmbiente,cModalidade,cVersao,lEnd)
+
+Local aArea     := GetArea()
+Local aNotas    := {}
+Local aRetNotas := {}
+Local cRetorno  := ""
+Local aXml      := {}
+Local cAliasSF3 := "SF3"
+Local cWhere    := ""
+Local cErro     := ""
+Local lQuery    := .F.
+Local lRetorno  := .T.
+Local nX        := 0
+Local nY        := 0
+Local nNFes     := 0
+Local nXmlSize  := 0
+Local dDataIni  := Date()
+Local cHoraIni  := Time()
+Local cURL      := PadR(GetNewPar("MV_SPEDURL","http://"),250)
+Local oWs
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Restaura a integridade da rotina caso exista filtro             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea(cAlias)
+dbClearFilter()
+RetIndex(cAlias)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Analisa parametros                                                     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cAmbiente   := SubStr(cAmbiente,1,1)
+cModalidade := SubStr(cModalidade,1,1)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Cancela as notas do dia anterior                                       ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+SpedNFeCan(cEmpAnt,cFilAnt,cIdEnt,cAmbiente,cModalidade,cVersao)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Filtra as notas fiscais do dia                                         ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+ProcRegua(Val(cNotaFim)-Val(cNotaIni)+1)
+dbSelectArea("SF3")
+dbSetOrder(5)
+#IFDEF TOP
+	cWhere := "%((SubString(SF3.F3_CFO,1,1) < '5' AND SF3.F3_FORMUL='S') OR (SubString(SF3.F3_CFO,1,1) >= '5'))%"
+	cAliasSF3 := GetNextAlias()
+	lQuery    := .T.
+	BeginSql Alias cAliasSF3
+		
+	COLUMN F3_ENTRADA AS DATE
+	COLUMN F3_DTCANC AS DATE
+				
+	SELECT	F3_FILIAL,F3_ENTRADA,F3_NFeLETR,F3_CFO,F3_FORMUL,F3_NFISCAL,F3_SERIE,F3_CLIEFOR,F3_LOJA,F3_ESPECIE,F3_DTCANC
+			FROM %Table:SF3% SF3
+			WHERE
+			SF3.F3_FILIAL = %xFilial:SF3% AND
+			SF3.F3_SERIE = %Exp:cSerie% AND 
+			SF3.F3_NFISCAL >= %Exp:cNotaIni% AND 
+			SF3.F3_NFISCAL <= %Exp:cNotaFim% AND 
+			%Exp:cWhere% AND 
+			SF3.F3_DTCANC = %Exp:Space(8)% AND 
+			SF3.%notdel%
+	EndSql
+	cWhere := ".T."	
+#ELSE
+	MsSeek(xFilial("SF3")+cSerie+cNotaIni,.T.)
+#ENDIF
+cWhere := "((SubStr(F3_CFO,1,1) < '5' .AND. F3_FORMUL='S') .OR. (SubStr(F3_CFO,1,1) >= '5'))"
+While !Eof() .And. xFilial("SF3") == (cAliasSF3)->F3_FILIAL .And.;
+	(cAliasSF3)->F3_SERIE == cSerie .And.;
+	(cAliasSF3)->F3_NFISCAL >= cNotaIni .And.;
+	(cAliasSF3)->F3_NFISCAL <= cNotaFim
+
+	dbSelectArea(cAliasSF3)
+	If (SubStr((cAliasSF3)->F3_CFO,1,1)>="5" .Or. (cAliasSF3)->F3_FORMUL=="S") .And. aScan(aNotas,{|x| x[3]+x[4]==(cAliasSF3)->F3_SERIE+(cAliasSF3)->F3_NFISCAL})==0
+		
+		IncProc("(1/2) "+STR0022+(cAliasSF3)->F3_NFISCAL) //"Preparando nota: "
+		
+		If (AModNot((cAliasSF3)->F3_ESPECIE)$"55,57" .Or. cAmbiente=="2") .And. Empty((cAliasSF3)->F3_DTCANC) .And. &cWhere
+			aadd(aNotas,{})	
+			nX := Len(aNotas)
+			aadd(aNotas[nX],IIF((cAliasSF3)->F3_CFO<"5","0","1"))
+			aadd(aNotas[nX],(cAliasSF3)->F3_ENTRADA)
+			aadd(aNotas[nX],(cAliasSF3)->F3_SERIE)
+			aadd(aNotas[nX],(cAliasSF3)->F3_NFISCAL)
+			aadd(aNotas[nX],(cAliasSF3)->F3_CLIEFOR)
+			aadd(aNotas[nX],(cAliasSF3)->F3_LOJA)
+		EndIf
+	EndIf		
+	dbSelectArea(cAliasSF3)
+	dbSkip()	
+EndDo
+If lQuery
+	dbSelectArea(cAliasSF3)
+	dbCloseArea()
+	dbSelectArea("SF3")
+EndIf
+ProcRegua(Len(aNotas))
+
+oWs:= WsNFeSBra():New()
+oWs:cUserToken := "TOTVS"
+oWs:cID_ENT    := cIdEnt
+oWS:_URL       := AllTrim(cURL)+"/NFeSBRA.apw"
+oWs:oWsNFe:oWSNOTAS :=  NFeSBRA_ARRAYOFNFeS():New()
+For nX := 1 To Len(aNotas)
+	IncProc("(2/2) "+STR0023+aNotas[nX][4]) //"Transmitindo XML da nota: "
+	aXml := ExecBlock("XmlNFeSef",.F.,.F.,aNotas[nX])
+	If !Empty(aXML[2])
+		nNFes++
+		nY++
+		nXmlSize += Len(aXML[2])
+		aadd(oWs:oWsNFe:oWSNOTAS:oWSNFeS,NFeSBRA_NFeS():New())
+		
+		aadd(aRetNotas,aNotas[nX])
+		
+		oWs:oWsNFe:oWSNOTAS:oWsNFes[nY]:cID := aNotas[nX][3]+aNotas[nX][4]
+		oWs:oWsNFe:oWSNOTAS:oWsNFes[nY]:cXML:= aXML[2]
+				
+	EndIf
+	If (nY >=50 .Or. nX == Len(aNotas) .Or. nXmlSize>=500000) .And. nNFes > 0
+		If nXmlSize>0 .And. oWs:Remessa()
+			If Len(oWs:oWsRemessaResult:oWSID:cString) <> nY
+				cErro := STR0024+CRLF+CRLF //"As notas abaixo foram recusadas, verifique a rotina 'Monitor' para saber os motivos."
+			EndIf
+			For nY := 1 To Len(aRetNotas)
+				If Len(oWs:oWsRemessaResult:oWSID:cString) <> nY
+					If aScan(oWs:oWsRemessaResult:oWSID:cString,aRetNotas[nY][3]+aRetNotas[nY][4])==0
+						cErro += "NFe: "+aRetNotas[nY][3]+aRetNotas[nY][4]+CRLF
+					EndIf
+				EndIf
+		    	If aRetNotas[nY][1] == "0"
+		    		If SF1->(FieldPos("F1_FIMP"))>0
+			    		dbSelectArea("SF1")
+			    		dbSetOrder(1)
+			    		If MsSeek(xFilial("SF1")+aRetNotas[nY][4]+aRetNotas[nY][3]+aRetNotas[nY][5]+aRetNotas[nY][6]) .And. SF1->F1_FIMP$"N, "
+		    			   RecLock("SF1")
+		    			   SF1->F1_FIMP := IIF(aScan(oWs:oWsRemessaResult:oWSID:cString,aRetNotas[nY][3]+AllTrim(aRetNotas[nY][4]))==0,"N","T")
+		    			   MsUnlock()
+		    			EndIf
+					EndIf		    	
+		    	Else
+		    		dbSelectArea("SF2")
+		    		dbSetOrder(1)
+		    		If MsSeek(xFilial("SF2")+aRetNotas[nY][4]+aRetNotas[nY][3]+aRetNotas[nY][5]+aRetNotas[nY][6]) .And. SF2->F2_FIMP$"N, "
+	    			   RecLock("SF2")
+	    			   SF2->F2_FIMP := IIF(aScan(oWs:oWsRemessaResult:oWSID:cString,aRetNotas[nY][3]+AllTrim(aRetNotas[nY][4]))==0,"N","T")
+	    			   MsUnlock()
+	    			EndIf
+		        EndIf					
+			Next nY
+			oWs:= WsNFeSBra():New()
+			oWs:cUserToken := "TOTVS"
+			oWs:cID_ENT    := cIdEnt	
+			oWS:_URL       := AllTrim(cURL)+"/NFeSBRA.apw"
+			oWs:oWsNFe:oWSNOTAS :=  NFeSBRA_ARRAYOFNFeS():New()
+			nY := 0
+			nXmlSize := 0
+			aRetNotas := {}
+		Else
+			cErro := GetWscError(3)
+			DEFAULT cErro := STR0025 //"Erro indeterminado"
+			lRetorno := .F.
+			Exit
+        EndIf
+	EndIf
+Next nX
+If lRetorno
+	cRetorno := STR0026+CRLF //"Você concluíu com sucesso a transmissão do Protheus para o Totvs Services SPED."
+	cRetorno += STR0027+CRLF+CRLF //"Verifique se as notas foram autorizadas na SEFAZ, utilizando a rotina 'Monitor'. Antes de imprimir a DANFe."
+	cRetorno += STR0028+AllTrim(Str(nNFes,18))+STR0029+IntToHora(SubtHoras(dDataIni,cHoraIni,Date(),Time()))+CRLF+CRLF //"Foram transmitidas "###" nota(s) em "
+	cRetorno += cErro	
+Else
+	cRetorno := STR0029+CRLF+CRLF //"Houve erro durante a transmissão para o Totvs Services SPED."
+	cRetorno += cErro
+EndIf
+
+Eval(bFiltraBrw)
+RestArea(aArea)
+
+Return(cRetorno)
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³SpedNFePar³ Autor ³Eduardo Riera          ³ Data ³18.06.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Parametriza o  Totvs Services para a nota fiscal eletronica ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function SpedNFePar()
+
+Local oWs
+Local aPerg  := {}
+Local aParam := {"","","",0}
+Local aCombo1:= {}
+Local aCombo2:= {}
+Local aCombo3:= {}
+Local aCombo4:= {}
+Local aCombo5:= {}
+Local cCombo1:= ""
+Local cCombo2:= ""
+Local cCombo3:= ""
+Local cCombo4:= ""
+Local cCombo5:= ""
+Local cIdEnt := ""
+Local cURL   := PadR(GetNewPar("MV_SPEDURL","http://"),250)
+Local nTempo := 0
+
+aadd(aCombo1,STR0031) //"1-Produção"
+aadd(aCombo1,STR0032) //"2-Homologação"
+aadd(aCombo2,STR0033) //"1-Normal"
+aadd(aCombo2,STR0034) //"2-Contingência off-line"
+aadd(aCombo2,STR0108) //"3-Contingência SCAN"
+aadd(aCombo2,STR0131) //"4-Ambiente Nacional"
+aadd(aCombo2,STR0139) //"5-Contigência Eletrônica - DPEC"
+aadd(aCombo3,"1.07") 
+aadd(aCombo3,"1.10")
+aadd(aCombo3,"1.11")
+aadd(aCombo3,"1.12")
+aadd(aCombo3,"9.99")
+aadd(aCombo4,"1.02") 
+aadd(aCombo4,"9.99")
+aadd(aCombo5,"1.00") 
+aadd(aCombo5,"1.01")
+aadd(aCombo5,"9.99") 
+If IsReady()
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Obtem o codigo da entidade                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	cIdEnt := GetIdEnt()
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Obtem o ambiente                                                        ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ	
+	oWS := WsSpedCfgNFe():New()
+	oWS:cUSERTOKEN := "TOTVS"
+	oWS:cID_ENT    := cIdEnt
+	oWS:nAmbiente  := 0	
+	oWS:_URL       := AllTrim(cURL)+"/SPEDCFGNFe.apw"
+	oWS:CFGAMBIENTE()
+	cCombo1 := oWS:cCfgAmbienteResult
+	
+	aadd(aPerg,{2,STR0035,cCombo1,aCombo1,120,".T.",.T.,".T."}) //"Ambiente"
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Obtem a modalidade                                                      ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ	
+	oWS:cUSERTOKEN := "TOTVS"
+	oWS:cID_ENT    := cIdEnt
+	oWS:nModalidade:= 0
+	oWS:_URL       := AllTrim(cURL)+"/SPEDCFGNFe.apw"
+	oWS:CFGModalidade()
+	cCombo2 := oWS:cCfgModalidadeResult
+	
+	aadd(aPerg,{2,STR0036,cCombo2,aCombo2,120,".T.",.T.,".T."}) //"Modalidade"	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Obtem a versao da NFe                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	oWS:cUSERTOKEN := "TOTVS"
+	oWS:cID_ENT    := cIdEnt
+	oWS:cVersao    := "0.00"
+	oWS:_URL       := AllTrim(cURL)+"/SPEDCFGNFe.apw"
+	oWS:CFGVersao()
+	cCombo3 := oWS:cCfgVersaoResult
+	aadd(aPerg,{2,STR0037+" NFe",cCombo3,aCombo3,120,".T.",.T.,".T."}) //"Versão"
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Obtem a versao do CTe                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	oWS:cUSERTOKEN := "TOTVS"
+	oWS:cID_ENT    := cIdEnt
+	oWS:cVersao    := "0.00"
+	oWS:_URL       := AllTrim(cURL)+"/SPEDCFGNFe.apw"
+	oWS:CFGVersaoCTe()
+	cCombo4 := oWS:cCfgVersaoCTeResult
+	aadd(aPerg,{2,STR0037+" CTe",cCombo4,aCombo4,120,".T.",.T.,".T."}) //"Versão"
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Obtem a versao do DPEC                                                  ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	oWS:cUSERTOKEN := "TOTVS"
+	oWS:cID_ENT    := cIdEnt
+	oWS:cVersao    := "0.00"
+	oWS:_URL       := AllTrim(cURL)+"/SPEDCFGNFe.apw"
+	oWS:CfgVersaoDpec()
+	cCombo5 := oWS:cCfgVersaoDpecResult
+	aadd(aPerg,{2,STR0037+" DPEC",cCombo5,aCombo5,120,".T.",.T.,".T."}) //"Versão DPEC"	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Obtem o tempo de espera                                                 ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	oWS:cUSERTOKEN  := "TOTVS"
+	oWS:cID_ENT     := cIdEnt
+	oWS:nTempoEspera:= 0
+	oWS:_URL        := AllTrim(cURL)+"/SPEDCFGNFe.apw"
+	oWS:CFGTempoEspera()
+	nTempo := oWS:nCfgTempoEsperaResult
+		
+	aadd(aPerg,{1,STR0071,nTempo,"99",".T.","",".T.",30,.F.})		//"Tempo de espera"	
+	
+	aParam := {SubStr(cCombo1,1,1),SubStr(cCombo2,1,1),cCombo3,cCombo4,cCombo5,nTempo}
+	If ParamBox(aPerg,"SPED - NFe",aParam,,,,,,,"SPEDNFEPAR",.T.,.F.)
+		oWS := WsSpedCfgNFe():New()
+		oWS:cUSERTOKEN := "TOTVS"
+		oWS:cID_ENT    := cIdEnt
+		oWS:nAmbiente  := Val(aParam[1])
+		oWS:_URL       := AllTrim(cURL)+"/SPEDCFGNFe.apw"
+		oWS:CFGAMBIENTE()
+		
+		oWS:cUSERTOKEN := "TOTVS"
+		oWS:cID_ENT    := cIdEnt
+		oWS:nModalidade:= Val(aParam[2])
+		oWS:_URL       := AllTrim(cURL)+"/SPEDCFGNFe.apw"
+		oWS:CFGModalidade()		
+	
+		oWS:cUSERTOKEN := "TOTVS"
+		oWS:cID_ENT    := cIdEnt
+		oWS:cVersao    := aParam[3]
+		oWS:_URL       := AllTrim(cURL)+"/SPEDCFGNFe.apw"
+		oWS:CFGVersao()
+		
+
+		oWS:cUSERTOKEN := "TOTVS"
+		oWS:cID_ENT    := cIdEnt
+		oWS:cVersao    := aParam[4]
+		oWS:_URL       := AllTrim(cURL)+"/SPEDCFGNFe.apw"
+		oWS:CFGVersaoCTe()
+		
+		oWS:cUSERTOKEN := "TOTVS"
+		oWS:cID_ENT    := cIdEnt
+		oWS:cVersao    := aParam[5]
+		oWS:_URL       := AllTrim(cURL)+"/SPEDCFGNFe.apw"
+		oWS:CFGVersaoDpec()
+		oWS:cUSERTOKEN  := "TOTVS"
+		oWS:cID_ENT     := cIdEnt
+		oWS:nTempoEspera:= aParam[5]
+		oWS:_URL        := AllTrim(cURL)+"/SPEDCFGNFe.apw"
+		oWS:CFGTempoEspera()
+	EndIf
+Else
+
+	Aviso("SPED",STR0021,{STR0114},3) //"Execute o módulo de configuração do serviço, antes de utilizar esta opção!!!"
+
+EndIf
+
+Return
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³SpedNFeSta³ Autor ³Eduardo Riera          ³ Data ³18.06.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Analisa o Status do Servico da NFe                          ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function SpedNFeStatus()
+
+Local oWS
+Local oDlg
+Local oGet
+Local cIdEnt     := ""
+Local cURL       := PadR(GetNewPar("MV_SPEDURL","http://"),250)
+Local cStatus    := ""
+Local cAuditoria := ""
+Local aSize      := {}
+Local aXML       := {}
+Local nX         := 0
+
+If IsReady() 
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Obtem o codigo da entidade                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ	
+	cIdEnt := GetIdEnt()
+	If !Empty(cIdEnt)
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Instancia a classe                                                      ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If !Empty(cIdEnt)
+			oWS:= WSNFeSBRA():New()
+			oWS:cUSERTOKEN := "TOTVS"
+			oWS:cID_ENT    := cIdEnt
+			oWS:_URL       := AllTrim(cURL)+"/NFeSBRA.apw"
+			If oWS:MONITORSEFAZMODELO()
+				aSize := MsAdvSize()
+				aXML := oWS:oWsMonitorSefazModeloResult:OWSMONITORSTATUSSEFAZMODELO
+				For nX := 1 To Len(aXML)
+					Do Case
+						Case aXML[nX]:cModelo == "55"
+							cStatus += "- NFe"+CRLF
+						Case aXML[nX]:cModelo == "57"
+							cStatus += "- CTe"+CRLF
+					EndCase
+					cStatus += Space(6)+STR0129+": "+aXML[nX]:cVersaoMensagem+CRLF //"Versão da mensagem"
+					cStatus += Space(6)+STR0120+": "+aXML[nX]:cStatusCodigo+"-"+aXML[nX]:cStatusMensagem+CRLF //"Código do Status"
+	                cStatus += Space(6)+STR0121+": "+aXML[nX]:cUFOrigem+CRLF //"UF Origem"
+	                If !Empty(aXML[nX]:cUFResposta)
+		                cStatus += Space(6)+STR0122+": "+aXML[nX]:cUFResposta+CRLF //"UF Resposta"
+		   			EndIf
+	                If aXML[nX]:nTempoMedioSEF <> Nil
+						cStatus += Space(6)+STR0071+": "+Str(aXML[nX]:nTempoMedioSEF,6)+CRLF+CRLF //"Tempo de espera"
+					EndIf
+					If !Empty(aXML[nX]:cMotivo)
+						cStatus += Space(6)+STR0123+": "+aXML[nX]:cMotivo+CRLF+CRLF //"Motivo"
+					EndIf
+					If !Empty(aXML[nX]:cObservacao)
+						cStatus += Space(6)+STR0124+": "+aXML[nX]:cObservacao+CRLF+CRLF //"Observação"
+					EndIf
+					If !Empty(aXML[nX]:cSugestao)
+						cStatus += Space(6)+STR0125+": "+aXML[nX]:cSugestao+CRLF+CRLF //"Sugestão"
+					EndIf
+					If !Empty(aXML[nX]:cLogAuditoria)
+						cAuditoria += aXML[nX]:cLogAuditoria
+					EndIf
+				Next nX
+										
+				DEFINE MSDIALOG oDlg TITLE "SPED - NFe" From 017,000 to (aSize[6]/3),(aSize[5]/2) OF oMainWnd PIXEL
+				@ 005,005 GET oGet VAR cStatus OF oDlg SIZE (aSize[3]/2)-005,(aSize[4]/3)-032 PIXEL MULTILINE
+				oGet:lReadOnly := .T.
+				@ (aSize[4]/3)-022,(aSize[3]/2)-040 BUTTON oBtn1 PROMPT STR0114   		ACTION oDlg:End() OF oDlg PIXEL SIZE 035,011 //"OK"
+				@ (aSize[4]/3)-022,(aSize[3]/2)-080 BUTTON oBtn2 PROMPT STR0126   		ACTION (Aviso(STR0126,cAuditoria,{STR0114},3)) OF oDlg PIXEL SIZE 035,011 WHEN !Empty(cAuditoria)//"Detalhes"
+				ACTIVATE MSDIALOG oDlg	CENTERED
+			Else
+				Aviso("SPED",IIf(Empty(GetWscError(3)),GetWscError(1),GetWscError(3)),{STR0114},3)
+			EndIf	
+		EndIf
+	Else
+		Aviso("SPED",STR0021,{STR0114},3)	//"Execute o módulo de configuração do serviço, antes de utilizar esta opção!!!"
+	EndIf
+Else
+	Aviso("SPED",STR0021,{STR0114},3) //"Execute o módulo de configuração do serviço, antes de utilizar esta opção!!!"
+EndIf
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³SpedNFeCFG³ Autor ³Eduardo Riera          ³ Data ³18.06.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Configura o Totvs Services para a nota fiscal eletronica    ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function SpedNFeCFG()
+
+Local oWizard
+Local oCombo 
+Local cURL      := PadR(GetNewPar("MV_SPEDURL","http://"),250)
+Local cCert     := Space(250)
+Local cKey      := Space(250)
+Local cModulo   := Space(250)
+Local cPassWord := Space(20)
+Local cCombo    := ""
+Local cSlot     := Space(4)
+Local cLabel    := Space(250)
+Local aTexto    := {}
+Local aPerg     := {}
+Local aPerg2    := {}
+Local aParam    := {}
+Local aParam2   := {}
+
+aadd(aParam,PadR(SuperGetMv("MV_RELSERV"),250))
+If SuperGetMv("MV_RELAUTH",,.F.)
+	aadd(aParam,PadR(SuperGetMv("MV_RELACNT",,""),250))
+Else
+	aadd(aParam,PadR(SuperGetMv("MV_RELFROM",,""),250))
+EndIf
+aadd(aParam,PadR(SuperGetMv("MV_RELPSW"),250))
+aadd(aParam,PadR(SuperGetMv("MV_RELFROM",,""),250))
+aadd(aParam,SuperGetMv("MV_RELAUTH",,.F.))
+aadd(aParam,PadR("",250))
+
+aadd(aPerg,{1,STR0085,aParam[1],"",".T.","",".T.",120,.F.})	//"Servidor SMTP"
+aadd(aPerg,{1,STR0086,aParam[2],"",".T.","",".T.",120,.F.})	//"Login do e-mail"
+aadd(aPerg,{1,STR0087,aParam[3],"",".T.","",".T.",120,.F.})	//"Senha"
+aadd(aPerg,{1,STR0090,aParam[4],"",".T.","",".T.",120,.F.})	//"Conta de e-mail"
+aadd(aPerg,{4,STR0088,aParam[5],STR0089,040,".T.",.F.})       //"Autenticação"###"Requerida"
+aadd(aPerg,{1,STR0128,aParam[6],"",".T.","",".T.",120,.F.})	//"Conta de e-mail de notificação"
+
+aadd(aParam2,PadR(SuperGetMv("MV_RELSERV"),250))
+If SuperGetMv("MV_RELAUTH",,.F.)
+	aadd(aParam2,PadR(SuperGetMv("MV_RELACNT",,""),250))
+Else
+	aadd(aParam2,PadR(SuperGetMv("MV_RELFROM",,""),250))
+EndIf
+aadd(aParam2,PadR(SuperGetMv("MV_RELPSW"),250))
+
+aadd(aPerg2,{1,STR0093,aParam[1],"",".T.","",".T.",120,.F.})	//"Servidor POP"
+aadd(aPerg2,{1,STR0086,aParam[2],"",".T.","",".T.",120,.F.})	//"Login do e-mail"
+aadd(aPerg2,{1,STR0087,aParam[3],"",".T.","",".T.",120,.F.})	//"Senha"
+
+If PswAdmin( /*cUser*/, /*cPsw*/,RetCodUsr()) == 0
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Montagem da Interface                                                  ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	aadd(aTexto,{})
+	aTexto[1] := STR0038+CRLF //"Esta rotina tem como objetivo ajuda-lo na configuração da integração com o Protheus com o serviço Totvs Services SPED. "
+	aTexto[1] += STR0039 //"O primeiro passo é configurar a conexão do Protheus com o serviço."
+	
+	aadd(aTexto,{})
+	aTexto[2] := STR0040
+	
+	DEFINE WIZARD oWizard ;
+		TITLE STR0041; //"Assistente de configuração da Nota Fiscal Eletrônica"
+		HEADER STR0019; //"Atenção"
+		MESSAGE STR0020; //"Siga atentamente os passos para a configuração da nota fiscal eletrônica."
+		TEXT aTexto[1] ;
+		NEXT {|| .T.} ;
+		FINISH {||.T.}
+	
+	CREATE PANEL oWizard  ;
+		HEADER STR0041 ; //"Assistente de configuração da Nota Fiscal Eletrônica"
+		MESSAGE ""	;
+		BACK {|| .F.} ;
+		NEXT {|| IsReady(cURL,3,.T.)} ;
+		PANEL
+		
+	@ 010,010 SAY STR0042 SIZE 270,010 PIXEL OF oWizard:oMPanel[2] //"Informe a URL do servidor Totvs Services"
+	@ 025,010 GET cURL SIZE 270,010 PIXEL OF oWizard:oMPanel[2]
+	
+	CREATE PANEL oWizard  ;
+		HEADER STR0041 ; //"Assistente de configuração da Nota Fiscal Eletrônica"
+		MESSAGE ""	;
+		BACK {|| .T.} ;
+		NEXT {|| IsCDReady(@oCombo:nAt,@cCert,@cKey,@cPassWord,@cSlot,@cLabel,@cModulo)} ;
+		PANEL
+
+	@ 005,010 SAY STR0095 SIZE 270,010 PIXEL OF oWizard:oMPanel[3] //"Informe o tipo de certificado digital"
+	@ 005,105 COMBOBOX oCombo VAR cCombo ITEMS {STR0096,STR0097,STR0132} SIZE 120,010 OF oWizard:oMPanel[3] PIXEL //"Formato Apache(.pem)"###"Formato PFX(.pfx ou .p12)"###"HSM"
+	@ 020,010 SAY STR0043 SIZE 270,010 PIXEL OF oWizard:oMPanel[3] //"Informe o nome do arquivo do certificado digital"
+	@ 030,010 GET cCert SIZE 240,010 PIXEL OF oWizard:oMPanel[3] WHEN oCombo:nAt <> 3
+	TButton():New( 030,250,STR0044,oWizard:oMPanel[3],{||cCert := cGetFile(IIF(oCombo:nAt == 1,STR0045,STR0098),STR0072,0,"",.T.,GETF_LOCALHARD),.T.},29,12,,oWizard:oMPanel[3]:oFont,,.T.,.F.,,.T., ,, .F.) //"Drive:"###"Arquivos .PEM |*.PEM","Selecione o certificado"
+	@ 050,010 SAY STR0046 SIZE 270,010 PIXEL OF oWizard:oMPanel[3] //"Informe o nome do arquivo da private key"
+	@ 060,010 GET cKey SIZE 240,010 PIXEL OF oWizard:oMPanel[3] WHEN oCombo:nAt == 1
+	TButton():New( 060,250,STR0044,oWizard:oMPanel[3],{||cKey := cGetFile(STR0045,STR0072,0,"",.T.,GETF_LOCALHARD),.T.},29,12,,oWizard:oMPanel[3]:oFont,,.T.,.F.,,.T., ,, .F.) // //"Drive:"###"Arquivos .PEM |*.PEM","Selecione o certificado"
+	@ 080,010 SAY STR0133 SIZE 100,010 PIXEL OF oWizard:oMPanel[3] //"Slot do certificado digital"
+	@ 080,100 GET cSlot SIZE 060,010 PIXEL OF oWizard:oMPanel[3] WHEN oCombo:nAt == 3 PICTURE "9999"
+	@ 095,010 SAY STR0134 SIZE 100,010 PIXEL OF oWizard:oMPanel[3] //"Label do certificado digital"
+	@ 095,100 GET cLabel SIZE 060,010 PIXEL OF oWizard:oMPanel[3] WHEN oCombo:nAt == 3
+	@ 110,010 SAY STR0047 SIZE 270,010 PIXEL OF oWizard:oMPanel[3] //"Informe senha do arquivo digital"
+	@ 110,110 GET cPassWord SIZE 060,010 PIXEL OF oWizard:oMPanel[3] PASSWORD
+	@ 125,010 SAY STR0135 SIZE 270,010 PIXEL OF oWizard:oMPanel[3] //"Informe o nome do arquivo do modulo HSM"
+	@ 125,120 GET cModulo SIZE 100,010 PIXEL OF oWizard:oMPanel[3] WHEN oCombo:nAt == 3
+	//TButton():New( 125,250,STR0044,oWizard:oMPanel[3],{||cKey := cGetFile(STR0136,STR0137,0,"",.T.,GETF_ONLYSERVER),.T.},29,12,,oWizard:oMPanel[3]:oFont,,.T.,.F.,,.T., ,, .F.) // //"Drive:"###"Arquivos .DLL |*.DLL","Selecione o modulo"
+
+	CREATE PANEL oWizard  ;
+		HEADER STR0041 ; //"Assistente de configuração da Nota Fiscal Eletrônica"
+		MESSAGE ""	;
+		BACK {|| oWizard:SetPanel(2),.T.} ;
+		NEXT {|| IsMailReady(1,aParam[1],aParam[2],aParam[3],aParam[4],aParam[5],aParam[6])} ;
+		PANEL
+		
+	ParamBox(aPerg,"SPED - NFe",@aParam,,,,,,oWizard:oMPanel[4],"SPEDNFESMTP",.T.,.T.)
+	
+	CREATE PANEL oWizard  ;
+		HEADER STR0041 ; //"Assistente de configuração da Nota Fiscal Eletrônica"
+		MESSAGE ""	;
+		BACK {|| oWizard:SetPanel(2),.T.} ;
+		NEXT {|| IsMailReady(2,aParam2[1],aParam2[2],aParam2[3])} ;
+		PANEL
+		
+	ParamBox(aPerg2,"SPED - NFe",@aParam2,,,,,,oWizard:oMPanel[5],"SPEDNFEPOP",.T.,.T.)
+
+	CREATE PANEL oWizard  ;
+		HEADER STR0041; //"Assistente de configuração da Nota Fiscal Eletrônica"
+		MESSAGE "";
+		BACK {|| oWizard:SetPanel(2),.T.} ;
+		FINISH {|| lOk := .T.} ;
+		PANEL
+	@ 010,010 GET aTexto[2] MEMO SIZE 270, 115 READONLY PIXEL OF oWizard:oMPanel[6]
+	
+	ACTIVATE WIZARD oWizard CENTERED
+Else
+	Help( "", 1, "SEMPERM" )
+EndIf
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³IsReady   ³ Autor ³Eduardo Riera          ³ Data ³18.06.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Verifica se a conexao com a Totvs Sped Services pode ser    ³±±
+±±³          ³estabelecida                                                ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1: URL do Totvs Services SPED                        OPC³±±
+±±³          ³ExpN2: nTipo - 1 = Conexao ; 2 = Certificado             OPC³±±
+±±³          ³ExpL3: Exibe help                                        OPC³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function CTIsReady(cURL,nTipo,lHelp)
+Return(IsReady(cURL,nTipo,lHelp))
+
+Static Function IsReady(cURL,nTipo,lHelp)
+
+Local nX       := 0
+Local cHelp    := ""
+Local oWS
+Local lRetorno := .F.
+DEFAULT nTipo := 1
+DEFAULT lHelp := .F.
+If !Empty(cURL) .And. !PutMV("MV_SPEDURL",cURL)
+	RecLock("SX6",.T.)
+	SX6->X6_FIL     := xFilial( "SX6" )
+	SX6->X6_VAR     := "MV_SPEDURL"
+	SX6->X6_TIPO    := "C"
+	SX6->X6_DESCRIC := "URL SPED NFe"
+	MsUnLock()
+	PutMV("MV_SPEDURL",cURL)
+EndIf
+SuperGetMv() //Limpa o cache de parametros - nao retirar
+DEFAULT cURL      := PadR(GetNewPar("MV_SPEDURL","http://"),250)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica se o servidor da Totvs esta no ar                              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+oWs := WsSpedCfgNFe():New()
+oWs:cUserToken := "TOTVS"
+oWS:_URL := AllTrim(cURL)+"/SPEDCFGNFe.apw"
+If oWs:CFGCONNECT()
+	lRetorno := .T.
+Else
+	If lHelp
+		Aviso("SPED",IIf(Empty(GetWscError(3)),GetWscError(1),GetWscError(3)),{STR0114},3)
+	EndIf
+	lRetorno := .F.
+EndIf
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica se o certificado digital ja foi transferido                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If nTipo <> 1 .And. lRetorno
+	oWs:cUserToken := "TOTVS"
+	oWs:cID_ENT    := GetIdEnt()
+	oWS:_URL := AllTrim(cURL)+"/SPEDCFGNFe.apw"		
+	If oWs:CFGReady()
+		lRetorno := .T.
+	Else
+		If nTipo == 3
+			cHelp := IIf(Empty(GetWscError(3)),GetWscError(1),GetWscError(3))
+			If lHelp .And. !"003" $ cHelp
+				Aviso("SPED",cHelp,{STR0114},3)
+				lRetorno := .F.
+			EndIf		
+		Else
+			lRetorno := .F.
+		EndIf
+	EndIf
+EndIf
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica se o certificado digital ja foi transferido                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If nTipo == 2 .And. lRetorno
+	oWs:cUserToken := "TOTVS"
+	oWs:cID_ENT    := GetIdEnt()
+	oWS:_URL := AllTrim(cURL)+"/SPEDCFGNFe.apw"		
+	If oWs:CFGStatusCertificate()
+		If Len(oWs:oWSCFGSTATUSCERTIFICATERESULT:OWSDIGITALCERTIFICATE) > 0
+			For nX := 1 To Len(oWs:oWSCFGSTATUSCERTIFICATERESULT:OWSDIGITALCERTIFICATE)
+				If oWs:oWSCFGSTATUSCERTIFICATERESULT:OWSDIGITALCERTIFICATE[nx]:DVALIDTO-30 <= Date()
+				
+					Aviso("SPED",STR0127+Dtoc(oWs:oWSCFGSTATUSCERTIFICATERESULT:OWSDIGITALCERTIFICATE[nX]:DVALIDTO),{STR0114},3) //"O certificado digital irá vencer em: "
+				
+			    EndIf
+			Next nX		
+		EndIf
+	EndIf
+EndIf
+
+Return(lRetorno)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³IsCDReady ³ Autor ³Eduardo Riera          ³ Data ³18.06.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Verifica se o certificado digital foi transferido com suces-³±±
+±±³          ³so                                                          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpN1: [1] PEM; [2] PFX                                     ³±±
+±±³          ³ExpC2: Certificado digital                                  ³±±
+±±³          ³ExpC3: Private Key                                          ³±±
+±±³          ³ExpC4: Password                                             ³±±
+±±³          ³ExpC5: Slot                                                 ³±±
+±±³          ³ExpC6: Label                                                ³±±
+±±³          ³ExpC7: Modulo                                               ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function IsCDReady(nTipo,cCert,cKey,cPassWord,cSlot,cLabel,cModulo)
+
+Local oWS
+Local cIdEnt   := ""
+Local lRetorno := .T.
+Local cURL     := PadR(GetNewPar("MV_SPEDURL","http://"),250)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Obtem o codigo da entidade                                              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If ((!Empty(cCert) .And. !Empty(cKey) .And. !Empty(cPassWord) .And. nTipo == 1) .Or.;
+	(!Empty(cSlot) .And. !Empty(cLabel) .And. !Empty(cPassword) .And. nTipo == 3) .Or.;
+	 (!Empty(cCert) .And. !Empty(cPassWord) .And. nTipo == 2)) .Or. !IsReady(,2)
+	cIdEnt := AllTrim(GetIdEnt())
+	If nTipo <> 3 .And. !File(cCert)
+		Aviso("SPED",STR0048,{STR0114},3) //"Arquivo não encontrado"
+		lRetorno := .F.
+	EndIf
+	If nTipo == 1 .And. !File(cKey) .And. lRetorno
+		Aviso("SPED",STR0048,{STR0114},3) //"Arquivo não encontrado"
+		lRetorno := .F.
+	EndIf
+	If !Empty(cIdEnt) .And. lRetorno .And. nTipo <> 3
+		oWs:= WsSpedCfgNFe():New()
+		oWs:cUSERTOKEN   := "TOTVS"
+		oWs:cID_ENT      := cIdEnt
+		oWs:cCertificate := FsLoadTXT(cCert)
+		If nTipo == 1
+			oWs:cPrivateKey  := FsLoadTXT(cKey)
+		EndIf
+		oWs:cPASSWORD    := AllTrim(cPassWord)
+		oWS:_URL         := AllTrim(cURL)+"/SPEDCFGNFe.apw"
+		If IIF(nTipo==1,oWs:CfgCertificate(),oWs:CfgCertificatePFX())
+			Aviso("SPED",IIF(nTipo==1,oWS:cCfgCertificateResult,oWS:cCfgCertificatePFXResult),{STR0114},3)
+		Else
+			lRetorno := .F.
+			Aviso("SPED",IIf(Empty(GetWscError(3)),GetWscError(1),GetWscError(3)),{STR0114},3)
+		EndIf	
+	EndIf
+	If !Empty(cIdEnt) .And. lRetorno .And. nTipo == 3
+		oWs:= WsSpedCfgNFe():New()
+		oWs:cUSERTOKEN   := "TOTVS"
+		oWs:cID_ENT      := cIdEnt
+		oWs:cSlot        := cSlot
+		oWs:cLabel       := cLabel
+		oWs:cPASSWORD    := AllTrim(cPassWord)
+		oWs:cModule      := AllTrim(cModulo)
+		If nTipo == 1
+			oWs:cPrivateKey  := FsLoadTXT(cKey)
+		EndIf
+		oWs:cPASSWORD    := AllTrim(cPassWord)
+		oWS:_URL         := AllTrim(cURL)+"/SPEDCFGNFe.apw"
+		If oWs:CfgHSM()
+			Aviso("SPED",oWS:cCfgHSMResult,{STR0114},3)
+		Else
+			lRetorno := .F.
+			Aviso("SPED",IIf(Empty(GetWscError(3)),GetWscError(1),GetWscError(3)),{STR0114},3)
+		EndIf	
+	EndIf
+EndIf
+Return(lRetorno)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³IsMailRead³ Autor ³Eduardo Riera          ³ Data ³18.08.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Verifica se a conexao com a Totvs Sped Services pode ser    ³±±
+±±³          ³estabelecida - Mail                                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpN1: Tipo de servidor - 1 SMTP ; 2 POP                    ³±±
+±±³          ³ExpC2: Servidor                                             ³±±
+±±³          ³ExpC3: Login                                                ³±±
+±±³          ³ExpC4: Senha                                                ³±±
+±±³          ³ExpC5: Conta de envio                                       ³±±
+±±³          ³ExpL6: Requer autenticacao                                  ³±±
+±±³          ³ExpC7: Email de notificacao                                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function IsMailReady(nTipo,cServer,cLogin,cSenha,cFrom,lAuth,cAdmin)
+
+Local oWS
+Local cIdEnt   := ""
+Local cMsg     := ""
+Local cURL     := PadR(GetNewPar("MV_SPEDURL","http://"),250)
+Local lRetorno := .T.
+DEFAULT lAuth      := .F.
+DEFAULT cLogin := ""
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Obtem o codigo da entidade                                              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If nTipo == 1
+	If !lAuth .Or. (!Empty(AllTrim(cLogin)) .And. !Empty(AllTrim(cSenha)))
+		cIdEnt := AllTrim(GetIdEnt())
+		If !Empty(AllTrim(cServer))			
+			If !Empty(cIdEnt)
+				oWs:= WsSpedCfgNFe():New()
+				oWs:cUSERTOKEN      := "TOTVS"
+				oWs:cID_ENT         := cIdEnt
+				oWs:oWsSMTP                         := SPEDCFGNFE_SMTPSERVER():New()
+				oWs:oWsSMTP:cMailServer             := cServer
+				oWS:oWsSMTP:cLoginAccount           := cLogin
+				oWs:oWsSMTP:cMailPassword           := cSenha
+				oWs:oWsSMTP:cMailAccount            := cFrom				
+				oWs:oWsSMTP:lAuthenticationRequered	:= lAuth
+				oWs:oWsSMTP:cMailAdmin              := cAdmin
+				oWS:_URL         := AllTrim(cURL)+"/SPEDCFGNFe.apw"
+				If oWs:CfgSMTPMail()
+					Aviso("SPED",oWS:cCfgSMTPMailResult,{STR0114},3)
+				Else
+					lRetorno := .F.
+					Aviso("SPED",IIf(Empty(GetWscError(3)),GetWscError(1),GetWscError(3)),{STR0114},3)
+				EndIf
+			EndIf
+		Else
+			oWs:= WsSpedCfgNFe():New()
+			oWs:cUSERTOKEN      := "TOTVS"
+			oWs:cID_ENT         := cIdEnt
+			oWS:_URL            := AllTrim(cURL)+"/SPEDCFGNFe.apw"
+			If oWs:GetSMTPMail()
+				DEFAULT oWS:oWSGETSMTPMAILRESULT:cMailAdmin := ""
+				cMsg := STR0092+CRLF+CRLF//"O Servidor de SMTP do Totvs Sped não foi configurado"
+				cMsg += STR0085+": "+oWS:oWSGETSMTPMAILRESULT:cMAILSERVER+CRLF
+				cMsg += STR0086+": "+oWS:oWSGETSMTPMAILRESULT:cLOGINACCOUNT+CRLF
+				cMsg += STR0087+": "+oWS:oWSGETSMTPMAILRESULT:cMAILPASSWORD+CRLF
+				cMsg += STR0090+": "+oWS:oWSGETSMTPMAILRESULT:cMAILACCOUNT+CRLF
+				cMsg += STR0088+": "+IIF(oWS:oWSGETSMTPMAILRESULT:lAUTHENTICATIONREQUERED,".T.",".F.")+CRLF
+				cMsg += STR0128+": "+oWS:oWSGETSMTPMAILRESULT:cMailAdmin+CRLF
+				Aviso("SPED",cMsg,{STR0114},3)
+			Else
+				Aviso("SPED",IIf(Empty(GetWscError(3)),GetWscError(1),GetWscError(3)),{STR0114},3)
+			EndIf
+		EndIf
+	EndIf
+Else
+	cIdEnt := AllTrim(GetIdEnt())
+	If !Empty(AllTrim(cServer))		
+		If !Empty(cIdEnt)
+			oWs:= WsSpedCfgNFe():New()
+			oWs:cUSERTOKEN      := "TOTVS"
+			oWs:cID_ENT         := cIdEnt
+			oWS:_URL            := AllTrim(cURL)+"/SPEDCFGNFe.apw"
+			oWs:oWsPOP                         := SPEDCFGNFE_POPSERVER():New()
+			oWs:oWsPOP:cMailServer             := cServer
+			oWs:oWsPOP:cLoginAccount           := cLogin
+			oWs:oWsPOP:cMailPassword           := cSenha
+			If oWs:CfgPOPMail()
+				Aviso("SPED",oWS:cCfgPOPMailResult,{STR0114},3)
+			Else
+				lRetorno := .F.
+				Aviso("SPED",IIf(Empty(GetWscError(3)),GetWscError(1),GetWscError(3)),{STR0114},3)
+			EndIf
+		EndIf
+	Else
+		oWs:= WsSpedCfgNFe():New()
+		oWs:cUSERTOKEN      := "TOTVS"
+		oWs:cID_ENT         := cIdEnt
+		oWS:_URL            := AllTrim(cURL)+"/SPEDCFGNFe.apw"
+		If oWs:GetPOPMail()
+			cMsg := STR0094+CRLF+CRLF//"O Servidor de POP do Totvs Sped não foi configurado"
+			cMsg += STR0093+": "+oWS:oWSGETPOPMAILRESULT:cMAILSERVER+CRLF
+			cMsg += STR0086+": "+oWS:oWSGETPOPMAILRESULT:cLOGINACCOUNT+CRLF
+			cMsg += STR0087+": "+oWS:oWSGETPOPMAILRESULT:cMAILPASSWORD+CRLF
+			Aviso("SPED",cMsg,{STR0114},3)
+		Else
+			Aviso("SPED",IIf(Empty(GetWscError(3)),GetWscError(1),GetWscError(3)),{STR0114},3)
+		EndIf
+	EndIf
+EndIf
+Return(lRetorno)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³GetIdEnt  ³ Autor ³Eduardo Riera          ³ Data ³18.06.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Obtem o codigo da entidade apos enviar o post para o Totvs  ³±±
+±±³          ³Service                                                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ExpC1: Codigo da entidade no Totvs Services                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function GetIdEnt()
+
+Local aArea  := GetArea()
+Local cIdEnt := ""
+Local cURL   := PadR(GetNewPar("MV_SPEDURL","http://"),250)
+Local oWs
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Obtem o codigo da entidade                                              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+oWS := WsSPEDAdm():New()
+oWS:cUSERTOKEN := "TOTVS"
+	
+oWS:oWSEMPRESA:cCNPJ       := IIF(SM0->M0_TPINSC==2 .Or. Empty(SM0->M0_TPINSC),SM0->M0_CGC,"")	
+oWS:oWSEMPRESA:cCPF        := IIF(SM0->M0_TPINSC==3,SM0->M0_CGC,"")
+oWS:oWSEMPRESA:cIE         := SM0->M0_INSC
+oWS:oWSEMPRESA:cIM         := SM0->M0_INSCM		
+oWS:oWSEMPRESA:cNOME       := SM0->M0_NOMECOM
+oWS:oWSEMPRESA:cFANTASIA   := SM0->M0_NOME
+oWS:oWSEMPRESA:cENDERECO   := FisGetEnd(SM0->M0_ENDENT)[1]
+oWS:oWSEMPRESA:cNUM        := FisGetEnd(SM0->M0_ENDENT)[3]
+oWS:oWSEMPRESA:cCOMPL      := FisGetEnd(SM0->M0_ENDENT)[4]
+oWS:oWSEMPRESA:cUF         := SM0->M0_ESTENT
+oWS:oWSEMPRESA:cCEP        := SM0->M0_CEPENT
+oWS:oWSEMPRESA:cCOD_MUN    := SM0->M0_CODMUN
+oWS:oWSEMPRESA:cCOD_PAIS   := "1058"
+oWS:oWSEMPRESA:cBAIRRO     := SM0->M0_BAIRENT
+oWS:oWSEMPRESA:cMUN        := SM0->M0_CIDENT
+oWS:oWSEMPRESA:cCEP_CP     := Nil
+oWS:oWSEMPRESA:cCP         := Nil
+oWS:oWSEMPRESA:cDDD        := Str(FisGetTel(SM0->M0_TEL)[2],3)
+oWS:oWSEMPRESA:cFONE       := AllTrim(Str(FisGetTel(SM0->M0_TEL)[3],15))
+oWS:oWSEMPRESA:cFAX        := AllTrim(Str(FisGetTel(SM0->M0_FAX)[3],15))
+oWS:oWSEMPRESA:cEMAIL      := UsrRetMail(RetCodUsr())
+oWS:oWSEMPRESA:cNIRE       := SM0->M0_NIRE
+oWS:oWSEMPRESA:dDTRE       := SM0->M0_DTRE
+oWS:oWSEMPRESA:cNIT        := IIF(SM0->M0_TPINSC==1,SM0->M0_CGC,"")
+oWS:oWSEMPRESA:cINDSITESP  := ""
+oWS:oWSEMPRESA:cID_MATRIZ  := ""
+oWS:oWSOUTRASINSCRICOES:oWSInscricao := SPEDADM_ARRAYOFSPED_GENERICSTRUCT():New()
+oWS:_URL := AllTrim(cURL)+"/SPEDADM.apw"
+If oWs:ADMEMPRESAS()
+	cIdEnt  := oWs:cADMEMPRESASRESULT
+Else
+	Aviso("SPED",IIf(Empty(GetWscError(3)),GetWscError(1),GetWscError(3)),{STR0114},3)
+EndIf
+
+RestArea(aArea)
+Return(cIdEnt)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³SpedNFe1Mn³ Autor ³Eduardo Riera          ³ Data ³21.06.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Rotina de monitoramento da NFe - por faixa                  ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function SpedNFe1Mnt()
+
+Local cIdEnt   := ""
+Local aPerg    := {}
+Local aParam   := {Space(Len(SF2->F2_SERIE)),Space(Len(SF2->F2_DOC)),Space(Len(SF2->F2_DOC))}
+Local aSize    := {}
+Local aObjects := {}
+Local aListBox := {}
+Local aInfo    := {}
+Local aPosObj  := {}
+Local oWS
+Local oDlg
+Local oListBox
+Local oBtn1
+Local oBtn2
+Local oBtn3
+Local oBtn4
+
+aadd(aPerg,{1,STR0010,aParam[01],"",".T.","",".T.",30,.F.}) //"Serie da Nota Fiscal"
+aadd(aPerg,{1,STR0011,aParam[02],"",".T.","",".T.",30,.T.}) //"Nota fiscal inicial"
+aadd(aPerg,{1,STR0012,aParam[03],"",".T.","",".T.",30,.T.}) //"Nota fiscal final"
+
+aParam[01] := ParamLoad("SPEDNFEREM",aPerg,1,aParam[01])
+aParam[02] := ParamLoad("SPEDNFEREM",aPerg,2,aParam[02])
+aParam[03] := ParamLoad("SPEDNFEREM",aPerg,3,aParam[03])
+
+If IsReady() 
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Obtem o codigo da entidade                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ	
+	cIdEnt := GetIdEnt()
+	If !Empty(cIdEnt)
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Instancia a classe                                                      ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If !Empty(cIdEnt)
+		
+			If ParamBox(aPerg,"SPED - NFe",@aParam,,,,,,,"SPEDNFEREM",.T.,.T.)
+				aListBox := WsNFeMnt(cIdEnt,1,aParam)
+				If !Empty(aListBox)
+					aSize := MsAdvSize()
+					aObjects := {}
+					AAdd( aObjects, { 100, 100, .t., .t. } )
+					AAdd( aObjects, { 100, 015, .t., .f. } )
+				
+					aInfo := { aSize[ 1 ], aSize[ 2 ], aSize[ 3 ], aSize[ 4 ], 3, 3 }
+					aPosObj := MsObjSize( aInfo, aObjects )
+											
+					DEFINE MSDIALOG oDlg TITLE "SPED - NFe" From aSize[7],0 to aSize[6],aSize[5] OF oMainWnd PIXEL
+					
+					@ aPosObj[1,1],aPosObj[1,2] LISTBOX oListBox Fields HEADER "",STR0049,STR0035,STR0036,STR0050,STR0051,STR0052,STR0053; //"NF"###"Ambiente"###"Modalidade"###"Protocolo"###"Recomendação"###"Tempo decorrido"###"Tempo SEF"
+						SIZE aPosObj[1,4]-aPosObj[1,2],aPosObj[1,3]-aPosObj[1,1] PIXEL
+					oListBox:SetArray( aListBox )
+					oListBox:bLine := { || { aListBox[ oListBox:nAT,1 ],aListBox[ oListBox:nAT,2 ],aListBox[ oListBox:nAT,3 ],aListBox[ oListBox:nAT,4 ],aListBox[ oListBox:nAT,5 ],aListBox[ oListBox:nAT,6 ],aListBox[ oListBox:nAT,7 ],aListBox[ oListBox:nAT,8 ]} }
+					
+					
+					@ aPosObj[2,1],aPosObj[2,4]-040 BUTTON oBtn1 PROMPT STR0114   		ACTION oDlg:End() OF oDlg PIXEL SIZE 035,011 //"OK"
+					@ aPosObj[2,1],aPosObj[2,4]-080 BUTTON oBtn2 PROMPT STR0054   		ACTION (Bt2NFeMnt(aListBox[oListBox:nAT][09])) OF oDlg PIXEL SIZE 035,011 //"Mensagens"
+					@ aPosObj[2,1],aPosObj[2,4]-120 BUTTON oBtn3 PROMPT STR0055   		ACTION (Bt3NFeMnt(cIdEnt,aListBox[ oListBox:nAT,2 ])) OF oDlg PIXEL SIZE 035,011 //"Rec.XML"
+					@ aPosObj[2,1],aPosObj[2,4]-160 BUTTON oBtn4 PROMPT STR0118 		ACTION (aListBox := WsNFeMnt(cIdEnt,1,aParam),oListBox:nAt := 1,IIF(Empty(aListBox),oDlg:End(),oListBox:Refresh())) OF oDlg PIXEL SIZE 035,011 //"Refresh"
+					@ aPosObj[2,1],aPosObj[2,4]-200 BUTTON oBtn4 PROMPT STR0115  		ACTION (Bt3NFeMnt(cIdEnt,aListBox[ oListBox:nAT,2 ],2)) OF oDlg PIXEL SIZE 035,011 //"Schema"
+					ACTIVATE MSDIALOG oDlg
+				EndIf
+			EndIf
+		EndIf
+	Else
+		Aviso("SPED",STR0021,{STR0114},3)	//"Execute o módulo de configuração do serviço, antes de utilizar esta opção!!!"
+	EndIf
+Else
+	Aviso("SPED",STR0021,{STR0114},3) //"Execute o módulo de configuração do serviço, antes de utilizar esta opção!!!"
+EndIf
+
+Return
+
+Static Function WsNFeMnt(cIdEnt,nModelo,aParam)
+
+Local aListBox := {}
+Local aMsg     := {}
+Local nX       := 0
+Local nY       := 0
+Local cURL     := PadR(GetNewPar("MV_SPEDURL","http://"),250)
+Local lOk      := .T.
+Local oOk      := LoadBitMap(GetResources(), "ENABLE")
+Local oNo      := LoadBitMap(GetResources(), "DISABLE")
+Local oWS
+Local oRetorno
+Private oXml
+
+oWS:= WSNFeSBRA():New()
+oWS:cUSERTOKEN    := "TOTVS"
+oWS:cID_ENT       := cIdEnt 
+oWS:_URL          := AllTrim(cURL)+"/NFeSBRA.apw"
+If nModelo == 1
+	oWS:cIdInicial    := aParam[01]+aParam[02]
+	oWS:cIdFinal      := aParam[01]+aParam[03]
+	lOk := oWS:MONITORFAIXA()
+	oRetorno := oWS:oWsMonitorFaixaResult
+Else
+	oWS:nIntervalo := Max(aParam[01],60)
+	lOk := oWS:MONITORTEMPO()
+	oRetorno := oWS:oWsMonitorTempoResult
+EndIf
+If lOk
+	dbSelectArea("SF3")
+	dbSetOrder(5)
+    For nX := 1 To Len(oRetorno:oWSMONITORNFE)
+  		aMsg := {}
+ 		oXml := oRetorno:oWSMONITORNFE[nX]
+ 		If Type("oXml:OWSERRO:OWSLOTENFE")<>"U"
+	 		For nY := 1 To Len(	oXml:OWSERRO:OWSLOTENFE) 				                            
+ 				If oXml:OWSERRO:OWSLOTENFE[nY]:NLOTE<>0
+	 				aadd(aMsg,{oXml:OWSERRO:OWSLOTENFE[nY]:NLOTE,oXml:OWSERRO:OWSLOTENFE[nY]:DDATALOTE,oXml:OWSERRO:OWSLOTENFE[nY]:CHORALOTE,;
+	 							oXml:OWSERRO:OWSLOTENFE[nY]:NRECIBOSEFAZ,;
+	 							oXml:OWSERRO:OWSLOTENFE[nY]:CCODENVLOTE,PadR(oXml:OWSERRO:OWSLOTENFE[nY]:CMSGENVLOTE,50),;
+	 							oXml:OWSERRO:OWSLOTENFE[nY]:CCODRETRECIBO,PadR(oXml:OWSERRO:OWSLOTENFE[nY]:CMSGRETRECIBO,50),;
+	 							oXml:OWSERRO:OWSLOTENFE[nY]:CCODRETNFE,PadR(oXml:OWSERRO:OWSLOTENFE[nY]:CMSGRETNFE,50)})
+				EndIf
+				If oXml:OWSERRO:OWSLOTENFE[nY]:CCODRETNFE$"101,102,110,301,302,303,304,305,306"
+					If SF3->(MsSeek(xFilial("SF3")+oXml:Cid,.T.))
+						If SF3->(FieldPos("F3_CODRSEF"))<>0 .And. Empty(SF3->F3_CODRSEF)
+							RecLock("SF3")
+							SF3->F3_CODRSEF:= oXml:OWSERRO:OWSLOTENFE[nY]:CCODRETNFE
+							MsUnlock()						
+						EndIf
+					EndIf				
+				EndIf
+ 			Next nY
+		EndIf
+    	aadd(aListBox,{ IIf(Empty(oXml:cPROTOCOLO),oNo,oOk),;
+    					oXml:cID,;
+    					IIf(oXml:nAMBIENTE==1,STR0056,STR0057),; //"Produção"###"Homologação"
+    					IIf(oXml:nMODALIDADE==1 .Or. oXml:nMODALIDADE==4,STR0058,STR0059),; //"Normal"###"Contingência"
+    					oXml:cPROTOCOLO,;
+    					PadR(oXml:cRECOMENDACAO,250),;
+    					oXml:cTEMPODEESPERA,;
+    					oXml:nTEMPOMEDIOSEF,;
+    					aMsg})
+    Next nX
+    If Empty(aListBox)
+    	Aviso("SPED",STR0106,{STR0114})
+    EndIf    
+Else
+	Aviso("SPED",IIf(Empty(GetWscError(3)),GetWscError(1),GetWscError(3)),{STR0114},3)
+EndIf      
+Return(aListBox)
+
+Static Function Bt2NFeMnt(aMsg)
+
+Local aSize    := MsAdvSize()
+Local aObjects := {}
+Local aInfo    := {}
+Local aPosObj  := {}
+Local oDlg
+Local oListBox
+Local oBtn1
+
+If !Empty(aMsg)
+	AAdd( aObjects, { 100, 100, .t., .t. } )
+	AAdd( aObjects, { 100, 015, .t., .f. } )
+	aInfo := { aSize[ 1 ], aSize[ 2 ], aSize[ 3 ], aSize[ 4 ], 3, 3 }
+	aPosObj := MsObjSize( aInfo, aObjects )
+	
+	DEFINE MSDIALOG oDlg TITLE "SPED - NFe" From aSize[7],0 to aSize[6],aSize[5] OF oMainWnd PIXEL
+	@ aPosObj[1,1],aPosObj[1,2] LISTBOX oListBox Fields HEADER STR0060,STR0061,STR0062,STR0063,STR0064,STR0065,STR0066,STR0067,STR0068,STR0069; //"Lote"###"Dt.Lote"###"Hr.Lote"###"Recibo SEF"###"Cod.Env.Lote"###"Msg.Env.Lote"###"Cod.Ret.Lote"###"Msg.Ret.Lote"###"Cod.Ret.NFe"###"Msg.Ret.NFe"
+						SIZE aPosObj[1,4]-aPosObj[1,2],aPosObj[1,3]-aPosObj[1,1] PIXEL
+	oListBox:SetArray( aMsg )
+	oListBox:bLine := { || { aMsg[ oListBox:nAT,1 ],aMsg[ oListBox:nAT,2 ],aMsg[ oListBox:nAT,3 ],aMsg[ oListBox:nAT,4 ],aMsg[ oListBox:nAT,5 ],aMsg[ oListBox:nAT,6 ],aMsg[ oListBox:nAT,7 ],aMsg[ oListBox:nAT,8 ],aMsg[ oListBox:nAT,9 ],aMsg[ oListBox:nAT,10 ]} }
+	@ aPosObj[2,1],aPosObj[2,4]-030 BUTTON oBtn1 PROMPT STR0114         ACTION oDlg:End() OF oDlg PIXEL SIZE 028,011
+	ACTIVATE MSDIALOG oDlg
+EndIf
+Return(.T.)
+
+Static Function Bt3NFeMnt(cIdEnt,cIdNFe,nTipo)
+
+Local cURL     := PadR(GetNewPar("MV_SPEDURL","http://"),250)
+Local oWS
+Local cMsg     := ""
+DEFAULT nTipo  := 1
+
+oWS:= WSNFeSBRA():New()
+oWS:cUSERTOKEN        := "TOTVS"
+oWS:cID_ENT           := cIdEnt
+oWS:oWSNFEID          := NFESBRA_NFES2():New()
+oWS:oWSNFEID:oWSNotas := NFESBRA_ARRAYOFNFESID2():New()
+aadd(oWS:oWSNFEID:oWSNotas:oWSNFESID2,NFESBRA_NFESID2():New())
+Atail(oWS:oWSNFEID:oWSNotas:oWSNFESID2):cID := cIdNfe
+oWS:nDIASPARAEXCLUSAO := 0
+oWS:_URL          := AllTrim(cURL)+"/NFeSBRA.apw"			
+oWS:nDANFE          := 0		
+If oWS:RETORNANOTAS()
+	If Len(oWs:oWsRetornaNotasResult:OWSNOTAS:oWSNFES3) > 0
+		If nTipo == 1
+			Do Case
+				Case oWs:oWsRetornaNotasResult:OWSNOTAS:oWSNFES3[1]:oWSNFECANCELADA <> Nil
+					Aviso("SPED",oWs:oWsRetornaNotasResult:OWSNOTAS:oWSNFES3[1]:oWSNFECANCELADA:cXML,{STR0114},3)
+				OtherWise
+					Aviso("SPED",oWs:oWsRetornaNotasResult:OWSNOTAS:oWSNFES3[1]:oWSNFE:cXML,{STR0114},3)	
+			EndCase
+		Else
+			cMsg := AllTrim(oWs:oWsRetornaNotasResult:OWSNOTAS:oWSNFES3[1]:oWSNFE:cXML)
+			If !Empty(cMsg)
+				Aviso("SPED",@cMsg,{STR0114},3,/*cCaption2*/,/*nRotAutDefault*/,/*cBitmap*/,.T.)		
+				oWS:= WSNFeSBRA():New()
+				oWS:cUSERTOKEN     := "TOTVS"
+				oWS:cID_ENT        := cIdEnt
+				oWs:oWsNFe:oWSNOTAS:=  NFeSBRA_ARRAYOFNFeS():New()
+				aadd(oWs:oWsNFe:oWSNOTAS:oWSNFeS,NFeSBRA_NFeS():New())
+				oWs:oWsNFe:oWSNOTAS:oWsNFes[1]:cID := cIdNfe
+				oWs:oWsNFe:oWSNOTAS:oWsNFes[1]:cXML:= EncodeUtf8(cMsg)
+				oWS:_URL          := AllTrim(cURL)+"/NFeSBRA.apw"
+				If oWS:Schema()
+					If Empty(oWS:oWSSCHEMARESULT:oWSNFES4[1]:cMENSAGEM)
+						Aviso("SPED",STR0091,{STR0114})
+					Else
+						Aviso("SPED",IIF(Empty(oWS:oWSSCHEMARESULT:oWSNFES4[1]:cMENSAGEM),STR0091,oWS:oWSSCHEMARESULT:oWSNFES4[1]:cMENSAGEM),{STR0114},3)
+					EndIf
+				Else
+					Aviso("SPED",IIf(Empty(GetWscError(3)),GetWscError(1),GetWscError(3)),{STR0114},3)
+				EndIf
+			EndIf
+		EndIf
+	EndIf
+Else
+	Aviso("SPED",IIf(Empty(GetWscError(3)),GetWscError(1),GetWscError(3)),{STR0114},3)
+EndIf
+Return(.T.)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³SpedNFe2Mn³ Autor ³Eduardo Riera          ³ Data ³21.06.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Rotina de monitoramento da NFe - por tempo                  ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function SpedNFe2Mnt()
+
+Local cIdEnt   := ""
+Local aPerg    := {}
+Local aParam   := {000060}
+Local aSize    := {}
+Local aObjects := {}
+Local aListBox := {}
+Local aInfo    := {}
+Local aPosObj  := {}
+Local oWS
+Local oDlg
+Local oListBox
+Local oBtn1
+Local oBtn2
+Local oBtn3
+Local oBtn4
+
+aadd(aPerg,{1,STR0070,aParam[01],"",".T.","",".T.",30,.T.})
+
+aParam[01] := ParamLoad("SPEDNFEMNT",aPerg,1,aParam[01])
+
+If IsReady()
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Obtem o codigo da entidade                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ	
+	cIdEnt := GetIdEnt()
+	If !Empty(cIdEnt)
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Instancia a classe                                                      ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If !Empty(cIdEnt)
+		
+			If ParamBox(aPerg,"SPED - NFe",@aParam,,,,,,,"SPEDNFEMNT",.T.,.T.)
+				aListBox := WsNFeMnt(cIdEnt,2,aParam)
+				If !Empty(aListBox)
+					aSize := MsAdvSize()
+					aObjects := {}
+					AAdd( aObjects, { 100, 100, .T., .T. } )
+					AAdd( aObjects, { 100, 015, .T., .F. } )
+				
+					aInfo := { aSize[ 1 ], aSize[ 2 ], aSize[ 3 ], aSize[ 4 ], 3, 3 }
+					aPosObj := MsObjSize( aInfo, aObjects )
+											
+					DEFINE MSDIALOG oDlg TITLE "SPED - NFe" From aSize[7],0 to aSize[6],aSize[5] OF oMainWnd PIXEL
+					
+					@ aPosObj[1,1],aPosObj[1,2] LISTBOX oListBox Fields HEADER "",STR0049,STR0035,STR0036,STR0050,STR0051,STR0052,STR0053; //"NF"###"Ambiente"###"Modalidade"###"Protocolo"###"Recomendação"###"Tempo decorrido"###"Tempo SEF"
+						SIZE aPosObj[1,4]-aPosObj[1,2],aPosObj[1,3]-aPosObj[1,1] PIXEL
+					oListBox:SetArray( aListBox )
+					oListBox:bLine := { || { aListBox[ oListBox:nAT,1 ],aListBox[ oListBox:nAT,2 ],aListBox[ oListBox:nAT,3 ],aListBox[ oListBox:nAT,4 ],aListBox[ oListBox:nAT,5 ],aListBox[ oListBox:nAT,6 ],aListBox[ oListBox:nAT,7 ]} }
+					@ aPosObj[2,1],aPosObj[2,4]-030 BUTTON oBtn1 PROMPT STR0114         ACTION oDlg:End() OF oDlg PIXEL SIZE 028,011
+					@ aPosObj[2,1],aPosObj[2,4]-060 BUTTON oBtn2 PROMPT STR0054 ACTION (Bt2NFeMnt(aListBox[oListBox:nAT][09])) OF oDlg PIXEL SIZE 028,011 //"Mensagens"
+					@ aPosObj[2,1],aPosObj[2,4]-090 BUTTON oBtn3 PROMPT STR0055 ACTION (Bt3NFeMnt(cIdEnt,aListBox[ oListBox:nAT,2 ])) OF oDlg PIXEL SIZE 028,011 //"Rec.XML"
+					@ aPosObj[2,1],aPosObj[2,4]-120 BUTTON oBtn4 PROMPT "Refresh" ACTION (aListBox := WsNFeMnt(cIdEnt,2,aParam),oListBox:nAt := 1,IIF(Empty(aListBox),oDlg:End(),oListBox:Refresh())) OF oDlg PIXEL SIZE 028,011
+					ACTIVATE MSDIALOG oDlg
+				EndIf
+			EndIf
+		EndIf
+	Else
+		Aviso("SPED",STR0021,{STR0114},3)	 //"Execute o módulo de configuração do serviço, antes de utilizar esta opção!!!"
+	EndIf
+Else
+	Aviso("SPED",STR0021,{STR0114},3) //"Execute o módulo de configuração do serviço, antes de utilizar esta opção!!!"
+EndIf
+
+Return
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³SpedNFe3Mn³ Autor ³Eduardo Riera          ³ Data ³21.06.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Rotina de monitoramento da NFe - Estatisticas               ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function SpedNFe3Mnt()
+
+Local cIdEnt   := ""
+Local aPerg    := {}
+Local aParam   := {dDataBase,dDataBase}
+Local aSize    := {}
+Local aObjects := {}
+Local aListBox := {}
+Local aInfo    := {}
+Local aPosObj  := {}
+Local cURL     := PadR(GetNewPar("MV_SPEDURL","http://"),250)
+Local nX       := 0
+Local nY       := 0
+Local oWS
+Local oDlg
+Local oListBox
+Local oBtn1
+Local oBtn2
+Local oBtn3
+Local oBtn4
+
+aadd(aPerg,{1,STR0100,aParam[01],"",".T.","",".T.",30,.T.}) //"Data inicial"
+aadd(aPerg,{1,STR0101,aParam[02],"",".T.","",".T.",30,.T.}) //"Data final"
+
+aParam[01] := ParamLoad("SPEDNFE3MNT",aPerg,1,aParam[01])
+aParam[02] := ParamLoad("SPEDNFE3MNT",aPerg,2,aParam[02])
+
+If IsReady()
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Obtem o codigo da entidade                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ	
+	cIdEnt := GetIdEnt()
+	If !Empty(cIdEnt)
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Instancia a classe                                                      ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If !Empty(cIdEnt)
+		
+			If ParamBox(aPerg,"SPED - NFe",@aParam,,,,,,,"SPEDNFE3MNT",.T.,.T.)
+				oWs:= WsNFeSBra():New()
+				oWs:cUserToken   := "TOTVS"
+				oWs:cID_ENT      := cIdEnt
+				oWs:_URL         := AllTrim(cURL)+"/NFeSBRA.apw"
+				oWs:dDataInicial := aParam[01]
+				oWs:dDataFinal   := aParam[02]
+				If oWs:ESTATISTICAS()				
+					For nX := 1 To Len(oWs:oWSESTATISTICASRESULT:OWSESTATISTICANFE)
+						aadd(aListBox,{	IIF(oWs:oWSESTATISTICASRESULT:OWSESTATISTICANFE[nX]:nAmbiente==1,STR0056,STR0057),;
+										oWs:oWSESTATISTICASRESULT:OWSESTATISTICANFE[nX]:cServico,;
+										Space(005),;
+										Space(100),;
+										0})
+						For nY := 1 To Len(oWs:oWSESTATISTICASRESULT:OWSESTATISTICANFE[nX]:OWSDETALHE:OWSDETALHEESTATISTICANFESEF)
+							aadd(aListBox,{	"",;
+										"",;
+										oWs:oWSESTATISTICASRESULT:OWSESTATISTICANFE[nX]:OWSDETALHE:OWSDETALHEESTATISTICANFESEF[nY]:CCODMSGSEF,;
+										oWs:oWSESTATISTICASRESULT:OWSESTATISTICANFE[nX]:OWSDETALHE:OWSDETALHEESTATISTICANFESEF[nY]:CMENSAGEM,;
+										oWs:oWSESTATISTICASRESULT:OWSESTATISTICANFE[nX]:OWSDETALHE:OWSDETALHEESTATISTICANFESEF[nY]:NQUANTIDADE})
+						Next nY
+				    Next nX
+				    If Empty(aListBox)
+				    	Aviso("SPED",STR0106,{STR0114})
+				    EndIf
+				Else
+					Aviso("SPED",IIf(Empty(GetWscError(3)),GetWscError(1),GetWscError(3)),{STR0114},3)
+				EndIf      				
+				If !Empty(aListBox)
+					aSize := MsAdvSize()
+					aObjects := {}
+					AAdd( aObjects, { 100, 100, .T., .T. } )
+					AAdd( aObjects, { 100, 015, .T., .F. } )
+				
+					aInfo := { aSize[ 1 ], aSize[ 2 ], aSize[ 3 ], aSize[ 4 ], 3, 3 }
+					aPosObj := MsObjSize( aInfo, aObjects )
+											
+					DEFINE MSDIALOG oDlg TITLE "SPED - NFe" From aSize[7],0 to aSize[6],aSize[5] OF oMainWnd PIXEL
+					
+					@ aPosObj[1,1],aPosObj[1,2] LISTBOX oListBox Fields HEADER STR0035,STR0102,STR0103,STR0104,STR0105; //"Ambiente"###"Serviço"###"Código"###"Mensagem"###"Transações"
+						SIZE aPosObj[1,4]-aPosObj[1,2],aPosObj[1,3]-aPosObj[1,1] PIXEL
+					oListBox:SetArray( aListBox )
+					oListBox:bLine := { || { aListBox[ oListBox:nAT,1 ],aListBox[ oListBox:nAT,2 ],aListBox[ oListBox:nAT,3 ],aListBox[ oListBox:nAT,4 ],aListBox[ oListBox:nAT,5 ]} }
+					@ aPosObj[2,1],aPosObj[2,4]-030 BUTTON oBtn1 PROMPT STR0114         ACTION oDlg:End() OF oDlg PIXEL SIZE 028,011
+					ACTIVATE MSDIALOG oDlg
+				EndIf
+			EndIf
+		EndIf
+	Else
+		Aviso("SPED",STR0021,{STR0114},3)	 //"Execute o módulo de configuração do serviço, antes de utilizar esta opção!!!"
+	EndIf
+Else
+	Aviso("SPED",STR0021,{STR0114},3) //"Execute o módulo de configuração do serviço, antes de utilizar esta opção!!!"
+EndIf
+
+Return
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³SpedNFe4Mn³ Autor ³Eduardo Riera          ³ Data ³18.10.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Rotina de monitoramento da NFe - Consulta NFe               ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function SpedNFe4Mnt(cAlias)
+
+Local cIdEnt     := ""
+Local cURL       := PadR(GetNewPar("MV_SPEDURL","http://"),250)
+Local cMensagem  := ""
+Local oWS
+
+If IsReady()
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Obtem o codigo da entidade                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ	
+	cIdEnt := GetIdEnt()
+	If !Empty(cIdEnt)
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Instancia a classe                                                      ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If !Empty(cIdEnt)
+		
+			oWs:= WsNFeSBra():New()
+			oWs:cUserToken   := "TOTVS"
+			oWs:cID_ENT      := cIdEnt
+			oWs:_URL         := AllTrim(cURL)+"/NFeSBRA.apw"
+			oWs:cNFECONSULTAPROTOCOLOID := IIF(cAlias=="SF1",SF1->F1_SERIE+SF1->F1_DOC,SF2->F2_SERIE+SF2->F2_DOC)
+			If oWs:ConsultaProtocoloNfe()
+				cMensagem := ""
+				If !Empty(oWs:oWSCONSULTAPROTOCOLONFERESULT:cVERSAO)
+					cMensagem += STR0129+": "+oWs:oWSCONSULTAPROTOCOLONFERESULT:cVERSAO+CRLF
+				EndIf
+				cMensagem += STR0035+": "+IIf(oWs:oWSCONSULTAPROTOCOLONFERESULT:nAMBIENTE==1,STR0056,STR0057)+CRLF //"Produção"###"Homologação"
+				cMensagem += STR0068+": "+oWs:oWSCONSULTAPROTOCOLONFERESULT:cCODRETNFE+CRLF
+				cMensagem += STR0069+": "+oWs:oWSCONSULTAPROTOCOLONFERESULT:cMSGRETNFE+CRLF
+				If !Empty(oWs:oWSCONSULTAPROTOCOLONFERESULT:cPROTOCOLO)
+					cMensagem += STR0050+": "+oWs:oWSCONSULTAPROTOCOLONFERESULT:cPROTOCOLO+CRLF	
+				EndIf
+				Aviso(STR0107,cMensagem,{STR0114},3)
+				If !Empty(oWs:oWSCONSULTAPROTOCOLONFERESULT:cPROTOCOLO)
+					Do Case
+						Case cAlias == "SF1" .And. SF1->(FieldPos("F1_FIMP"))<>0
+			   			   RecLock("SF1")
+	    				   SF1->F1_FIMP := "S"
+	    				   MsUnlock()
+	                	Case cAlias == "SF2"
+		    			   RecLock("SF2")
+		    			   SF2->F2_FIMP := "S"
+		    			   MsUnlock()
+					EndCase
+				EndIf
+				If oWs:oWSCONSULTAPROTOCOLONFERESULT:cCODRETNFE$"110,301,302,303,304,305,306" // Uso Denegado
+					Do Case
+						Case cAlias == "SF1" .And. SF1->(FieldPos("F1_FIMP"))<>0
+			   			   RecLock("SF1")
+	    				   SF1->F1_FIMP := "D"
+	    				   MsUnlock()
+	                	Case cAlias == "SF2"
+		    			   RecLock("SF2")
+		    			   SF2->F2_FIMP := "D"
+		    			   MsUnlock()
+					EndCase
+				EndIf				
+			Else
+				Aviso("SPED",IIf(Empty(GetWscError(3)),GetWscError(1),GetWscError(3)),{STR0114},3)
+			EndIf
+		EndIf
+	Else
+		Aviso("SPED",STR0021,{STR0114},3)	 //"Execute o módulo de configuração do serviço, antes de utilizar esta opção!!!"
+	EndIf
+Else
+	Aviso("SPED",STR0021,{STR0114},3) //"Execute o módulo de configuração do serviço, antes de utilizar esta opção!!!"
+EndIf
+
+Return
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Consulta NF-e atraves da chave                                          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Function SpedNFe5Mnt(cAlias)
+
+Local oDlgKey, oBtnOut, oBtnCon
+Local cIdEnt   := ""
+Local cChaveNFe := Space(44)
+
+If IsReady()
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Obtem o codigo da entidade                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ	
+	cIdEnt := GetIdEnt()
+	If !Empty(cIdEnt)
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Instancia a classe                                                      ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If !Empty(cIdEnt)
+
+			DEFINE MSDIALOG oDlgKey TITLE "Consulta NF-e" FROM 0,0 TO 150,305 PIXEL OF GetWndDefault()
+			
+			@ 12,008 SAY "Informe a Chave de acesso da NF-e: " PIXEL OF oDlgKey
+			@ 20,008 MSGET cChaveNFe SIZE 140,10 PIXEL OF oDlgKey
+			
+			@ 46,035 BUTTON oBtnCon PROMPT "&Consultar" SIZE 38,11 PIXEL ACTION ConsNFeChave(cChaveNFe,cIdEnt)
+			@ 46,077 BUTTON oBtnOut PROMPT "&Sair" SIZE 38,11 PIXEL ACTION oDlgKey:End()
+			
+			ACTIVATE DIALOG oDlgKey CENTERED
+			
+		EndIf
+	Else
+		Aviso("SPED",STR0021,{STR0114},3)	 //"Execute o módulo de configuração do serviço, antes de utilizar esta opção!!!"
+	EndIf
+Else
+	Aviso("SPED",STR0021,{STR0114},3) //"Execute o módulo de configuração do serviço, antes de utilizar esta opção!!!"
+EndIf
+
+
+Static Function ConsNFeChave(cChaveNFe,cIdEnt)
+
+Local cURL     := PadR(GetNewPar("MV_SPEDURL","http://"),250)
+Local cMensagem:= ""
+Local oWS
+
+oWs:= WsNFeSBra():New()
+oWs:cUserToken   := "TOTVS"
+oWs:cID_ENT      := cIdEnt
+oWs:_URL         := AllTrim(cURL)+"/NFeSBRA.apw"
+oWs:cChvNfe := cChaveNFe
+If oWs:ConsultaProtocoloNfe()
+	cMensagem := ""
+	If !Empty(oWs:oWSCONSULTAPROTOCOLONFERESULT:cVERSAO)
+		cMensagem += STR0129+": "+oWs:oWSCONSULTAPROTOCOLONFERESULT:cVERSAO+CRLF
+	EndIf
+	cMensagem += STR0035+": "+IIf(oWs:oWSCONSULTAPROTOCOLONFERESULT:nAMBIENTE==1,STR0056,STR0057)+CRLF //"Produção"###"Homologação"
+	cMensagem += STR0068+": "+oWs:oWSCONSULTAPROTOCOLONFERESULT:cCODRETNFE+CRLF
+	cMensagem += STR0069+": "+oWs:oWSCONSULTAPROTOCOLONFERESULT:cMSGRETNFE+CRLF
+	If !Empty(oWs:oWSCONSULTAPROTOCOLONFERESULT:cPROTOCOLO)
+		cMensagem += STR0050+": "+oWs:oWSCONSULTAPROTOCOLONFERESULT:cPROTOCOLO+CRLF	
+	EndIf
+	Aviso(STR0107,cMensagem,{STR0114},3)
+Else
+	Aviso("SPED",IIf(Empty(GetWscError(3)),GetWscError(1),GetWscError(3)),{STR0114},3)
+EndIf
+
+Return
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³FsLoadTxt ³ Autor ³Eduardo Riera          ³ Data ³24.10.2006³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Funcao de leitura de arquivo texto para anexar ao layout    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ExC1: Arquivo texto                                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1: Nome do arquivo texto com path                       ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao Efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function FsLoadTXT(cFileImp)
+
+Local cTexto     := ""
+Local cNewFile   := ""
+Local cExt       := "" 
+Local cStartPath := GetSrvProfString("StartPath","")
+Local nHandle    := 0
+Local nTamanho   := 0
+cStartPath := StrTran(cStartPath,"/","\")
+cStartPath +=If(Right(cStartPath,1)=="\","","\")
+
+CpyT2S(cFileImp,cStartPath)
+SplitPath(cFileImp,/*cDrive*/,/*cPath*/, @cNewFile,cExt)
+cNewFile := cNewFile+cExt
+
+nHandle := FOpen(cNewFile)
+nTamanho := Fseek(nHandle,0,FS_END)
+FSeek(nHandle,0,FS_SET)
+FRead(nHandle,@cTexto,nTamanho)
+FClose(nHandle)
+FErase(cNewFile)
+
+Return(cTexto)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³SpedNFeCan³ Autor ³Eduardo Riera          ³ Data ³21.06.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Rotina de cancelamento da NFe para o Totvs Services SPED    ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1: Empresa                                              ³±±
+±±³          ³ExpC2: Filial                                               ³±±
+±±³          ³ExpC3: Codigo da Entidade                                   ³±±
+±±³          ³ExpC4: Ambiente                                             ³±±
+±±³          ³ExpC5: Modalidade                                           ³±±
+±±³          ³ExpC6: Versao                                               ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function SpedNFeCan(cCodEmp,cCodFil,cIdEnt,cAmbiente,cModalidade,cVersao)
+
+MsgRun(STR0130,STR0073,{|| JobNfeCan(cIdEnt,cAmbiente,cModalidade,cVersao)}) //"Aguarde"###"Processando Transmissão NF-e"
+
+Return
+
+Static Function JobNFeCan(cIdEnt,cAmbiente,cModalidade,cVersao)
+Local aArea     := GetArea()
+Local aNotas    := {}
+Local cIndice   := ""
+Local aXml      := {}
+Local cAliasSF3 := "SF3"
+Local cWhere    := ""
+Local cURL      := PadR(GetNewPar("MV_SPEDURL","http://"),250)
+Local cModelo   := "55"
+Local lQuery    := .F.
+Local lRetorno  := .T.
+Local nX        := 0
+Local nY        := 0
+Local oWs
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Analisa parametros                                                     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cAmbiente   := SubStr(cAmbiente,1,1)
+cModalidade := SubStr(cModalidade,1,1)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Filtra as notas fiscais do dia                                         ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea("SF3")
+dbSetOrder(5)
+#IFDEF TOP
+	cWhere := "%((SubString(SF3.F3_CFO,1,1) < '5' AND SF3.F3_FORMUL='S') OR (SubString(SF3.F3_CFO,1,1) >= '5'))%"
+	cAliasSF3 := GetNextAlias()
+	lQuery    := .T.
+	BeginSql Alias cAliasSF3
+		
+	COLUMN F3_ENTRADA AS DATE
+	COLUMN F3_DTCANC AS DATE
+				
+	SELECT	F3_FILIAL,F3_ENTRADA,F3_NFeLETR,F3_CFO,F3_FORMUL,F3_NFISCAL,F3_SERIE,F3_CLIEFOR,F3_LOJA,F3_ESPECIE,F3_DTCANC
+			FROM %Table:SF3% SF3
+			WHERE
+			SF3.F3_FILIAL = %xFilial:SF3% AND
+			SF3.F3_ENTRADA >= %Exp:dDataBase-30% AND
+			SF3.F3_DTCANC  >= %Exp:dDataBase-30% AND 
+			%Exp:cWhere% AND
+			SF3.%notdel%
+	EndSql
+	cWhere := ".T."
+#ELSE
+	cIndice := CriaTrab(,.F.)
+	cWhere := "((SubStr(F3_CFO,1,1) < '5' .AND. F3_FORMUL=='S') .OR. (SubStr(F3_CFO,1,1) >= '5'))"
+	IndRegua("SF3",cIndice,SF3->(IndexKey()),,"F3_FILIAL=='"+xFilial("SF3")+"' .AND. DTOS(F3_EMISSAO)>='"+DTOS(dDataBase-30)+"' .AND. DTOS(F3_DTCANC)>='"+DTOS(dDataBase-30)+"' .AND. "+cWhere)
+	dbGotop()
+#ENDIF
+While !Eof() .And. xFilial("SF3") == (cAliasSF3)->F3_FILIAL
+	dbSelectArea(cAliasSF3)
+	If (SubStr((cAliasSF3)->F3_CFO,1,1)>="5" .Or. (cAliasSF3)->F3_FORMUL=="S") .And. aScan(aNotas,{|x| x[3]+x[4]==(cAliasSF3)->F3_SERIE+(cAliasSF3)->F3_NFISCAL})==0
+		If (AModNot((cAliasSF3)->F3_ESPECIE)$"55,57" .Or. cAmbiente=="2") .And. &cWhere
+			aadd(aNotas,{})	
+			nX := Len(aNotas)
+			aadd(aNotas[nX],IIF((cAliasSF3)->F3_CFO<"5","0","1"))
+			aadd(aNotas[nX],(cAliasSF3)->F3_ENTRADA)
+			aadd(aNotas[nX],(cAliasSF3)->F3_SERIE)
+			aadd(aNotas[nX],(cAliasSF3)->F3_NFISCAL)
+			aadd(aNotas[nX],(cAliasSF3)->F3_CLIEFOR)
+			aadd(aNotas[nX],(cAliasSF3)->F3_LOJA)
+			If AModNot((cAliasSF3)->F3_ESPECIE)$"55,57"
+				aadd(aNotas[nX],AModNot((cAliasSF3)->F3_ESPECIE))
+			ElseIf FunName()$"SPEDCTE"
+				aadd(aNotas[nX],"57")
+			Else
+				aadd(aNotas[nX],"55")
+			EndIf
+		EndIf
+	EndIf
+	dbSelectArea(cAliasSF3)
+	dbSkip()
+EndDo
+If lQuery
+	dbSelectArea(cAliasSF3)
+	dbCloseArea()
+	dbSelectArea("SF3")
+Else
+	RetIndex("SF3")
+	FErase(cIndice+OrdBagExt())
+EndIf
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Transmite as NFe canceladas                                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+oWs:= WsNFeSBra():New()
+oWs:cUserToken := "TOTVS"
+oWs:cID_ENT    := cIdEnt
+oWS:_URL       := AllTrim(cURL)+"/NFeSBRA.apw"
+oWs:oWsNFe:oWsNotas :=  NFESBRA_ARRAYOFNFES():New()
+For nX := 1 To Len(aNotas)
+	cModelo := aNotas[nX][7]
+	nY++
+	aadd(oWs:oWsNFe:oWsNotas:oWSNFES,NFESBRA_NFES():New())
+	oWs:oWsNFe:oWsNotas:oWSNFES[nY]:cID := aNotas[nX][3]+aNotas[nX][4]
+	If cVersao < "1.11"	
+		oWs:oWsNFe:oWsNotas:oWSNFES[nY]:cXML:= GetUFCode(SM0->M0_ESTCOB)+FsDateConv(aNotas[nX][2],"YYMM")+SM0->M0_CGC+cModelo+StrZero(Val(aNotas[nX][3]),3)+StrZero(Val(aNotas[nX][4]),9)+Inverte(StrZero(Val(aNotas[nX][4]),9))
+	Else
+		oWs:oWsNFe:oWsNotas:oWSNFES[nY]:cXML:= GetUFCode(SM0->M0_ESTCOB)+FsDateConv(aNotas[nX][2],"YYMM")+SM0->M0_CGC+cModelo+StrZero(Val(aNotas[nX][3]),3)+StrZero(Val(aNotas[nX][4]),9)+cModalidade+Inverte(StrZero(Val(SubStr(aNotas[nX][4],2,8)),8))
+	EndIf
+	oWs:oWsNFe:oWsNotas:oWSNFES[nY]:cXML:= 'Id="' +	oWs:oWsNFe:oWsNotas:oWSNFES[nY]:cXML + Modulo11(oWs:oWsNFe:oWsNotas:oWSNFES[nY]:cXML) + '"'
+	If ExistBlock("FISCANNFE")
+		oWs:oWsNFe:oWsNotas:oWSNFES[nY]:cXML := ExecBlock("FISCANNFE",.F.,.F.,{oWs:oWsNFe:oWsNotas:oWSNFES[nY]:cXML,aNotas[nX]})
+	EndIf
+	If nY >=50 .Or. nX == Len(aNotas)
+		If oWs:CancelaNotas()
+			oWs:= WsNFeSBra():New()
+			oWs:cUserToken := "TOTVS"
+			oWs:cID_ENT    := cIdEnt
+			oWS:_URL       := AllTrim(cURL)+"/NFeSBRA.apw"
+			oWs:oWsNFe:oWsNotas :=  NFESBRA_ARRAYOFNFES():New()
+			nY := 0
+		Else
+			Aviso("SPED",IIf(Empty(GetWscError(3)),GetWscError(1),GetWscError(3)),{STR0114},3) //"Execute o módulo de configuração do serviço, antes de utilizar esta opção!!!"
+        EndIf
+	EndIf
+Next nX 
+
+
+RestArea(aArea)
+Return(.T.)
+
+Static Function Inverte(uCpo)
+
+Local cCpo	:= uCpo
+Local cRet	:= ""
+Local cByte	:= ""
+Local nAsc	:= 0
+Local nI		:= 0
+Local aChar	:= {}
+Local nDiv	:= 0
+
+
+Aadd(aChar,	{"0", "9"})
+Aadd(aChar,	{"1", "8"})
+Aadd(aChar,	{"2", "7"})
+Aadd(aChar,	{"3", "6"})
+Aadd(aChar,	{"4", "5"})
+Aadd(aChar,	{"5", "4"})
+Aadd(aChar,	{"6", "3"})
+Aadd(aChar,	{"7", "2"})
+Aadd(aChar,	{"8", "1"})
+Aadd(aChar,	{"9", "0"})
+
+For nI:= 1 to Len(cCpo)
+   cByte := Upper(Subs(cCpo,nI,1))
+   If (Asc(cByte) >= 48 .And. Asc(cByte) <= 57) .Or. ;	// 0 a 9
+   		(Asc(cByte) >= 65 .And. Asc(cByte) <= 90) .Or. ;	// A a Z
+   		Empty(cByte)	// " "
+	   nAsc	:= Ascan(aChar,{|x| x[1] == cByte})
+   	If nAsc > 0
+   		cRet := cRet + aChar[nAsc,2]	// Funcao Inverte e chamada pelo rdmake de conversao
+	   EndIf
+	Else
+		// Caracteres <> letras e numeros: mantem o caracter
+		cRet := cRet + cByte
+	EndIf
+Next
+Return(cRet)
+
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³SpedVisual³ Autor ³Marcelo Alexandre      ³ Data ³20.02.2008³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Botao para visualizar documentos de saida                   ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function SpedVisualDoc(cAlias)
+
+If cAlias == "SF2"
+	Mc090Visual("SF2",SF2->(RecNo()),1)
+ElseIf cAlias == "SF1"
+	A103NFiscal("SF1",SF1->(RecNo()),2)
+EndIf
+
+Return
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³SpedFiltro³ Autor ³Marcelo Alexandre      ³ Data ³23.02.2008³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Botao para alterar o filtro do browse                       ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/ 
+Function SpedFiltro()
+
+INCLUI    := .F.
+lBtnFiltro:= .T.
+CloseBrowse()
+
+Return Nil
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³SpedExport³ Autor ³Eduardo Riera          ³ Data ³02.03.2008³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Rotina de exportacao das notas fiscaiss eletronicas         ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function SpedExport()
+
+Local cIdEnt   := ""
+Local aPerg    := {}
+Local aParam   := {Space(Len(SF2->F2_SERIE)),Space(Len(SF2->F2_DOC)),Space(Len(SF2->F2_DOC)),Space(60),CToD(""),CToD(""),Space(14),Space(14)}
+
+aadd(aPerg,{1,STR0010,aParam[01],"",".T.","",".T.",30,.F.}) //"Serie da Nota Fiscal"
+aadd(aPerg,{1,STR0011,aParam[02],"",".T.","",".T.",30,.T.}) //"Nota fiscal inicial"
+aadd(aPerg,{1,STR0012,aParam[03],"",".T.","",".T.",30,.T.}) //"Nota fiscal final"
+aadd(aPerg,{6,STR0119,aParam[04],"",".T.","!Empty(mv_par04)",80,.T.," |*.","c:\",GETF_RETDIRECTORY+GETF_LOCALHARD}) //"Diretório de destino"
+aadd(aPerg,{1,STR0141,aParam[05],"",".T.","",".T.",10,.F.}) //"Data Inicial"
+aadd(aPerg,{1,STR0142,aParam[06],"",".T.","",".T.",10,.T.}) //"Data Final"
+aadd(aPerg,{1,STR0143,aParam[07],"",".T.","",".T.",50,.F.}) //"CNPJ Inicial"
+aadd(aPerg,{1,STR0144,aParam[08],"",".T.","",".T.",50,.T.}) //"CNPJ final"
+
+aParam[01] := ParamLoad("SPEDNFEEXP",aPerg,1,aParam[01])
+aParam[02] := ParamLoad("SPEDNFEEXP",aPerg,2,aParam[02])
+aParam[03] := ParamLoad("SPEDNFEEXP",aPerg,3,aParam[03])
+aParam[04] := ParamLoad("SPEDNFEEXP",aPerg,4,aParam[04])
+aParam[05] := ParamLoad("SPEDNFEEXP",aPerg,5,aParam[05])
+aParam[06] := ParamLoad("SPEDNFEEXP",aPerg,6,aParam[06])
+aParam[07] := ParamLoad("SPEDNFEEXP",aPerg,7,aParam[07])
+aParam[08] := ParamLoad("SPEDNFEEXP",aPerg,8,aParam[08])
+
+If IsReady()
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Obtem o codigo da entidade                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ	
+	cIdEnt := GetIdEnt()
+	If !Empty(cIdEnt)
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Instancia a classe                                                      ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If !Empty(cIdEnt)
+		
+			If ParamBox(aPerg,"SPED - NFe",@aParam,,,,,,,"SPEDNFEEXP",.T.,.T.)
+
+
+				Processa({|lEnd| SpedPExp(cIdEnt,aParam[01],aParam[02],aParam[03],aParam[04],lEnd,aParam[05],aParam[06],aParam[07],aParam[08])})
+
+			EndIf
+		EndIf
+	Else
+		Aviso("SPED",STR0021,{STR0114},3)	//"Execute o módulo de configuração do serviço, antes de utilizar esta opção!!!"
+	EndIf
+Else
+	Aviso("SPED",STR0021,{STR0114},3) //"Execute o módulo de configuração do serviço, antes de utilizar esta opção!!!"
+EndIf
+
+Return
+
+Static Function SpedPExp(cIdEnt,cSerie,cNotaIni,cNotaFim,cDirDest,lEnd, dDataDe,dDataAte,cCnpjDIni,cCnpjDFim)
+                                 
+Local aDeleta  := {}
+Local nHandle  := 0
+Local cURL     := PadR(GetNewPar("MV_SPEDURL","http://"),250)
+Local cChvNFe  := ""
+Local cDestino := ""
+Local cDrive   := ""
+Local cModelo  := ""
+Local cPrefixo := ""
+Local lFinal   := .F.
+Local nX       := 0
+Local oWS
+Local oRetorno
+Local oXML
+
+ProcRegua(Val(cNotaFim)-Val(cNotaIni))
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Corrigi diretorio de destino                                           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+SplitPath(cDirDest,@cDrive,@cDestino,"","")
+cDestino := cDrive+cDestino
+
+While !lFinal .And. !lEnd
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Inicia processamento                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	oWS:= WSNFeSBRA():New()
+	oWS:cUSERTOKEN        := "TOTVS"
+	oWS:cID_ENT           := cIdEnt 
+	oWS:_URL              := AllTrim(cURL)+"/NFeSBRA.apw"
+	oWS:cIdInicial        := cSerie+cNotaIni
+	oWS:cIdFinal          := cSerie+cNotaFim
+	oWS:dDataDe           := dDataDe
+	oWS:dDataAte          := dDataAte
+	oWS:cCNPJDESTInicial  := cCnpjDIni
+	oWS:cCNPJDESTFinal    := cCnpjDFim
+	oWS:nDiasparaExclusao := 0
+	lOk := oWS:RETORNAFAIXA()
+	oRetorno := oWS:oWsRetornaFaixaResult
+	If lOk
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Exporta as notas                                                       ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	    For nX := 1 To Len(oRetorno:OWSNOTAS:OWSNFES3)
+	 		oXml := oRetorno:OWSNOTAS:OWSNFES3[nX]
+	    	cNotaIni := oXml:cID	 		
+	 		If !Empty(oXml:oWSNFe:cProtocolo)
+	 			cChvNFe  := SpedNfeId(oXml:oWSNFe:cXML,"Id")	 			
+				cModelo := cChvNFe
+				cModelo := StrTran(cModelo,"NFe","")
+				cModelo := StrTran(cModelo,"CTe","")
+				cModelo := SubStr(cModelo,21,02)
+				
+				Do Case
+					Case cModelo == "57"
+						cPrefixo := "CTe"
+					OtherWise
+						cPrefixo := "NFe"
+				EndCase	 				 			
+	 			nHandle := FCreate(cDestino+cChvNFe+"-"+cPrefixo+".xml")
+	 			If nHandle > 0
+		 			FWrite(nHandle,oXml:oWSNFe:cXML)
+		 			FClose(nHandle)
+		 			aadd(aDeleta,oXml:cID)
+		 		EndIf
+	 			nHandle := FCreate(cDestino+"\"+cChvNFe+"-aut.xml")
+	 			If nHandle > 0
+		 			FWrite(nHandle,oXml:oWSNFe:cXMLPROT)
+		 			FClose(nHandle)
+		 		EndIf
+		 	EndIf
+		 	If oXml:OWSNFECANCELADA<>Nil .And. !Empty(oXml:oWSNFeCancelada:cProtocolo)
+			 	cChvNFe  := SpedNfeId(oXml:oWSNFeCancelada:cXML,"Id")
+			 	If !"INUT"$oXml:oWSNFeCancelada:cXML
+		 			nHandle := FCreate(cDestino+cChvNFe+"-ped-can.xml")
+		 			If nHandle > 0
+			 			FWrite(nHandle,oXml:oWSNFeCancelada:cXML)
+			 			FClose(nHandle)
+			 			aadd(aDeleta,oXml:cID)
+			 		EndIf
+		 			nHandle := FCreate(cDestino+"\"+cChvNFe+"-can.xml")
+		 			If nHandle > 0
+			 			FWrite(nHandle,oXml:oWSNFeCancelada:cXMLPROT)
+			 			FClose(nHandle)
+			 		EndIf
+			 	Else
+		 			nHandle := FCreate(cDestino+cChvNFe+"-ped-inu.xml")
+		 			If nHandle > 0
+			 			FWrite(nHandle,oXml:oWSNFeCancelada:cXML)
+			 			FClose(nHandle)
+			 			aadd(aDeleta,oXml:cID)
+			 		EndIf
+		 			nHandle := FCreate(cDestino+"\"+cChvNFe+"-inu.xml")
+		 			If nHandle > 0
+			 			FWrite(nHandle,oXml:oWSNFeCancelada:cXMLPROT)
+			 			FClose(nHandle)
+			 		EndIf		 	
+			 	EndIf
+			 EndIf
+			 IncProc()
+	    Next nX
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Exclui as notas                                                        ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If !Empty(aDeleta) .And. GetNewPar("MV_SPEDEXP",0)<>0
+			oWS:= WSNFeSBRA():New()
+			oWS:cUSERTOKEN        := "TOTVS"
+			oWS:cID_ENT           := cIdEnt
+			oWS:nDIASPARAEXCLUSAO := GetNewPar("MV_SPEDEXP",0)
+			oWS:_URL              := AllTrim(cURL)+"/NFeSBRA.apw"		
+			oWS:oWSNFEID          := NFESBRA_NFES2():New()
+			oWS:oWSNFEID:oWSNotas := NFESBRA_ARRAYOFNFESID2():New()
+		    oWS:nDanfe			  :=0
+		    For nX := 1 To Len(aDeleta)	    
+				aadd(oWS:oWSNFEID:oWSNotas:oWSNFESID2,NFESBRA_NFESID2():New())
+				Atail(oWS:oWSNFEID:oWSNotas:oWSNFESID2):cID := aDeleta[nX]
+		    Next nX
+			If oWS:RETORNANOTAS()
+				//Ok
+			Else
+				Aviso("SPED",IIf(Empty(GetWscError(3)),GetWscError(1),GetWscError(3)),{STR0114},3)
+				lFinal := .T.
+			EndIf
+		EndIf
+		aDeleta  := {}
+	    cNotaIni := Soma1(cNotaIni,Len(cNotaIni),.F.,.T.)
+	    If Len(oRetorno:OWSNOTAS:OWSNFES3) == 0
+	    	lFinal := .T.
+	    EndIf
+	Else
+		Aviso("SPED",IIf(Empty(GetWscError(3)),GetWscError(1),GetWscError(3)),{STR0114},3)
+		lFinal := .T.
+	EndIf
+
+	lFinal := .T.
+	
+EndDo
+Return(.T.)
+

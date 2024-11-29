@@ -1,0 +1,208 @@
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "APWIZARD.CH"
+#INCLUDE "FILEIO.CH"
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³SPEDCTe   ³ Autor ³ Eduardo Riera         ³ Data ³19.11.2008³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Programa de transmissao do conhecimento eletronico          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ ATUALIZACOES SOFRIDAS DESDE A CONSTRUCAO INICIAL.                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ PROGRAMADOR  ³ DATA   ³ BOPS ³  MOTIVO DA ALTERACAO                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³              ³        ³      ³                                        ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function SPEDCTe()
+
+Local aArea     := GetArea()
+Local lRetorno  := .T.
+Local nVezes    := 0
+
+PRIVATE lBtnFiltro:= .F.
+
+While lRetorno
+	lBtnFiltro:= .F.
+    lRetorno := SpedCTe2(nVezes==0)
+    nVezes++
+    If !lBtnFiltro
+    	Exit
+    EndIf
+EndDo
+RestArea(aArea)
+Return Nil
+
+Static Function SPEDCTe2(lInit,cAlias)
+
+Local aPerg     := {}
+Local aCores    := {}
+Local lRetorno  := .T.
+Local aIndArq   := {}
+
+PRIVATE cCondicao := ""
+PRIVATE aRotina   := MenuDef()
+PRIVATE cCadastro := "Monitoramento da CTe-SEFAZ"
+PRIVATE bFiltraBrw
+
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Montagem das perguntas                                                  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+aadd(aPerg,{2,"Tipo de CTe","",{"1-Saída","2-Entrada"},120,".T.",.T.,".T."}) 
+aadd(aPerg,{2,"Filtra","",{"1-Autorizadas","2-Sem filtro","3-Não Autorizadas","4-Transmitidas","5-Não Transmitidas"},120,".T.",.T.,".T."}) 
+aadd(aPerg,{1,"Serie do Conhecimento",PadR("",Len(SF2->F2_SERIE)),"",".T.","",".T.",30,.F.})	
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica se o serviço foi configurado - Somente o Adm pode configurar   ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If lInit
+	If (!CtIsReady() .Or. !CtIsReady(,2))
+		If PswAdmin( /*cUser*/, /*cPsw*/,RetCodUsr()) == 0
+			SpedNFeCFG()
+		Else
+			HelProg(,"FISTRFCTE")
+		EndIf
+	EndIf	
+EndIf
+If !lInit .Or. CtIsReady()
+	If ParamBox(aPerg,"SPED - CTe",,,,,,,,"SPEDCTe",.T.,.T.)
+		If SubStr(MV_PAR01,1,1) == "1"
+			aCores    := {{"F2_FIMP==' '",'DISABLE' },;								//CT não transmitido
+						  {"F2_FIMP=='S'",'ENABLE'},;									//CT Autorizado
+						  {"F2_FIMP=='T'",'BR_AZUL'},;									//CT Transmitido
+						  {"F2_FIMP=='N'",'BR_PRETO'}}									//CT nao autorizado
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Realiza a Filtragem                                                     ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ			
+			cCondicao := "F2_FILIAL=='"+xFilial("SF2")+"'"
+			If !Empty(MV_PAR03)
+				cCondicao += ".AND.F2_SERIE=='"+MV_PAR03+"'"
+			EndIf
+			If SubStr(MV_PAR02,1,1) == "1" //"1-CT Autorizada"
+				cCondicao += ".AND. F2_FIMP$'S' "
+			ElseIf SubStr(MV_PAR02,1,1) == "3" //"3-Não Autorizadas"
+				cCondicao += ".AND. F2_FIMP$'N' "
+			ElseIf SubStr(MV_PAR02,1,1) == "4" //"4-Transmitidas"
+				cCondicao += ".AND. F2_FIMP$'T' "
+			ElseIf SubStr(MV_PAR02,1,1) == "5" //"5-Não Transmitidas"
+				cCondicao += ".AND. F2_FIMP$' ' "
+			EndIf
+			bFiltraBrw := {|| FilBrowse("SF2",@aIndArq,@cCondicao) }
+			Eval(bFiltraBrw)
+			mBrowse( 6, 1,22,75,"SF2",,,,,,aCores,/*cTopFun*/,/*cBotFun*/,/*nFreeze*/,/*bParBloco*/,/*lNoTopFilter*/,.F.,.F.,)
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Restaura a integridade da rotina                                ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			dbSelectArea("SF2")
+			RetIndex("SF2")
+			dbClearFilter()
+			aEval(aIndArq,{|x| Ferase(x[1]+OrdBagExt())})			
+		Else
+			If SF1->(FieldPos("F1_FIMP"))>0
+				aCores    := {{"F1_FIMP==' '",'DISABLE' },;									//CT não transmitado
+							  {"F1_FIMP=='S'",'ENABLE'},;									//CT Autorizado
+							  {"F1_FIMP=='T'",'BR_AZUL'},;									//CT Transmitido
+							  {"F1_FIMP=='N'",'BR_PRETO'}}									//CT nao autorizado
+			Else
+				aCores := Nil
+			EndIf
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Realiza a Filtragem                                                     ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			cCondicao := "F1_FILIAL=='"+xFilial("SF1")+"' .AND. "
+			cCondicao += "F1_FORMUL=='S'"
+			If !Empty(MV_PAR03)
+				cCondicao += ".AND.F1_SERIE=='"+MV_PAR03+"'"
+			EndIf
+			If SubStr(MV_PAR02,1,1) == "1" .And. SF1->(FieldPos("F1_FIMP")) >  0  //"1-CT Autorizado"
+				cCondicao += ".AND. F1_FIMP$'S' "
+			ElseIf SubStr(MV_PAR02,1,1) == "3" .And. SF1->(FieldPos("F1_FIMP"))>0 //"3-Não Autorizados"
+				cCondicao += ".AND. F1_FIMP$'N' "
+			ElseIf SubStr(MV_PAR02,1,1) == "4" .And. SF1->(FieldPos("F1_FIMP"))>0 //"4-Transmitidos"
+				cCondicao += ".AND. F1_FIMP$'T' "
+			ElseIf SubStr(MV_PAR02,1,1) == "5" .And. SF1->(FieldPos("F1_FIMP"))>0 //"5-Não Transmitidos"
+				cCondicao += ".AND. F1_FIMP$' ' "				
+			EndIf
+			bFiltraBrw := {|| FilBrowse("SF1",@aIndArq,@cCondicao) }
+			Eval(bFiltraBrw)
+			mBrowse( 6, 1,22,75,"SF1",,,,,,aCores,/*cTopFun*/,/*cBotFun*/,/*nFreeze*/,/*bParBloco*/,/*lNoTopFilter*/,.F.,.F.,)
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Restaura a integridade da rotina                                ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			dbSelectArea("SF1")
+			RetIndex("SF1")
+			dbClearFilter()
+			aEval(aIndArq,{|x| Ferase(x[1]+OrdBagExt())})			
+		EndIf	
+	Else
+		lRetorno := .F.
+	EndIf
+Else
+	HelProg(,"FISTRFCTE")
+	lRetorno := .F.
+EndIf
+Return(lRetorno)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³MenuDef   ³ Autor ³Eduardo Riera          ³ Data ³20.11.2008³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Utilizacao de menu Funcional                               ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Array com opcoes da rotina.                                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³Parametros do array a Rotina:                               ³±±
+±±³          ³1. Nome a aparecer no cabecalho                             ³±±
+±±³          ³2. Nome da Rotina associada                                 ³±±
+±±³          ³3. Reservado                                                ³±±
+±±³          ³4. Tipo de Transa‡„o a ser efetuada:                        ³±±
+±±³          ³	  1 - Pesquisa e Posiciona em um Banco de Dados           ³±±
+±±³          ³    2 - Simplesmente Mostra os Campos                       ³±±
+±±³          ³    3 - Inclui registros no Bancos de Dados                 ³±±
+±±³          ³    4 - Altera o registro corrente                          ³±±
+±±³          ³    5 - Remove o registro corrente do Banco de Dados        ³±±
+±±³          ³5. Nivel de acesso                                          ³±±
+±±³          ³6. Habilita Menu Funcional                                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function MenuDef()
+
+Local aRotina2  := { {"Faixa","SpedNFe1Mnt",0,2},;
+                     {"Tempo","SpedNFe2Mnt",0,2},; 
+                     {"Estatísticas","SpedNFe3Mnt",0,2},;
+                     {"Consulta CTe","SpedNFe4Mnt",0,2}} 
+
+Private aRotina := {	    {"Pesquisar","PesqBrw"       ,0,1,0,.F.},;
+							{"Wiz.Config.","SpedNFeCfg"    ,0,2,0 ,NIL},;
+							{"P&arâmetros","SpedNFePar"    ,0,2,0 ,NIL},;
+							{"Status SEFAZ","SpedNFeStatus" ,0,2,0 ,NIL},;
+							{"Transmissão","SpedNFeRemessa",0,2,0 ,NIL},;
+							{"DACTE","SpedDaNFe"     ,0,2,0 ,NIL},;
+							{"Monitor",aRotina2        ,0,2,0 ,NIL},;
+							{"Visualiza Doc.","SpedVisualDoc" ,0,2,0 ,NIL},;
+							{"Filtro","CteFiltro"	 ,0,3,0 ,NIL},;
+							{"Exportar","SpedExport"    ,0,2,0 ,NIL},;
+							{"Legenda","SpedNFeLeg"    ,0,2,0 ,NIL}}
+	
+If ExistBlock("FISTRFCTE")
+	ExecBlock("FISTRFCTE",.F.,.F.)
+EndIf
+
+Return(aRotina)    
+

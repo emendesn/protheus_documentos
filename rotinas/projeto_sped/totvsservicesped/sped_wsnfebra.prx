@@ -1,0 +1,2531 @@
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "APWEBSRV.CH"
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Definicao das estruturas                                                ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+WSSTRUCT NFECONSULTACONTRIBUINTE
+	WSDATA IE                 AS STRING
+	WSDATA CNPJ               AS STRING
+	WSDATA CPF                AS STRING
+	WSDATA UF                 AS STRING
+	WSDATA SITUACAO           AS STRING
+	WSDATA RAZAOSOCIAL        AS STRING
+	WSDATA FANTASIA           AS STRING OPTIONAL
+	WSDATA REGIMEAPURACAO     AS STRING OPTIONAL
+	WSDATA CNAE               AS STRING OPTIONAL
+	WSDATA INICIOATIVIDADE    AS DATE   OPTIONAL
+	WSDATA ULTIMASITUACAO     AS DATE   OPTIONAL
+	WSDATA BAIXA              AS DATE   OPTIONAL
+	WSDATA IEUNICA            AS STRING OPTIONAL
+	WSDATA IEATUAL            AS STRING OPTIONAL
+	WSDATA ENDERECO           AS NFECONSULTACONTRIBUINTEENDERECO OPTIONAL
+ENDWSSTRUCT
+
+WSSTRUCT NFECONSULTACONTRIBUINTEENDERECO
+	WSDATA LOGRADOURO         AS STRING OPTIONAL
+	WSDATA NUMERO             AS STRING OPTIONAL
+	WSDATA COMPLEMENTO        AS STRING OPTIONAL
+	WSDATA BAIRRO             AS STRING OPTIONAL
+	WSDATA CODIGOMUNICIPIO    AS STRING OPTIONAL
+	WSDATA MUNICIPIO          AS STRING OPTIONAL
+	WSDATA CEP                AS STRING OPTIONAL
+ENDWSSTRUCT
+
+WSSTRUCT ESTATISTICANFE
+	WSDATA AMBIENTE      AS INTEGER
+	WSDATA SERVICO       AS STRING
+	WSDATA DETALHE       AS ARRAY OF DETALHEESTATISTICANFESEF
+ENDWSSTRUCT
+
+WSSTRUCT DETALHEESTATISTICANFESEF
+	WSDATA CodMsgSef      AS STRING
+	WSDATA Mensagem       AS STRING
+	WSDATA Quantidade     AS INTEGER
+ENDWSSTRUCT
+
+WSSTRUCT NFEPROTOCOLOCONSULTA
+	WSDATA ID            AS STRING
+	WSDATA AMBIENTE      AS INTEGER
+	WSDATA VERSAO        AS STRING
+	WSDATA RECBTO        AS DATE   OPTIONAL
+	WSDATA PROTOCOLO     AS STRING OPTIONAL
+	WSDATA CODRETNFE    AS STRING OPTIONAL
+	WSDATA MSGRETNFE    AS STRING OPTIONAL	
+ENDWSSTRUCT
+
+WSSTRUCT MONITORSTATUSSEFAZ
+	WSDATA VERSAOMENSAGEM       AS STRING
+	WSDATA STATUSCODIGO         AS STRING
+	WSDATA STATUSMENSAGEM       AS STRING
+	WSDATA UFORIGEM             AS STRING
+	WSDATA UFRESPOSTA           AS STRING  OPTIONAL
+	WSDATA TEMPOMEDIOSEF        AS INTEGER OPTIONAL
+	WSDATA MOTIVO 				AS STRING  OPTIONAL
+	WSDATA OBSERVACAO			AS STRING  OPTIONAL
+	WSDATA SUGESTAO             AS STRING  OPTIONAL
+	WSDATA LOGAUDITORIA         AS STRING  OPTIONAL
+ENDWSSTRUCT
+
+WSSTRUCT MONITORSTATUSSEFAZMODELO
+	WSDATA MODELO               AS STRING
+	WSDATA VERSAOMENSAGEM       AS STRING
+	WSDATA STATUSCODIGO         AS STRING
+	WSDATA STATUSMENSAGEM       AS STRING
+	WSDATA UFORIGEM             AS STRING
+	WSDATA UFRESPOSTA           AS STRING  OPTIONAL
+	WSDATA TEMPOMEDIOSEF        AS INTEGER OPTIONAL
+	WSDATA MOTIVO 				AS STRING  OPTIONAL
+	WSDATA OBSERVACAO			AS STRING  OPTIONAL
+	WSDATA SUGESTAO             AS STRING  OPTIONAL
+	WSDATA LOGAUDITORIA         AS STRING  OPTIONAL
+ENDWSSTRUCT
+
+WSSTRUCT MONITORONLINESEFAZ
+	WSDATA AMBIENTE             AS INTEGER
+	WSDATA VERSAOMENSAGEM       AS STRING
+	WSDATA STATUSCODIGO         AS STRING
+	WSDATA STATUSMENSAGEM       AS STRING
+	WSDATA UFORIGEM             AS STRING
+	WSDATA UFRESPOSTA           AS STRING  OPTIONAL
+	WSDATA TEMPOMEDIOSEF        AS INTEGER OPTIONAL
+	WSDATA MOTIVO 				AS STRING  OPTIONAL
+	WSDATA OBSERVACAO			AS STRING  OPTIONAL
+	WSDATA SUGESTAO             AS STRING  OPTIONAL
+ENDWSSTRUCT
+
+WSSTRUCT MONITORNFE
+	WSDATA AMBIENTE      AS INTEGER
+	WSDATA MODALIDADE    AS INTEGER
+	WSDATA ID            AS STRING
+	WSDATA PROTOCOLO     AS STRING OPTIONAL
+	WSDATA ERRO          AS ARRAY OF LOTENFE OPTIONAL
+	WSDATA TEMPOMEDIOSEF AS INTEGER
+	WSDATA TEMPODEESPERA AS STRING
+	WSDATA RECOMENDACAO  AS STRING
+ENDWSSTRUCT
+WSSTRUCT NFES
+	WSDATA ID        AS STRING
+	WSDATA XML       AS BASE64BINARY 
+ENDWSSTRUCT
+WSSTRUCT NFES4
+	WSDATA ID        AS STRING
+	WSDATA XML       AS BASE64BINARY
+	WSDATA Mensagem  AS STRING OPTIONAL
+ENDWSSTRUCT
+WSSTRUCT NFES3
+	WSDATA ID            AS STRING
+	WSDATA NFE           AS NFEPROTOCOLO
+	WSDATA NFECANCELADA  AS NFEPROTOCOLO OPTIONAL
+ENDWSSTRUCT
+WSSTRUCT NFEPROTOCOLO
+	WSDATA XML           AS STRING
+	WSDATA XMLPROT       AS STRING OPTIONAL
+	WSDATA PROTOCOLO     AS STRING OPTIONAL
+ENDWSSTRUCT
+WSSTRUCT NFESID
+	WSDATA ID        AS ARRAY OF STRING OPTIONAL
+ENDWSSTRUCT
+WSSTRUCT NFESID2
+	WSDATA ID        AS STRING
+ENDWSSTRUCT
+WSSTRUCT NFES2
+	WSDATA NOTAS     AS ARRAY OF NFESID2
+ENDWSSTRUCT
+WSSTRUCT NFE
+	WSDATA NOTAS     AS ARRAY OF NFES
+ENDWSSTRUCT
+WSSTRUCT NFE3
+	WSDATA NOTAS     AS ARRAY OF NFES3 OPTIONAL
+ENDWSSTRUCT
+WSSTRUCT LOTENFE
+	WSDATA LOTE         AS INTEGER
+	WSDATA DATALOTE     AS DATE
+	WSDATA HORALOTE     AS STRING
+	WSDATA RECIBOSEFAZ  AS INTEGER
+	WSDATA CODENVLOTE   AS STRING
+	WSDATA MSGENVLOTE   AS STRING
+	WSDATA CODRETRECIBO AS STRING OPTIONAL
+	WSDATA MSGRETRECIBO AS STRING OPTIONAL
+	WSDATA CODRETNFE    AS STRING OPTIONAL
+	WSDATA MSGRETNFE    AS STRING OPTIONAL	
+ENDWSSTRUCT
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Definicao do Web Service                                                ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+WSSERVICE NFESBRA	;
+	DESCRIPTION "<b>Serviço de administração das notas fiscais eletrônicas de saída do Brasil.</b><br><br>Este serviço permite a total integração com a nota fiscal eletrônica do Brasil utilizando os web services disponibilizados pelo projeto SPED."  ;
+	NAMESPACE "http://webservices.totvs.com.br/nfsebra.apw"
+
+	WSDATA UserToken              AS STRING
+	WSDATA Id_Ent                 AS STRING
+	WSDATA NFe                    AS NFE
+	WSDATA NFeSchema              AS Array OF NFES4
+	WSDATA NFeID                  AS NFES2
+	WSDATA NFeOk                  AS NFESID OPTIONAL
+	WSDATA NFeAutorizada          AS NFE3
+	WSDATA NFeConsultaProtocoloID AS STRING OPTIONAL
+	WSDATA chvNFE   			  AS STRING	OPTIONAL
+	WSDATA NFeProtocolo           AS NFEPROTOCOLOCONSULTA
+	WSDATA IDInicial              AS STRING
+	WSDATA IDFinal                AS STRING
+	WSDATA DataDe                 AS DATE
+	WSDATA DataAte                AS DATE
+	WSDATA CNPJDESTInicial        AS STRING
+	WSDATA CNPJDESTFinal          AS STRING
+	WSDATA Intervalo              AS INTEGER
+	WSDATA Monitor                AS ARRAY OF MONITORNFE
+	WSDATA StatusSefaz            AS STRING
+	WSDATA StatusSefazEx          AS MONITORSTATUSSEFAZ
+	WSDATA StatusSefazModelo      AS ARRAY OF MONITORSTATUSSEFAZMODELO
+	WSDATA DiasparaExclusao       AS INTEGER
+	WSDATA DataInicial            AS DATE
+	WSDATA DataFinal              AS DATE
+	WSDATA Informacoes            AS ARRAY OF ESTATISTICANFE
+	WSDATA UF                     AS STRING
+	WSDATA CNPJ                   AS STRING OPTIONAL
+	WSDATA CPF                    AS STRING OPTIONAL
+	WSDATA IE                     AS STRING OPTIONAL
+	WSDATA Contribuinte           AS ARRAY OF NFECONSULTACONTRIBUINTE
+	WSDATA MonitorSefazes         AS ARRAY OF MONITORONLINESEFAZ
+	WSDATA Danfe			      AS INTEGER
+		
+	WSMETHOD Remessa              DESCRIPTION "<b>Método de remessa da Nfe do Brasil para o fisco</b><br><br>Este método deve ser utilizado para o envio das notas fiscais eletrônicas do Brasil para o SEFAZ de origem que é identificado através do código da entidade(ID_ENT).<br>Após a identificação do SEFAZ de origem o sistema converte o XML para a versão configurada no serviço de configuraçao, valida o schema da NFe e retorna para a aplicação os IDs das notas que foram aceitas. A transmissão do lote será feita posteriormente através de um job que irá realizar todos os passos necessários para a transmissáo com segurança para a SEFAZ e o resultado pode ser consultado através dos serviços de monitoramento.<br>As NFes recusadas devem ser corrigidas pela aplicação e retransmitidas, em caso de duvida consulte o método 'Monitor' para identificar o erro da NFe.<br>Para a assinatura da Nfe é necessário um certificado digital que deve ser informando no serviço de configuração do SPED.<br>"
+	WSMETHOD Schema               DESCRIPTION "<b>Método de validação do XML da Nfe do Brasil, conforme a versão do layout configurada pelo serviço de configuração da NFe</b><br><br>Este método realiza as mesmas operações do método 'Remessa' porém não realiza a transmissão para o SEFAZ de origem."
+	WSMETHOD MonitorFaixa         DESCRIPTION "<b>Método de monitoramento do situaçXao da Nfe do Brasil no SEFAZ de origem por faixa de nota</b><br><br>Este método deve ser utilizado para monitorar a situação da Nfe, onde poderá ser observado o número de autorização (protocolo), as mensagens de erro e a sugestão do sistema.<br>A aplicação deve restringir o número máximo de NFes do intervalo para que o serviço não seja interrompido por timeout."
+	WSMETHOD MonitorTempo         DESCRIPTION "<b>Método de monitoramento do situaçXao da Nfe do Brasil no SEFAZ de origem por intervalo de Remessa</b><br><br>Este método deve ser utilizado para monitorar a situação da Nfe, onde poderá ser observado o número de autorização (protocolo), as mensagens de erro e a sugestão do sistema. A unidade do intervalo é minutos e o valor máximo é 24 horas. Para grandes emissores de NFes é recomendado a limitação do valor máximo para uma unidade que não provoque timeout na aplicação."
+	WSMETHOD MonitorSefaz         DESCRIPTION "<b>Método de monitoramento do situaçXao dos serviços da Nfe do Brasil no SEFAZ de origem</b><br><br>Este método deve ser utilizado para verificar a situação dos serviços de web services do SEFAZ de origem e o tempo de espera para os lotes de processamento.<br> O método solicita como parâmetro a codigo da entidade para identificar o SEFAZ de Origem. Em caso de duvida, verifique os serviços de Administração do SPED."
+	WSMETHOD MonitorSefazEx       DESCRIPTION "<b>Método de monitoramento do situaçXao dos serviços da Nfe do Brasil no SEFAZ de origem</b><br><br>Este método deve ser utilizado para verificar a situação dos serviços de web services do SEFAZ de origem e o tempo de espera para os lotes de processamento.<br> O método solicita como parâmetro a codigo da entidade para identificar o SEFAZ de Origem. Em caso de duvida, verifique os serviços de Administração do SPED."
+	WSMETHOD MonitorSefazModelo   DESCRIPTION "<b>Método de monitoramento do situaçXao dos serviços da NFe/CTe do Brasil na SEFAZ de origem</b><br><br>Este método deve ser utilizado para verificar a situação dos serviços de web services do SEFAZ de origem e o tempo de espera para os lotes de processamento.<br> O método solicita como parâmetro a codigo da entidade para identificar o SEFAZ de Origem. Em caso de duvida, verifique os serviços de Administração do SPED."
+	WSMETHOD Estatisticas         DESCRIPTION "<b>Método de monitoramento das estatisticas da Nfe do Brasil no SEFAZ de origem</b><br><br>Este método fornece alguns indicadores estatisticos referente aos serviços de comunicação com a SEFAZ. Os serviços retornados são: <br> NF-e,Cancelamentos,Envio de lotes e Retornos de lote."
+	WSMETHOD CancelaFaixa         DESCRIPTION "<b>Método de cancelamento/inutilização da Nfe do Brasil no SEFAZ de origem por faixa de notas.</b><br><br>Este método deve ser utilizado para cancelar ou inutilizar uma faixa de Nfe no SEFAZ de origem. O sistema decide automaticamente se irá inutilizar ou cancelar uma Nfe através das informações armazenadas em seu banco de dados. Caso o sistema identifique que a Nfe possui protocolo de autorização a Nfe é cancelada, caso contrario é unutilizada.<br>Este método apenas marca a NFe para cancelamento ou inutilização, porém o processo será feito por um Job que irá garantir o cancelamento/inutilização em caso de interrupção do serviço pela SEFAZ<br>Observação: Lembre-se que uma vez cancelada/inutilizada uma Nfe a sua numeração não poderá ser mais utilizada e caso exista intervalo na numeração de uma série da Nfe transmitida, o sistema automaticamente irá inutilizar-las após 2 dias utéis."
+	WSMETHOD CancelaNotas         DESCRIPTION "<b>Método de cancelamento/inutilização da Nfe do Brasil no SEFAZ de origem por relação de notas.</b><br><br>Este método é similar ao método por faixa, porém permite uma ou várias notas sem que seus números estejam em um intervalo."
+	WSMETHOD RetornaFaixa         DESCRIPTION "<b>Método de Retorno do XML da Nfe autorizada no SEFAZ de origem por faixa de notas.</b><br><br>Este método deve ser utilizado para capturar o XML da Nfe assinada. Caso o parâmetro de 'DiasparaExclusao' seja preenchido com um valor inteiro positivo o sistema irá realizar o exclusão física após o período informado.<br>A aplicação deve restringir o número máximo de NFes do intervalo para que o serviço não seja interrompido por timeout."
+	WSMETHOD RetornaNotas         DESCRIPTION "<b>Método de Retorno do XML da Nfe autorizada no SEFAZ de origem por relação de notas.</b><br><br>Este método é similar ao método por faixa, porém permite uma ou várias notas sem que seus números estejam em um intervalo.<br>A aplicação deve restringir o número máximo de NFes para que o serviço não seja interrompido por timeout.<br>O parâmetro 'DANFE'é utilizado para distinguir de onde esta sendo chamado o serviço se for 1 esta sendo chamado para impressão do DANFE caso seja 0 esta sendo chamdo na transmissão"
+	WSMETHOD ConsultaProtocoloNfe DESCRIPTION "<b>Método de consulta a situação atual da NF-e na base de dados da SEFAZ de origem.</b><br><br>Este método deve ser utilizado quando houver necessidade de consultar a situação da NFe por exigência da SEFAZ de origem durante a fase de homologação. Em condições normais de uso, torna-se desnecessário sua utilização."
+	WSMETHOD ConsultaContribuinte DESCRIPTION "<b>Método de consulta ao cadastro de contribuintes do ICMS da unidade federada.</b><br><br>Este método deve ser utilizado quando houver necessidade de consultar os dados do contribuinte e sincroniza-los com o ERP."
+	WSMETHOD MonitorStatusSefaz   DESCRIPTION "<b>Método de monitoramento do situaçXao dos serviços da Nfe do Brasil nas SEFAZes de origem</b><br><br>Este método deve ser utilizado para verificar a situação dos serviços de web services das SEFAZes de origem e o tempo de espera."
+ENDWSSERVICE
+
+WSMETHOD ConsultaContribuinte WSRECEIVE UserToken,Id_Ent,UF,CNPJ,CPF,IE  WSSEND Contribuinte WSSERVICE NFESBRA
+
+	Local lRetorno   := .T.
+	Local nAmbiente  := 0
+	Local cXml       := ""
+	Local cAviso     := ""
+	Local cErro      := ""
+	Local oXmlResult := Nil
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa o ambiente                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	DEFAULT ::CNPJ := ""
+	DEFAULT ::CPF  := ""
+	InitSped()
+	InitNfeSped()
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Parametros                                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If Self:UserToken == "TOTVS" .And. Select("SPED000")<>0	
+		nAmbiente := Val(SpedGetMv("MV_AMBIENT",Self:ID_ENT))
+		If lRetorno
+			If !Empty(Self:ID_ENT)
+				DbSelectArea("SPED001")
+				dbSetOrder(1)
+				If !DbSeek(Self:ID_ENT)
+					SetSoapFault("TOTVS SPED Services","001 - Codigo da entidade invalido")
+					lRetorno := .F.
+				EndIf
+			Else
+				SetSoapFault("TOTVS SPED Services","002 - Codigo da entidade em branco")
+				lRetorno := .F.	
+			EndIf
+		EndIf
+		If lRetorno
+			If Empty(::CNPJ) .And. Empty(::CPF) .And. Empty(::IE)
+				SetSoapFault("TOTVS SPED Services","003 - CNPJ,CPF ou IE em branco")
+				lRetorno := .F.
+		    EndIf
+		EndIf
+		If lRetorno
+			If Empty(::UF)
+				SetSoapFault("TOTVS SPED Services","004 - UF não informada")
+				lRetorno := .F.
+		    EndIf
+		EndIf
+		If lRetorno
+			If !NfeConsCad(nAmbiente,::UF,::IE,IIF(Empty(::CNPJ),::CPF,::CNPJ),@cXml)
+				SetSoapFault("TOTVS SPED Services","005 - Consulta não disponivel")
+				lRetorno := .F.			
+			Else
+				oXmlResult := XmlParser(cXML,"_",@cErro,@cAviso)
+				If Empty(cErro) .And. Empty(cAviso) .And. 	oXmlResult:_RETCONSCAD:_INFCONS:_CSTAT:TEXT$"111,112"
+				
+				Else
+					SetSoapFault("TOTVS SPED Services","006 - Erro na consulta - "+AllTrim(cErro)+AllTrim(cAviso)+AllTrim(oXmlResult:_RETCONSCAD:_INFCONS:_XMOTIVO:TEXT))
+					lRetorno := .F.				
+				EndIf
+			EndIf
+		EndIf
+	Else
+		If Select("SPED000")==0
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+		Else	
+			SetSoapFault("TOTVS SPED Services","Invalid Token")
+		EndIf
+		lRetorno := .F.
+	EndIf
+	FinishNfeSped()
+	Return(FinishSped(lRetorno))
+
+WSMETHOD Remessa        WSRECEIVE UserToken,Id_Ent,NFe                                WSSEND NfeOk       WSSERVICE NFESBRA
+	Local lRetorno   := .T.
+	Local lTravou    := .T.
+	Local lNfeOk     := .F.
+	Local nX         := 0
+	Local nModalidade:= 0
+	Local nAmbiente  := 0
+	Local cDirSchema := IIf(IsSrvUnix(),"/schemas/", "\schemas\")
+	Local cErro      := ""
+	Local cAviso     := ""
+	Local cMail      := ""
+	Local cSoapErro  := ""
+	Local cXml       := ""
+	Local cDpec		 := ""	
+	Local cModelo    := ""
+	Local cPrefixo   := ""
+	Private	oCNPJDEST
+	Private cCNPJDEST:= ""
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Status do SPED050                                                       ³
+	//³	      [1] NFe Recebida                                                 ³
+    //³       [2] NFe Assinada                                                 ³
+    //³       [3] NFe com falha no schema XML                                  ³ 
+    //³       [4] NFe transmitida                                              ³ 
+    //³       [5] NFe com problemas                                            ³ 
+    //³       [6] NFe autorizada                                               ³     
+    //³       [7] Cancelamento                                                 ³     
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ    
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa o ambiente                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	InitSped()
+	InitNfeSped()
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Parametros                                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If Self:UserToken == "TOTVS" .And. Select("SPED000")<>0
+		If lRetorno
+			If !Empty(Self:ID_ENT)
+				DbSelectArea("SPED001")
+				dbSetOrder(1)
+				If !DbSeek(Self:ID_ENT)
+					SetSoapFault("TOTVS SPED Services","001 - Codigo da entidade invalido")
+					lRetorno := .F.
+				EndIf
+			Else
+				SetSoapFault("TOTVS SPED Services","002 - Codigo da entidade em branco")
+				lRetorno := .F.	
+			EndIf
+		EndIf
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Valida as notas fiscais antes da gravaçao                    ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If lRetorno
+			nAmbiente   := Val(SubStr(SpedGetMv("MV_AMBIENT",Self:ID_ENT),1,1))
+			nModalidade := Val(SubStr(SpedGetMv("MV_MODALID",Self:ID_ENT),1,1))
+			If nModalidade == 5
+				nModalidade:= 1
+			EndIf
+			Begin Transaction
+			For nX := 1 To Len(Self:Nfe:NOTAS)
+				cMail     := ""
+				cSoapErro := ""
+				cErro     := ""
+				cAviso    := ""					
+				cDpec	  := Self:Nfe:NOTAS[nX]:XML
+				If !Empty(Self:Nfe:NOTAS[nX]:XML) .And. !Empty(Self:Nfe:NOTAS[nX]:ID)
+					lNfeOk := SpedNfeConv(@Self:Nfe:NOTAS[nX]:XML,Self:ID_ENT,@cMail,,@cSoapErro,@cModelo,nModalidade)
+					If lNfeOk
+						DbSelectArea("SPED050")
+						dbSetOrder(1)
+						If DbSeek(Self:ID_ENT+Self:Nfe:NOTAS[nX]:ID)
+							If SPED050->(SimpleLock())
+								If SPED050->STATUS==6 .AND. nAmbiente==1 .AND. SPED050->AMBIENTE==2
+									RecLock("SPED050")
+									dbDelete()
+									RecLock("SPED050",.T.)
+									lTravou := .T.
+								Else
+									If SPED050->STATUS==1 .OR. SPED050->STATUS==3 .OR.SPED050->STATUS==5 .OR. SPED050->STATUS==7 .OR. SPED050->MODALIDADE==5
+										RecLock("SPED050")
+										lTravou := .T.
+									Else
+										lTravou := .F.
+									EndIf
+								EndIf
+							Else
+								lTravou := .F.
+							EndIf
+						Else
+							RecLock("SPED050",.T.)
+							lTravou := .T.
+						EndIf
+						If lTravou
+							SPED050->ID_ENT    := Self:ID_ENT
+							SPED050->NFE_ID    := Self:Nfe:NOTAS[nX]:ID
+							If SPED050->(FieldPos("MODELO"))<>0
+								SPED050->MODELO    := cModelo
+							EndIf
+							SPED050->DATE_NFE  := Date()
+							SPED050->TIME_NFE  := Time()
+							SPED050->AMBIENTE  := nAmbiente
+							SPED050->MODALIDADE:= nModalidade
+							SPED050->STATUS    := 1//IIF(SPED050->STATUS==7,7,1)
+							SPED050->XML_ERP   := Self:Nfe:NOTAS[nX]:XML
+							SPED050->XML_SIG   := ""
+							SPED050->XML_SIGCAN:= ""
+							SPED050->EMAIL     := cMail
+							SPED050->STATUSMAIL:= IIF(!Empty(cMail),1,0)
+							cErro := ""
+							cAviso:= ""
+							Do Case
+								Case cModelo == "57"
+									cPrefixo := "CTe_v"
+								OtherWise
+									cPrefixo := "NFe_v"
+							EndCase
+						   	If lNfeOk
+						   		If !'<?xml version="1.0" encoding="UTF-8"?>'$SPED050->XML_ERP
+								   	cXML := '<?xml version="1.0" encoding="UTF-8"?>'+EncodeUtf8(SPED050->XML_ERP)
+								Else
+									cXml := SPED050->XML_ERP
+								EndIf
+						   		If File(cDirSchema+cPrefixo+SpedNfeId(cXML,"versao")+"NoSig.xsd")
+							   		If XmlSVldSchema(cXML,cDirSchema+cPrefixo+SpedNfeId(cXML,"versao")+"NoSig.xsd",@cErro,@cAviso)
+										aadd(Self:NfeOk:ID,AllTrim(Self:Nfe:NOTAS[nX]:ID))	
+									Else
+										SPED050->STATUS  := 3
+									EndIf
+								ElseIf File(cDirSchema+cPrefixo+SpedNfeId(cXML,"versao")+".xsd")
+							   		If XmlSVldSchema(cXML,cDirSchema+cPrefixo+SpedNfeId(cXML,"versao")+".xsd",@cErro,@cAviso)
+										aadd(Self:NfeOk:ID,AllTrim(Self:Nfe:NOTAS[nX]:ID))	
+									Else
+										SPED050->STATUS  := 3
+									EndIf								
+								EndIf
+							ElseIf SPED050->STATUS<>7
+								SPED050->STATUS  := 3
+							EndIf
+							oCNPJDEST := XmlParser(cXml,"","","")
+							cCNPJDEST := AllTrim(oCNPJDEST:_NFE:_INFNFE:_DEST:_CNPJ:TEXT)
+							If Empty(SPED050->CNPJDEST)
+								SPED050->CNPJDEST := cCNPJDEST
+							EndIf
+						EndIf
+					Else
+						If !Empty(cSoapErro)
+							SetSoapFault("TOTVS SPED Services",cSoapErro)
+							lRetorno := .F.
+							Exit
+						EndIf
+					EndIf
+				EndIf
+				nModalidade := Val(SubStr(SpedGetMv("MV_MODALID",Self:ID_ENT),1,1))
+				If nModalidade==5
+				cMail     := ""
+				cSoapErro := ""
+				cErro     := ""
+				cAviso    := ""
+					If !Empty(cDpec) .And. !Empty(Self:Nfe:NOTAS[nX]:ID).And.(lNfeOk) //Realiza novamente o tratamento para o DPEC gravando o xml no SPED050->XML_DPEC
+						lNfeOk     := .F.
+						lNfeOk := SpedNfeConv(@cDpec,Self:ID_ENT,@cMail,,@cSoapErro,@cModelo,nModalidade)
+						If lNfeOk
+							DbSelectArea("SPED050")
+							dbSetOrder(1)
+							If DbSeek(Self:ID_ENT+Self:Nfe:NOTAS[nX]:ID)
+								If SPED050->(SimpleLock())
+									If SPED050->STATUS==6 .AND. nAmbiente==1 .AND. SPED050->AMBIENTE==2
+										RecLock("SPED050")
+										dbDelete()
+										RecLock("SPED050",.T.)
+										lTravou := .T.
+									Else
+										If SPED050->STATUS==1 .OR. SPED050->STATUS==3 .OR.SPED050->STATUS==5 .OR. SPED050->STATUS==7 .OR. SPED050->MODALIDADE==5
+											RecLock("SPED050")
+											lTravou := .T.
+										Else
+											lTravou := .F.
+										EndIf
+									EndIf
+								Else
+									lTravou := .F.
+								EndIf
+							Else
+								RecLock("SPED050",.T.)
+								lTravou := .T.
+							EndIf
+							If lTravou
+								SPED050->ID_ENT    := Self:ID_ENT
+								SPED050->NFE_ID    := Self:Nfe:NOTAS[nX]:ID
+								If SPED050->(FieldPos("MODELO"))<>0
+									SPED050->MODELO    := cModelo
+								EndIf
+								SPED050->DATE_NFE  := Date()
+								SPED050->TIME_NFE  := Time()
+								SPED050->AMBIENTE  := nAmbiente
+								SPED050->MODALIDADE:= nModalidade
+								SPED050->STATUS    := 1//IIF(SPED050->STATUS==7,7,1)
+								SPED050->XML_DPEC   := cDpec
+								SPED050->XML_SIG   := ""
+								SPED050->XML_SIGCAN:= ""
+								SPED050->EMAIL     := cMail
+								SPED050->STATUSMAIL:= IIF(!Empty(cMail),1,0)
+								cErro := ""
+								cAviso:= ""
+							
+								cPrefixo := "envDPEC_v"
+						
+							   	If lNfeOk
+							   		If !'<?xml version="1.0" encoding="UTF-8"?>'$SPED050->XML_DPEC
+									   	cXML := '<?xml version="1.0" encoding="UTF-8"?>'+EncodeUtf8(SPED050->XML_DPEC)
+									Else
+										cXml := SPED050->XML_DPEC
+									EndIf
+							   		If File(cDirSchema+cPrefixo+SpedNfeId(cXML,"versao")+"NoSig.xsd")
+								   		If XmlSVldSchema(cXML,cDirSchema+cPrefixo+SpedNfeId(cXML,"versao")+"NoSig.xsd",@cErro,@cAviso)
+											aadd(Self:NfeOk:ID,AllTrim(Self:Nfe:NOTAS[nX]:ID))	
+										Else
+											SPED050->STATUS  := 3
+										EndIf
+									ElseIf File(cDirSchema+cPrefixo+SpedNfeId(cXML,"versao")+".xsd")
+								   		If XmlSVldSchema(cXML,cDirSchema+cPrefixo+SpedNfeId(cXML,"versao")+".xsd",@cErro,@cAviso)
+											aadd(Self:NfeOk:ID,AllTrim(Self:Nfe:NOTAS[nX]:ID))	
+										Else
+											SPED050->STATUS  := 3
+										EndIf								
+									EndIf
+						        
+								ElseIf SPED050->STATUS<>7
+									SPED050->STATUS  := 3
+								EndIf
+							EndIf
+						Else
+							If !Empty(cSoapErro)
+								SetSoapFault("TOTVS SPED Services",cSoapErro)
+								lRetorno := .F.
+								Exit
+							EndIf
+						EndIf
+					EndIf
+				EndIf
+			Next nX
+			End Transaction
+		EndIf
+	Else
+		If Select("SPED000")==0
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+		Else	
+			SetSoapFault("TOTVS SPED Services","Invalid Token")
+		EndIf
+		lRetorno := .F.
+	EndIf
+	If Empty(Self:NfeOk:ID)
+		Self:NfeOk:ID := {}
+	EndIf
+	FinishNfeSped()
+	Return(FinishSped(lRetorno))
+
+WSMETHOD Schema         WSRECEIVE UserToken,Id_Ent,NFe WSSEND NfeSchema WSSERVICE NFESBRA
+	Local lRetorno   := .T.
+	Local cErro      := ""
+	Local cSoapErro  := ""	
+	Local cAviso     := ""	
+	Local cDirSchema := IIf(IsSrvUnix(),"/schemas/", "\schemas\")
+	Local cModelo    := ""
+	Local cVersao    := ""
+	Local cPrefixo   := ""	
+	Local nX         := 0
+	Local nModalidade:= 0
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa o ambiente                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	InitSped()
+	InitNfeSped()
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Parametros                                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If Self:UserToken == "TOTVS" .And. Select("SPED000")<>0	
+		If lRetorno
+			If !Empty(Self:ID_ENT)
+				DbSelectArea("SPED001")
+				dbSetOrder(1)
+				If !DbSeek(Self:ID_ENT)
+					SetSoapFault("TOTVS SPED Services","001 - Codigo da entidade invalido")
+					lRetorno := .F.
+				EndIf
+			Else
+				SetSoapFault("TOTVS SPED Services","002 - Codigo da entidade em branco")
+				lRetorno := .F.	
+			EndIf
+		EndIf
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Valida as notas fiscais antes da gravaçao                    ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If lRetorno
+			Begin Transaction
+			For nX := 1 To Len(Self:Nfe:NOTAS)  
+				cSoapErro := ""
+				cErro     := ""
+				cAviso    := ""	
+				nModalidade := Val(SubStr(SpedGetMv("MV_MODALID",Self:ID_ENT),1,1))
+				Self:Nfe:NOTAS[nX]:XML := StrTran(Self:Nfe:NOTAS[nX]:XML,"&amp;","_")
+				If !Empty(Self:Nfe:NOTAS[nX]:XML) .And. !Empty(Self:Nfe:NOTAS[nX]:ID) .And. If(SPED050->MODALIDADE<>5,(SpedNfeConv(@Self:Nfe:NOTAS[nX]:XML,Self:ID_ENT,"",,@cSoapErro,@cModelo,SPED050->MODALIDADE)),.T.)
+					Do Case
+						Case cModelo == "57"
+							cPrefixo := "CTe_v"
+							cVersao  := "MV_VERCTE"
+						OtherWise
+							If SPED050->MODALIDADE <> 5
+							cPrefixo := "NFe_v"
+							cVersao  := "MV_VERSAO"
+							Else 
+							cPrefixo := "envDPEC_v"
+							cVersao  := "MV_VERDPEC"
+							EndIf
+					EndCase
+			   		If !'<?xml version="1.0" encoding="UTF-8"?>'$Self:Nfe:NOTAS[nX]:XML
+						Self:Nfe:NOTAS[nX]:XML := '<?xml version="1.0" encoding="UTF-8"?>'+EncodeUtf8(Self:Nfe:NOTAS[nX]:XML)
+					ElseIF SPED050->MODALIDADE <> 5
+						Self:Nfe:NOTAS[nX]:XML := SPED050->XML_ERP
+					 Else 
+					    Self:Nfe:NOTAS[nX]:XML := SPED050->XML_DPEC
+					EndIf
+					If "SIGNATURE"$UPPER(Self:Nfe:NOTAS[nX]:XML)
+						//nao faz nada
+					ElseIf File(cDirSchema+cPrefixo+SpedGetMv(cVersao,SPED001->ID_ENT)+"NoSig.xsd")
+				   		XmlSVldSchema(Self:Nfe:NOTAS[nX]:XML,cDirSchema+cPrefixo+SpedGetMv(cVersao,SPED001->ID_ENT)+"NoSig.xsd",@cErro,@cAviso)
+					ElseIf File(cDirSchema+cPrefixo+SpedGetMv(cVersao,SPED001->ID_ENT)+".xsd")
+						XmlSVldSchema(Self:Nfe:NOTAS[nX]:XML,cDirSchema+cPrefixo+SpedGetMv(cVersao,SPED001->ID_ENT)+".xsd",@cErro,@cAviso)
+					EndIf
+					aadd(Self:NfeSchema,WsClassNew("NFES4"))
+					Self:NfeSchema[nX]:ID       := Self:Nfe:NOTAS[nX]:ID
+					Self:NfeSchema[nX]:Mensagem := cErro+cAviso
+					Self:NfeSchema[nX]:XML      := Self:Nfe:NOTAS[nX]:XML
+				Else					
+					aadd(Self:NfeSchema,WsClassNew("NFES4"))
+					Self:NfeSchema[nX]:ID       := Self:Nfe:NOTAS[nX]:ID
+					Self:NfeSchema[nX]:Mensagem := cSoapErro
+					Self:NfeSchema[nX]:XML      := Self:Nfe:NOTAS[nX]:XML
+				EndIf
+			Next nX
+			End Transaction
+		EndIf
+	Else
+		If Select("SPED000")==0
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+		Else	
+			SetSoapFault("TOTVS SPED Services","Invalid Token")
+		EndIf
+		lRetorno := .F.
+	EndIf
+	If Empty(Self:NfeSchema)
+		Self:NfeSchema := {}
+	EndIf	
+	FinishNfeSped()
+	Return(FinishSped(lRetorno))
+
+WSMETHOD MonitorFaixa   WSRECEIVE UserToken,Id_Ent,IdInicial,IdFinal                  WSSEND Monitor     WSSERVICE NFESBRA
+
+	Local cAlias    := GetNextAlias()
+	Local aQuebra   := {}
+	Local lSkip     := .F.
+	Local nEspera   := 0
+	Local nX        := 0
+	Local nY        := 0
+	Local lRetorno  := .T.
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa o ambiente                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	InitSped()
+	InitNfeSped()
+	nEspera := Val(SpedGetMV("MV_CFGTIME",Self:ID_ENT))/60/60
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Parametros                                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If Self:UserToken == "TOTVS" .And. Select("SPED000")<>0
+		If lRetorno
+			If !Empty(Self:ID_ENT)
+				DbSelectArea("SPED001")
+				dbSetOrder(1)
+				If !DbSeek(Self:ID_ENT)
+					SetSoapFault("TOTVS SPED Services","001 - Codigo da entidade invalido")
+					lRetorno := .F.
+				EndIf
+			Else
+				SetSoapFault("TOTVS SPED Services","002 - Codigo da entidade em branco")
+				lRetorno := .F.	
+			EndIf
+		EndIf
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Recupera as notas que estao na faixa informada                          ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If lRetorno
+			BeginSql Alias cAlias
+				SELECT NFE.ID_ENT,NFE.NFE_ID,NFE.NFE_PROT,NFE.AMBIENTE,NFE.MODALIDADE,NFE.STATUS,NFE.DATE_NFE,NFE.TIME_NFE,NFE.STATUSCANC,
+					LOTE.LOTE,LOTE.RECIBO_SEF,LOTE.DATE_LOTE,LOTE.TIME_LOTE,LOTE.CSTAT_SEF,LOTE.XMOT_SEF,
+					LOTE.DTREC_SEF,LOTE.HRREC_SEF,LOTE.CSTAT_SEFR,LOTE.XMOT_SEFR,LOTE.STATUS AS STATUSLOTE,LOTE.TEMPO_SEF,
+					LOTEXNFE.CSTAT_SEFR AS CSTAT_NFE,LOTEXNFE.XMOT_SEFR AS XMOT_NFE,LOTEXNFE.DTREC_SEFR,LOTEXNFE.HRREC_SEFR
+					
+				FROM SPED050 NFE 
+					LEFT JOIN SPED054 LOTEXNFE 
+							ON 	LOTEXNFE.ID_ENT = NFE.ID_ENT AND 
+								LOTEXNFE.NFE_ID = NFE.NFE_ID AND
+								LOTEXNFE.%NOTDEL%
+					LEFT JOIN SPED052 LOTE
+							ON 	LOTE.ID_ENT = LOTEXNFE.ID_ENT AND
+								LOTE.LOTE   = LOTEXNFE.LOTE AND
+								LOTE.%NOTDEL%
+				WHERE 
+				NFE.ID_ENT = %Exp:Self:ID_ENT% AND
+				NFE.NFE_ID >= %Exp:Self:IdInicial% AND
+				NFE.NFE_ID <= %Exp:Self:IdFinal% AND
+				NFE.%NOTDEL%
+				ORDER BY NFE.ID_ENT,NFE.NFE_ID,LOTE.LOTE
+			EndSql
+			TcSetField(cAlias,"DATE_NFE"  ,"D",008,0)
+			TcSetField(cAlias,"DATE_LOTE" ,"D",008,0)
+			TcSetField(cAlias,"DTREC_SEF" ,"D",008,0)
+			TcSetField(cAlias,"DTREC_SEFR","D",008,0)
+		
+		    Self:Monitor := {}
+					
+			DbSelectArea(cAlias)
+			DbGoTop()
+			While !(cAlias)->(Eof())
+			
+				aQuebra := {(cAlias)->ID_ENT,(cAlias)->NFE_ID,""}
+				lSkip   := .F.
+				
+				aadd(Self:Monitor,WsClassNew("MONITORNFE"))
+				nX++
+				nY++
+				Self:Monitor[nX]:ID           := RTrim((cAlias)->NFE_ID)
+				Self:Monitor[nX]:PROTOCOLO    := (cAlias)->NFE_PROT
+				Self:Monitor[nX]:AMBIENTE     := (cAlias)->AMBIENTE
+				Self:Monitor[nX]:MODALIDADE   := (cAlias)->MODALIDADE
+				Self:Monitor[nX]:ERRO         := {}
+							
+				While !(cAlias)->(Eof()) .And.;
+					aQuebra[1] == (cAlias)->ID_ENT .And.;
+					aQuebra[2] == (cAlias)->NFE_ID
+					
+					aQuebra := {aQuebra[1],aQuebra[2],(cAlias)->LOTE}
+								
+					While !(cAlias)->(Eof()) .And.;
+						aQuebra[1] == (cAlias)->ID_ENT .And.;
+						aQuebra[2] == (cAlias)->NFE_ID .And.;
+						aQuebra[3] == (cAlias)->LOTE
+															
+						Do Case
+							Case !Empty((cAlias)->DTREC_SEFR)
+								Self:Monitor[nX]:TEMPODEESPERA  := IntToHora(Max(SubtHoras((cAlias)->DATE_NFE,(cAlias)->TIME_NFE,(cAlias)->DTREC_SEFR,(cAlias)->HRREC_SEFR),0),3)
+							Case !Empty((cAlias)->DTREC_SEF)
+								Self:Monitor[nX]:TEMPODEESPERA  := IntToHora(Max(SubtHoras((cAlias)->DATE_NFE,(cAlias)->TIME_NFE,(cAlias)->DTREC_SEF,(cAlias)->HRREC_SEF),0),3)
+							Case !Empty((cAlias)->DATE_LOTE)
+								Self:Monitor[nX]:TEMPODEESPERA  := IntToHora(Max(SubtHoras((cAlias)->DATE_NFE,(cAlias)->TIME_NFE,(cAlias)->DATE_LOTE,(cAlias)->TIME_LOTE),0),3)
+							OtherWise
+								Self:Monitor[nX]:TEMPODEESPERA  := IntToHora(Max(SubtHoras((cAlias)->DATE_NFE,(cAlias)->TIME_NFE,Date(),Time()),0),3)
+						EndCase	
+						Self:Monitor[nX]:TEMPOMEDIOSEF:= (cAlias)->TEMPO_SEF
+						Self:Monitor[nX]:RECOMENDACAO := NfeRecomendacao(cAlias)
+						
+						aadd(Self:Monitor[nX]:ERRO,WsClassNew("LOTENFE"))
+						nY++
+						Atail(Self:Monitor[nX]:ERRO):LOTE         := (cAlias)->LOTE
+						Atail(Self:Monitor[nX]:ERRO):DATALOTE     := (cAlias)->DATE_LOTE
+						Atail(Self:Monitor[nX]:ERRO):HORALOTE     := (cAlias)->TIME_LOTE
+						Atail(Self:Monitor[nX]:ERRO):RECIBOSEFAZ  := (cAlias)->RECIBO_SEF
+						Atail(Self:Monitor[nX]:ERRO):CODENVLOTE   := (cAlias)->CSTAT_SEF
+						Atail(Self:Monitor[nX]:ERRO):MSGENVLOTE   := AllTrim((cAlias)->XMOT_SEF)
+						Atail(Self:Monitor[nX]:ERRO):CODRETRECIBO := (cAlias)->CSTAT_SEFR
+						Atail(Self:Monitor[nX]:ERRO):MSGRETRECIBO := AllTrim((cAlias)->XMOT_SEFR)
+						Atail(Self:Monitor[nX]:ERRO):CODRETNFE    := (cAlias)->CSTAT_NFE
+						Atail(Self:Monitor[nX]:ERRO):MSGRETNFE    := AllTrim((cAlias)->XMOT_NFE)
+							
+						DbSelectArea(cAlias)
+						DbSkip()
+						lSkip := .T.			
+					EndDo
+					If !lSkip				
+						Self:Monitor[nX]:RECOMENDACAO := NfeRecomendacao(cAlias)
+						lSkip := .T.
+						DbSelectArea(cAlias)
+						DbSkip()
+					EndIf
+				EndDo
+				If !lSkip				
+					Self:Monitor[nX]:RECOMENDACAO := NfeRecomendacao(cAlias)					
+					DbSelectArea(cAlias)
+					DbSkip()
+				EndIf
+				If nY >= 400
+					Exit
+				EndIf
+			EndDo
+			DbSelectArea(cAlias)
+			dbCloseArea()
+			DbSelectArea("SPED050")		
+		EndIf
+	Else
+		If Select("SPED000")==0
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+		Else	
+			SetSoapFault("TOTVS SPED Services","Invalid Token")
+		EndIf
+		lRetorno := .F.
+	EndIf
+	FinishNfeSped()
+	Return(FinishSped(lRetorno))
+
+WSMETHOD MonitorTempo   WSRECEIVE UserToken,Id_Ent,Intervalo                          WSSEND Monitor     WSSERVICE NFESBRA
+
+	Local cAlias    := GetNextAlias()
+	Local aQuebra   := {}
+	Local lSkip     := .F.
+	Local nEspera   := 0
+	Local nX        := 0
+	Local nY        := 0
+	Local lRetorno  := .T.
+	Local dDataIni  := Date()
+	Local cHoraIni  := Time()
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa o ambiente                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	InitSped()
+	InitNfeSped()
+	nEspera := Val(SpedGetMV("MV_CFGTIME",Self:ID_ENT))/60/60
+	SomaDiaHor(@dDataIni,@cHoraIni,-1*(Self:Intervalo)/60)
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Parametros                                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If Self:UserToken == "TOTVS" .And. Select("SPED000")<>0
+		If lRetorno
+			If !Empty(Self:ID_ENT)
+				DbSelectArea("SPED001")
+				dbSetOrder(1)
+				If !DbSeek(Self:ID_ENT)
+					SetSoapFault("TOTVS SPED Services","001 - Codigo da entidade invalido")
+					lRetorno := .F.
+				EndIf
+			Else
+				SetSoapFault("TOTVS SPED Services","002 - Codigo da entidade em branco")
+				lRetorno := .F.	
+			EndIf
+		EndIf
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Recupera as notas que estao na faixa informada                          ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If lRetorno
+			BeginSql Alias cAlias
+				SELECT NFE.ID_ENT,NFE.NFE_ID,NFE.NFE_PROT,NFE.AMBIENTE,NFE.MODALIDADE,NFE.STATUS,NFE.DATE_NFE,NFE.TIME_NFE,NFE.STATUSCANC,
+					LOTE.LOTE,LOTE.RECIBO_SEF,LOTE.DATE_LOTE,LOTE.TIME_LOTE,LOTE.CSTAT_SEF,LOTE.XMOT_SEF,
+					LOTE.DTREC_SEF,LOTE.HRREC_SEF,LOTE.CSTAT_SEFR,LOTE.XMOT_SEFR,LOTE.STATUS AS STATUSLOTE,LOTE.TEMPO_SEF,
+					LOTEXNFE.CSTAT_SEFR AS CSTAT_NFE,LOTEXNFE.XMOT_SEFR AS XMOT_NFE,LOTEXNFE.DTREC_SEFR,LOTEXNFE.HRREC_SEFR
+					
+				FROM SPED050 NFE 
+					LEFT JOIN SPED054 LOTEXNFE 
+							ON 	LOTEXNFE.ID_ENT = NFE.ID_ENT AND 
+								LOTEXNFE.NFE_ID = NFE.NFE_ID AND
+								LOTEXNFE.%NOTDEL%
+					LEFT JOIN SPED052 LOTE
+							ON 	LOTE.ID_ENT = LOTEXNFE.ID_ENT AND
+								LOTE.LOTE   = LOTEXNFE.LOTE AND
+								LOTE.%NOTDEL%
+				WHERE 
+				NFE.ID_ENT = %Exp:Self:ID_ENT% AND
+				((NFE.DATE_NFE > %Exp:Dtos(dDataIni)%) OR
+				(NFE.DATE_NFE=%Exp:Dtos(dDataIni)% AND NFE.TIME_NFE >= %Exp:cHoraIni%)) AND
+				NFE.%NOTDEL%
+				ORDER BY NFE.ID_ENT,NFE.NFE_ID,LOTE.LOTE
+			EndSql
+			TcSetField(cAlias,"DATE_NFE"  ,"D",008,0)
+			TcSetField(cAlias,"DATE_LOTE" ,"D",008,0)
+			TcSetField(cAlias,"DTREC_SEF" ,"D",008,0)
+			TcSetField(cAlias,"DTREC_SEFR","D",008,0)
+		
+		    Self:Monitor := {}
+					
+			DbSelectArea(cAlias)
+			DbGoTop()
+			While !(cAlias)->(Eof())
+			
+				aQuebra := {(cAlias)->ID_ENT,(cAlias)->NFE_ID,""}
+				lSkip   := .F.
+				
+				aadd(Self:Monitor,WsClassNew("MONITORNFE"))
+				nX++
+				nY++
+				Self:Monitor[nX]:ID           := RTrim((cAlias)->NFE_ID)
+				Self:Monitor[nX]:PROTOCOLO    := (cAlias)->NFE_PROT
+				Self:Monitor[nX]:AMBIENTE     := (cAlias)->AMBIENTE
+				Self:Monitor[nX]:MODALIDADE   := (cAlias)->MODALIDADE
+				Self:Monitor[nX]:ERRO         := {}
+							
+				While !(cAlias)->(Eof()) .And.;
+					aQuebra[1] == (cAlias)->ID_ENT .And.;
+					aQuebra[2] == (cAlias)->NFE_ID
+					
+					aQuebra := {aQuebra[1],aQuebra[2],(cAlias)->LOTE}
+								
+					While !(cAlias)->(Eof()) .And.;
+						aQuebra[1] == (cAlias)->ID_ENT .And.;
+						aQuebra[2] == (cAlias)->NFE_ID .And.;
+						aQuebra[3] == (cAlias)->LOTE
+															
+						Do Case
+							Case !Empty((cAlias)->DTREC_SEFR)
+								Self:Monitor[nX]:TEMPODEESPERA  := IntToHora(Max(SubtHoras((cAlias)->DATE_NFE,(cAlias)->TIME_NFE,(cAlias)->DTREC_SEFR,(cAlias)->HRREC_SEFR),0),3)
+							Case !Empty((cAlias)->DTREC_SEF)
+								Self:Monitor[nX]:TEMPODEESPERA  := IntToHora(Max(SubtHoras((cAlias)->DATE_NFE,(cAlias)->TIME_NFE,(cAlias)->DTREC_SEF,(cAlias)->HRREC_SEF),0),3)
+							Case !Empty((cAlias)->DATE_LOTE)
+								Self:Monitor[nX]:TEMPODEESPERA  := IntToHora(Max(SubtHoras((cAlias)->DATE_NFE,(cAlias)->TIME_NFE,(cAlias)->DATE_LOTE,(cAlias)->TIME_LOTE),0),3)
+							OtherWise
+								Self:Monitor[nX]:TEMPODEESPERA  := IntToHora(Max(SubtHoras((cAlias)->DATE_NFE,(cAlias)->TIME_NFE,Date(),Time()),0),3)
+						EndCase	
+						Self:Monitor[nX]:TEMPOMEDIOSEF:= (cAlias)->TEMPO_SEF
+						Self:Monitor[nX]:RECOMENDACAO := NfeRecomendacao(cAlias)
+						
+						aadd(Self:Monitor[nX]:ERRO,WsClassNew("LOTENFE"))
+						nY++
+						Atail(Self:Monitor[nX]:ERRO):LOTE         := (cAlias)->LOTE
+						Atail(Self:Monitor[nX]:ERRO):DATALOTE     := (cAlias)->DATE_LOTE
+						Atail(Self:Monitor[nX]:ERRO):HORALOTE     := (cAlias)->TIME_LOTE
+						Atail(Self:Monitor[nX]:ERRO):RECIBOSEFAZ  := (cAlias)->RECIBO_SEF
+						Atail(Self:Monitor[nX]:ERRO):CODENVLOTE   := (cAlias)->CSTAT_SEF
+						Atail(Self:Monitor[nX]:ERRO):MSGENVLOTE   := AllTrim((cAlias)->XMOT_SEF)
+						Atail(Self:Monitor[nX]:ERRO):CODRETRECIBO := (cAlias)->CSTAT_SEFR
+						Atail(Self:Monitor[nX]:ERRO):MSGRETRECIBO := AllTrim((cAlias)->XMOT_SEFR)
+						Atail(Self:Monitor[nX]:ERRO):CODRETNFE    := (cAlias)->CSTAT_NFE
+						Atail(Self:Monitor[nX]:ERRO):MSGRETNFE    := AllTrim((cAlias)->XMOT_NFE)
+							
+						DbSelectArea(cAlias)
+						DbSkip()
+						lSkip := .T.			
+					EndDo
+					If !lSkip				
+						Self:Monitor[nX]:RECOMENDACAO := NfeRecomendacao(cAlias)
+						lSkip := .T.
+						DbSelectArea(cAlias)
+						DbSkip()
+					EndIf
+				EndDo
+				If !lSkip				
+					Self:Monitor[nX]:RECOMENDACAO := NfeRecomendacao(cAlias)					
+					DbSelectArea(cAlias)
+					DbSkip()
+				EndIf
+				If nY >= 400
+					Exit
+				EndIf				
+			EndDo
+			DbSelectArea(cAlias)
+			dbCloseArea()
+			DbSelectArea("SPED050")		
+		EndIf
+	Else
+		If Select("SPED000")==0
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+		Else	
+			SetSoapFault("TOTVS SPED Services","Invalid Token")
+		EndIf
+		lRetorno := .F.
+	EndIf
+	FinishNfeSped()
+	Return(FinishSped(lRetorno))
+
+WSMETHOD MonitorSefaz   WSRECEIVE UserToken,Id_Ent                                    WSSEND StatusSefaz WSSERVICE NFESBRA
+
+	Local aNfe       := {}
+	Local lRetorno   := .T.
+	Local cErro      := ""
+	Local cAviso     := ""
+	Local nEspera    := 0
+	Local nModalidade:= 0
+	Local cTempoMedio:= "0"
+	Local cMensagem  := ""
+	Local cUrl       := ""
+	Local oWsNfe  
+	Private oXmlResult	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa o ambiente                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	InitSped()
+	InitNfeSped()
+	nEspera     := Val(SpedGetMV("MV_CFGTIME",Self:ID_ENT))
+	nModalidade := Val(SubStr(SpedGetMv("MV_MODALID",Self:ID_ENT),1,1))
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Parametros                                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If Self:UserToken == "TOTVS" .And. Select("SPED000")<>0
+		If lRetorno
+			If !Empty(Self:ID_ENT)
+				DbSelectArea("SPED001")
+				dbSetOrder(1)
+				If !DbSeek(Self:ID_ENT)
+					SetSoapFault("TOTVS SPED Services","001 - Codigo da entidade invalido")
+					lRetorno := .F.
+				EndIf
+			Else
+				SetSoapFault("TOTVS SPED Services","002 - Codigo da entidade em branco")
+				lRetorno := .F.	
+			EndIf
+		EndIf		
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Executa o servico de status                                  ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ	
+		aNfe   := NfeStatusSEF(Self:ID_ENT)		
+		oWsNfe := WSNfeStatusServico():New()
+		oWsNfe:_URL := cURL := aNFe[3]
+		oWsNfe:cnfeCabecMsg := aNFe[1]
+		oWsNfe:cnfeDadosMsg := aNFe[2]
+		If oWsNfe:nfeStatusServicoNF()
+			oXmlResult := XmlParser(EncodeUTF8(oWsNfe:cnfeStatusServicoNFResult),"_",@cAviso,@cErro)
+			If Empty(cAviso) .And. Empty(cErro)
+				Self:StatusSefaz := "Versão da mensagem: "+oXmlResult:_RETCONSSTATSERV:_versao:TEXT+CRLF
+				Self:StatusSefaz += "Código do status: "+oXmlResult:_RETCONSSTATSERV:_CSTAT:TEXT+" - "+GetMsgSef(oXmlResult:_RETCONSSTATSERV:_CSTAT:TEXT)+CRLF
+				If oXmlResult:_RETCONSSTATSERV:_CSTAT:TEXT$'107,289,226'
+					If Type("oXmlResult:_RETCONSSTATSERV:_CUF")=="O"
+						If GetUFCode(oXmlResult:_RETCONSSTATSERV:_CUF:TEXT,.T.)<>SPED001->UF
+							Self:StatusSefaz += "UF: "+GetUFCode(oXmlResult:_RETCONSSTATSERV:_CUF:TEXT,.T.)+"("+SPED001->UF+")"+CRLF
+						Else
+							Self:StatusSefaz += "UF: "+GetUFCode(oXmlResult:_RETCONSSTATSERV:_CUF:TEXT,.T.)+CRLF
+						EndIf
+					EndIf
+					If Type("oXmlResult:_RETCONSSTATSERV:_TMED")=="O"
+						Self:StatusSefaz += "Tempo médio(seg): "+oXmlResult:_RETCONSSTATSERV:_TMED:TEXT+CRLF
+						cTempoMedio := oXmlResult:_RETCONSSTATSERV:_TMED:TEXT
+					EndIf
+				EndIf
+				Self:StatusSefaz += "Motivo: "+oXmlResult:_RETCONSSTATSERV:_XMOTIVO:TEXT+CRLF
+				If Type("oXmlResult:_RETCONSSTATSERV:_XOBS:TEXT")<>"U" .And. !Empty(oXmlResult:_RETCONSSTATSERV:_XOBS:TEXT)
+					Self:StatusSefaz += "Observacao: "+oXmlResult:_RETCONSSTATSERV:_XOBS:TEXT+CRLF
+				EndIf
+				Do Case
+					Case oXmlResult:_RETCONSSTATSERV:_CSTAT:TEXT$'107,289,226' .And. Val(cTempoMedio)>=nEspera
+						If nModalidade == 1 .And. nModalidade == 4
+							Self:StatusSefaz += "Sugestão Totvs: "+"Entrar em contigência"+" - "+"tempo de espera acima do limite"
+						Else
+							Self:StatusSefaz += "Sugestão Totvs: "+"Permanecer em contigência"+" - "+"tempo de espera acima do limite"
+						EndIf
+					Case AllTrim(oXmlResult:_RETCONSSTATSERV:_CSTAT:TEXT) $ "238,239,215"
+						Self:StatusSefaz += "Sugestão Totvs: "+"Verifique a versão do layout da NFe"
+					Case !AllTrim(oXmlResult:_RETCONSSTATSERV:_CSTAT:TEXT) $ "107,289,226"
+						If nModalidade == 1
+							Self:StatusSefaz += "Sugestão Totvs: "+"Autorizada operação em contigência"
+						Else
+							Self:StatusSefaz += "Sugestão Totvs: "+"Permanecer em contigência"
+						EndIf
+					Case oXmlResult:_RETCONSSTATSERV:_CSTAT:TEXT $ "107,289,226"
+						If nModalidade == 2
+							Self:StatusSefaz += "Sugestão Totvs: "+"Sair da contigência"
+						EndIf
+				EndCase
+			Else
+				Self:StatusSefaz := ""
+				Self:StatusSefaz += "Codigo do Status: 999 -  Erro na SEFAZ: "+AllTrim(cAviso)+" "+AllTrim(cErro)+CRLF
+				Self:StatusSefaz += "UF: "+SPED001->UF+CRLF
+				Self:StatusSefaz += "Sugestão Totvs: Contacte a Totvs e comunique o codigo do status"+CRLF				
+			EndIf
+		Else			
+			cMensagem            := IIf(Empty(GetWscError(3)),GetWscError(1),GetWscError(3))
+						
+			Self:StatusSefaz := ""
+			Do Case
+				Case "WSCERR044" $ cMensagem .Or. HttpGetStatus() == 0
+					Self:StatusSefaz += "Codigo do Status: 999 -  "+"Falha de comunicação (Acesso a internet)"+" "+"URL:"+cURL+CRLF
+				Case HttpGetStatus() == 403 .Or. HttpGetStatus() == 14
+					Self:StatusSefaz += "Codigo do Status: 999 -  "+"Falha na comunicação (Certificado Digital recusado)"+CRLF
+				Case ("WSCERR047" $ cMensagem .Or. "WSCERR064" $ cMensagem .Or. "WSCERR065" $ cMensagem) .And. HttpGetStatus()==200
+					Self:StatusSefaz += "Codigo do Status: 999 -  "+"Bloqueio de transmissão (Proxy ou Firewall)"+" "+"URL:"+cURL+CRLF
+				Case HttpGetStatus() >= 500 .And. HttpGetStatus() < 600
+					Self:StatusSefaz += "Codigo do Status: 999 -  "+"Falha no servidor da SEFAZ"+" "+"URL:"+cURL+CRLF
+				OtherWise
+					Self:StatusSefaz += "Codigo do Status: 999 -  Falha não mapeada"+" "+"URL:"+cURL+CRLF
+			EndCase			
+			Self:StatusSefaz += "UF: "+SPED001->UF+CRLF
+			If nModalidade == 1
+				Self:StatusSefaz += "Sugestão Totvs: Autorizada operação contigência"
+			Else
+				Self:StatusSefaz += "Sugestão Totvs: "+"Permanecer em contigência"
+			EndIf
+		EndIf        
+	Else
+		If Select("SPED000")==0
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+		Else	
+			SetSoapFault("TOTVS SPED Services","Invalid Token")
+		EndIf
+		lRetorno := .F.
+	EndIf
+	FinishNfeSped()
+	Return(FinishSped(lRetorno))
+	
+WSMETHOD MonitorSefazEx   WSRECEIVE UserToken,Id_Ent                                    WSSEND StatusSefazEx WSSERVICE NFESBRA
+
+	Local aNFe       := {}
+	Local lRetorno   := .T.
+	Local cURL       := ""
+	Local cErro      := ""
+	Local cAviso     := ""
+	Local nEspera    := 0
+	Local nModalidade:= 0
+	Local nInicio    := 0
+	Local nFim       := 0
+	Local cTempoMedio:= "0"
+	Local cMensagem  := ""
+	Local oWsNfe  
+	Private oXmlResult	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa o ambiente                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	InitSped()
+	InitNfeSped()
+	nEspera     := Val(SpedGetMV("MV_CFGTIME",Self:ID_ENT))
+	nModalidade := Val(SubStr(SpedGetMv("MV_MODALID",Self:ID_ENT),1,1))
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Parametros                                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If Self:UserToken == "TOTVS" .And. Select("SPED000")<>0
+		If lRetorno
+			If !Empty(Self:ID_ENT)
+				DbSelectArea("SPED001")
+				dbSetOrder(1)
+				If !DbSeek(Self:ID_ENT)
+					SetSoapFault("TOTVS SPED Services","001 - Codigo da entidade invalido")
+					lRetorno := .F.
+				EndIf
+			Else
+				SetSoapFault("TOTVS SPED Services","002 - Codigo da entidade em branco")
+				lRetorno := .F.	
+			EndIf
+		EndIf
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Executa o servico de status                                  ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ	
+		aNfe   := NfeStatusSEF(Self:ID_ENT)
+		
+		oWsNfe := WSNfeStatusServico():New()
+		oWsNfe:_URL := cURL := aNFe[3]
+		oWsNfe:cnfeCabecMsg := aNFe[1]
+		oWsNfe:cnfeDadosMsg := aNFe[2]
+		If oWsNfe:nfeStatusServicoNF()
+			oXmlResult := XmlParser(EncodeUTF8(oWsNfe:cnfeStatusServicoNFResult),"_",@cAviso,@cErro)
+			If Empty(cAviso) .And. Empty(cErro)
+				Self:StatusSefazEx:VersaoMensagem := oXmlResult:_RETCONSSTATSERV:_versao:TEXT
+				Self:StatusSefazEx:StatusCodigo   := oXmlResult:_RETCONSSTATSERV:_CSTAT:TEXT
+				Self:StatusSefazEx:StatusMensagem := GetMsgSef(oXmlResult:_RETCONSSTATSERV:_CSTAT:TEXT)
+				Self:StatusSefazEx:UFOrigem       := SPED001->UF
+				If Type("oXmlResult:_RETCONSSTATSERV:_CUF")=="O" .And. !Empty(oXmlResult:_RETCONSSTATSERV:_CUF:TEXT)
+					Self:StatusSefazEx:UFResposta     := GetUFCode(oXmlResult:_RETCONSSTATSERV:_CUF:TEXT,.T.)
+				EndIf
+				If Type("oXmlResult:_RETCONSSTATSERV:_TMED")=="O"
+					Self:StatusSefazEx:TempoMedioSEF  := Val(oXmlResult:_RETCONSSTATSERV:_TMED:TEXT)
+					cTempoMedio := oXmlResult:_RETCONSSTATSERV:_TMED:TEXT
+				EndIf
+				Self:StatusSefazEx:Motivo  := oXmlResult:_RETCONSSTATSERV:_XMOTIVO:TEXT
+				If Type("oXmlResult:_RETCONSSTATSERV:_XOBS:TEXT")<>"U" .And. !Empty(oXmlResult:_RETCONSSTATSERV:_XOBS:TEXT)
+					Self:StatusSefazEx:Observacao  := oXmlResult:_RETCONSSTATSERV:_XOBS:TEXT
+				EndIf
+				Do Case
+					Case oXmlResult:_RETCONSSTATSERV:_CSTAT:TEXT$'107,289,226' .And. Val(cTempoMedio)>=nEspera
+						If nModalidade == 1
+							Self:StatusSefazEx:Sugestao  :=  "Entrar em contigência"+" - "+"tempo de espera acima do limite"
+						Else
+							Self:StatusSefazEx:Sugestao  :=  "Permanecer em contigência"+" - "+"tempo de espera acima do limite"
+						EndIf
+					Case AllTrim(oXmlResult:_RETCONSSTATSERV:_CSTAT:TEXT) $ "238,239,215"
+							Self:StatusSefazEx:Sugestao  :=  "Verifique a versão do layout da NFe"
+					Case !AllTrim(oXmlResult:_RETCONSSTATSERV:_CSTAT:TEXT) $ "107,289,226"
+						If nModalidade == 1
+							Self:StatusSefazEx:Sugestao  :=  "Autorizada operação em contigência"
+						Else
+							Self:StatusSefazEx:Sugestao  :=  "Permanecer em contigência"
+						EndIf
+					Case oXmlResult:_RETCONSSTATSERV:_CSTAT:TEXT $ "107,289,226"
+						If nModalidade == 2
+							Self:StatusSefazEx:Sugestao  :=  "Sair da contigência"
+						EndIf
+				EndCase
+			Else
+				Self:StatusSefazEx:VersaoMensagem := aNFe[4]
+				Self:StatusSefazEx:StatusCodigo   := "999"
+				Self:StatusSefazEx:StatusMensagem := "Erro na SEFAZ: "+AllTrim(cAviso)+" "+AllTrim(cErro)
+				Self:StatusSefazEx:UFOrigem       := SPED001->UF
+				Self:StatusSefazEx:UFResposta     := SPED001->UF
+				Self:StatusSefazEx:Sugestao       := "Contacte a Totvs e comunique o codigo do status"
+			EndIf
+		Else		
+			cMensagem            := IIf(Empty(GetWscError(3)),GetWscError(1),GetWscError(3))
+			Self:StatusSefazEx:VersaoMensagem := aNfe[4]
+			Self:StatusSefazEx:StatusCodigo   := "999"
+			Self:StatusSefazEx:UFOrigem       := SPED001->UF
+			Self:StatusSefazEx:UFResposta     := SPED001->UF
+			Do Case
+				Case "WSCERR044" $ cMensagem .Or. HttpGetStatus() == 0
+					Self:StatusSefazEx:StatusMensagem := "Falha de comunicação (Acesso a internet)"+" "+"URL:"+cURL
+				Case HttpGetStatus() == 403 .Or. HttpGetStatus() == 14
+					Self:StatusSefazEx:StatusMensagem := "Falha na comunicação (Certificado Digital recusado)"
+				Case ("WSCERR064" $ cMensagem .Or. "WSCERR065" $ cMensagem) .And. HttpGetStatus() == 200
+					Self:StatusSefazEx:StatusMensagem := "Bloqueio de transmissão (Proxy ou Firewall)"+" "+"URL:"+cURL
+				Case HttpGetStatus() >= 500 .Or. HttpGetStatus() < 600
+					Self:StatusSefazEx:StatusMensagem := "Falha no servidor da SEFAZ"+" "+"URL:"+cURL+CRLF
+				OtherWise
+					Self:StatusSefazEx:StatusMensagem := "Falha não mapeada"+" "+"URL:"+cURL
+			EndCase
+			If nModalidade == 1
+				Self:StatusSefazEx:Sugestao  := "Autorizada operação contigência"
+			Else
+				Self:StatusSefazEx:Sugestao  := "Permanecer em contigência"
+			EndIf
+			
+			nInicio := At("HEADER:[",cMensagem)
+			nFim    := At("POST-RETURN:[",cMensagem)
+			If nInicio > 0 .And. nFim > 0
+				Self:StatusSefazEx:LogAuditoria  := SubStr(cMensagem,nInicio,nFim-nInicio-1)
+				cMensagem := SubStr(cMensagem,nFim-1)				
+				nInicio := At("POST-RETURN:[",cMensagem)
+				nFim    := At("]",cMensagem)
+				If nInicio > 0 .And. nFim > 0
+					Self:StatusSefazEx:LogAuditoria  += SubStr(cMensagem,nInicio,nFim-nInicio)
+				EndIf				
+			EndIf
+		EndIf        
+	Else
+		If Select("SPED000")==0
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+		Else	
+			SetSoapFault("TOTVS SPED Services","Invalid Token")
+		EndIf
+		lRetorno := .F.
+	EndIf
+	FinishNfeSped()
+	Return(FinishSped(lRetorno))	
+
+WSMETHOD MonitorSefazModelo   WSRECEIVE UserToken,Id_Ent                                    WSSEND StatusSefazModelo WSSERVICE NFESBRA
+
+	Local aModelos   := {"55","57"}
+	Local aNFe       := {}
+	Local lRetorno   := .T.
+	Local cURL       := ""
+	Local cErro      := ""
+	Local cAviso     := ""
+	Local nEspera    := 0
+	Local nModalidade:= 0
+	Local nInicio    := 0
+	Local nFim       := 0
+	Local nX         := 0
+	Local lExecute   := .F.
+	Local lModelo    := .F.
+	Local cTempoMedio:= "0"
+	Local cMensagem  := ""
+	Local oWS  
+	Private oXmlResult	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa o ambiente                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	InitSped()
+	InitNfeSped()
+	nEspera     := Val(SpedGetMV("MV_CFGTIME",Self:ID_ENT))
+	nModalidade := Val(SubStr(SpedGetMv("MV_MODALID",Self:ID_ENT),1,1))
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Parametros                                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If Self:UserToken == "TOTVS" .And. Select("SPED000")<>0
+		If lRetorno
+			If !Empty(Self:ID_ENT)
+				DbSelectArea("SPED001")
+				dbSetOrder(1)
+				If !DbSeek(Self:ID_ENT)
+					SetSoapFault("TOTVS SPED Services","001 - Codigo da entidade invalido")
+					lRetorno := .F.
+				EndIf
+			Else
+				SetSoapFault("TOTVS SPED Services","002 - Codigo da entidade em branco")
+				lRetorno := .F.	
+			EndIf
+		EndIf
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Executa o servico de status                                  ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		::StatusSefazModelo := {}
+		For nX := 1 To Len(aModelos)
+		    If nModalidade <> 5
+			aNfe   := NfeStatusSEF(Self:ID_ENT,/*cUF*/,/*cAmbiente*/,/*cModalidade*/,/*cCFGVersao*/,aModelos[nX])			
+			Do Case
+				Case aModelos[nx] == "55" .And. SpedGetMV("MV_VERSAO",Self:ID_ENT)<>"9.99" .And. !Empty(aNFe[3])
+					lModelo := .T.
+					aadd(::StatusSefazModelo,WsClassNew("MONITORStatusSefazModelo"))
+					Atail(::StatusSefazModelo):Modelo := aModelos[nX]
+					oWS := WSNfeStatusServico():New()
+					oWS:_URL := cURL := aNFe[3]
+					oWS:cnfeCabecMsg := aNFe[1]
+					oWS:cnfeDadosMsg := aNFe[2]
+					lExecute := oWS:nfeStatusServicoNF()
+					If lExecute
+						oXmlResult := XmlParser(EncodeUTF8(oWS:cnfeStatusServicoNFResult),"_",@cAviso,@cErro)
+						If Empty(cAviso) .And. Empty(cErro)
+							Atail(::StatusSefazModelo):VersaoMensagem := oXmlResult:_RETCONSSTATSERV:_versao:TEXT
+							Atail(::StatusSefazModelo):StatusCodigo   := AllTrim(oXmlResult:_RETCONSSTATSERV:_CSTAT:TEXT)
+							Atail(::StatusSefazModelo):StatusMensagem := GetMsgSef(oXmlResult:_RETCONSSTATSERV:_CSTAT:TEXT)
+							Atail(::StatusSefazModelo):UFOrigem       := SPED001->UF
+							If Type("oXmlResult:_RETCONSSTATSERV:_CUF")=="O" .And. !Empty(oXmlResult:_RETCONSSTATSERV:_CUF:TEXT)
+								Atail(::StatusSefazModelo):UFResposta     := GetUFCode(oXmlResult:_RETCONSSTATSERV:_CUF:TEXT,.T.)
+							EndIf
+							If Type("oXmlResult:_RETCONSSTATSERV:_TMED")=="O"
+								Atail(::StatusSefazModelo):TempoMedioSEF  := Val(oXmlResult:_RETCONSSTATSERV:_TMED:TEXT)
+								cTempoMedio := oXmlResult:_RETCONSSTATSERV:_TMED:TEXT
+							EndIf
+							Atail(::StatusSefazModelo):Motivo  := oXmlResult:_RETCONSSTATSERV:_XMOTIVO:TEXT
+							If Type("oXmlResult:_RETCONSSTATSERV:_XOBS:TEXT")<>"U" .And. !Empty(oXmlResult:_RETCONSSTATSERV:_XOBS:TEXT)
+								Atail(::StatusSefazModelo):Observacao  := oXmlResult:_RETCONSSTATSERV:_XOBS:TEXT
+							EndIf
+						EndIf
+					EndIf
+				Case aModelos[nx] == "57" .And. SpedGetMV("MV_VERCTE",Self:ID_ENT)<>"9.99" .And. !Empty(aNFe[3])
+					lModelo := .T.
+					aadd(::StatusSefazModelo,WsClassNew("MONITORStatusSefazModelo"))
+					Atail(::StatusSefazModelo):Modelo := aModelos[nX]					
+					oWS := WSCTEStatusServico():New()
+					oWS:_URL := cURL := aNFe[3]
+					oWS:cCTECabecMsg := aNFe[1]
+					oWS:cCTEDadosMsg := aNFe[2]
+					lExecute := oWS:CTeStatusServicoCT()
+					If lExecute
+						oXmlResult := XmlParser(EncodeUTF8(oWS:cCTEStatusServicoCTResult),"_",@cAviso,@cErro)
+						If Empty(cAviso) .And. Empty(cErro)
+							Atail(::StatusSefazModelo):VersaoMensagem := oXmlResult:_RETCONSSTATSERVCTE:_versao:TEXT
+							Atail(::StatusSefazModelo):StatusCodigo   := AllTrim(oXmlResult:_RETCONSSTATSERVCTE:_CSTAT:TEXT)
+							Atail(::StatusSefazModelo):StatusMensagem := GetMsgSef(oXmlResult:_RETCONSSTATSERVCTE:_CSTAT:TEXT)
+							Atail(::StatusSefazModelo):UFOrigem       := SPED001->UF
+							If Type("oXmlResult:_RETCONSSTATSERVCTE:_CUF")=="O" .And. !Empty(oXmlResult:_RETCONSSTATSERVCTE:_CUF:TEXT)
+								Atail(::StatusSefazModelo):UFResposta     := GetUFCode(oXmlResult:_RETCONSSTATSERVCTE:_CUF:TEXT,.T.)
+							EndIf
+							If Type("oXmlResult:_RETCONSSTATSERVCTE:_TMED")=="O"
+								Atail(::StatusSefazModelo):TempoMedioSEF  := Val(oXmlResult:_RETCONSSTATSERVCTE:_TMED:TEXT)
+								cTempoMedio := oXmlResult:_RETCONSSTATSERVCTE:_TMED:TEXT
+							EndIf
+							Atail(::StatusSefazModelo):Motivo  := oXmlResult:_RETCONSSTATSERVCTE:_XMOTIVO:TEXT
+							If Type("oXmlResult:_RETCONSSTATSERVCTE:_XOBS:TEXT")<>"U" .And. !Empty(oXmlResult:_RETCONSSTATSERVCTE:_XOBS:TEXT)
+								Atail(::StatusSefazModelo):Observacao  := oXmlResult:_RETCONSSTATSERVCTE:_XOBS:TEXT
+							EndIf
+					    EndIf
+					 EndIf
+				OtherWise
+					lModelo := .F.
+			EndCase
+			If lModelo
+				If lExecute 
+					If Empty(cAviso) .And. Empty(cErro)
+						Do Case
+							Case Atail(::StatusSefazModelo):StatusCodigo$'107,289,226' .And. Val(cTempoMedio)>=nEspera
+								If nModalidade == 1
+									Atail(::StatusSefazModelo):Sugestao  :=  "Entrar em contigência"+" - "+"tempo de espera acima do limite"
+								Else
+									Atail(::StatusSefazModelo):Sugestao  :=  "Permanecer em contigência"+" - "+"tempo de espera acima do limite"
+								EndIf
+							Case Atail(::StatusSefazModelo):StatusCodigo $ "238,239,215"
+									Atail(::StatusSefazModelo):Sugestao  :=  "Verifique a versão do layout da NFe"
+							Case !Atail(::StatusSefazModelo):StatusCodigo $ "107,289,226"
+								If nModalidade == 1
+									Atail(::StatusSefazModelo):Sugestao  :=  "Autorizada operação em contigência"
+								Else
+									Atail(::StatusSefazModelo):Sugestao  :=  "Permanecer em contigência"
+								EndIf
+							Case Atail(::StatusSefazModelo):StatusCodigo $ "107,289,226"
+								If nModalidade == 2
+									Atail(::StatusSefazModelo):Sugestao  :=  "Sair da contigência"
+								EndIf
+						EndCase
+					Else
+						Atail(::StatusSefazModelo):VersaoMensagem := aNFe[4]
+						Atail(::StatusSefazModelo):StatusCodigo   := "999"
+						Atail(::StatusSefazModelo):StatusMensagem := "Erro na SEFAZ: "+AllTrim(cAviso)+" "+AllTrim(cErro)
+						Atail(::StatusSefazModelo):UFOrigem       := SPED001->UF
+						Atail(::StatusSefazModelo):UFResposta     := SPED001->UF
+						Atail(::StatusSefazModelo):Sugestao       := "Contacte a Totvs e comunique o codigo do status"
+					EndIf
+				Else		
+					cMensagem            := IIf(Empty(GetWscError(3)),GetWscError(1),GetWscError(3))
+					Atail(::StatusSefazModelo):VersaoMensagem := aNfe[4]
+					Atail(::StatusSefazModelo):StatusCodigo   := "999"
+					Atail(::StatusSefazModelo):UFOrigem       := SPED001->UF
+					Atail(::StatusSefazModelo):UFResposta     := SPED001->UF
+					Do Case
+						Case "WSCERR044" $ cMensagem .Or. HttpGetStatus() == 0
+							Atail(::StatusSefazModelo):StatusMensagem := "Falha de comunicação (Acesso a internet)"+" "+"URL:"+cURL
+						Case HttpGetStatus() == 403 .Or. HttpGetStatus() == 14
+							Atail(::StatusSefazModelo):StatusMensagem := "Falha na comunicação (Certificado Digital recusado)"
+						Case ("WSCERR064" $ cMensagem .Or. "WSCERR065" $ cMensagem) .And. HttpGetStatus() == 200
+							Atail(::StatusSefazModelo):StatusMensagem := "Bloqueio de transmissão (Proxy ou Firewall)"+" "+"URL:"+cURL
+						Case HttpGetStatus() >= 500 .Or. HttpGetStatus() < 600
+							Atail(::StatusSefazModelo):StatusMensagem := "Falha no servidor da SEFAZ"+" "+"URL:"+cURL+CRLF
+						OtherWise
+							Atail(::StatusSefazModelo):StatusMensagem := "Falha não mapeada"+" "+"URL:"+cURL
+					EndCase
+					If nModalidade == 1
+						Atail(::StatusSefazModelo):Sugestao  := "Autorizada operação contigência"
+					Else
+						Atail(::StatusSefazModelo):Sugestao  := "Permanecer em contigência"
+					EndIf					
+					nInicio := At("HEADER:[",cMensagem)
+					nFim    := At("POST-RETURN:[",cMensagem)
+					If nInicio > 0 .And. nFim > 0
+						Atail(::StatusSefazModelo):LogAuditoria  := SubStr(cMensagem,nInicio,nFim-nInicio-1)
+						cMensagem := SubStr(cMensagem,nFim-1)				
+						nInicio := At("POST-RETURN:[",cMensagem)
+						nFim    := At("]",cMensagem)
+						If nInicio > 0 .And. nFim > 0
+							Atail(::StatusSefazModelo):LogAuditoria  += SubStr(cMensagem,nInicio,nFim-nInicio)
+						EndIf				
+					EndIf
+				EndIf
+			EndIf
+			EndIF	
+		Next nX
+	Else
+		If Select("SPED000")==0
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+		Else	
+			SetSoapFault("TOTVS SPED Services","Invalid Token")
+		EndIf
+		lRetorno := .F.
+	EndIf
+	FinishNfeSped()
+	Return(FinishSped(lRetorno))	
+
+
+WSMETHOD CancelaFaixa   WSRECEIVE UserToken,Id_Ent,IdInicial,IDFinal                  WSSEND NfeOk  WSSERVICE NFESBRA
+
+	Local cAlias    := GetNextAlias()
+	Local lRetorno  := .T.
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa o ambiente                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	InitSped()
+	InitNfeSped()
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Parametros                                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If Self:UserToken == "TOTVS" .And. Select("SPED000")<>0
+		If lRetorno
+			If !Empty(Self:ID_ENT)
+				DbSelectArea("SPED001")
+				dbSetOrder(1)
+				If !DbSeek(Self:ID_ENT)
+					SetSoapFault("TOTVS SPED Services","001 - Codigo da entidade invalido")
+					lRetorno := .F.
+				EndIf
+			Else
+				SetSoapFault("TOTVS SPED Services","002 - Codigo da entidade em branco")
+				lRetorno := .F.	
+			EndIf
+		EndIf
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Recupera as notas que estao na faixa informada                          ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If lRetorno
+			BeginSql Alias cAlias
+				SELECT R_E_C_N_O_				
+				FROM SPED050 NFE 
+				WHERE 
+				NFE.ID_ENT = %Exp:Self:ID_ENT% AND
+				NFE.NFE_ID >= %Exp:Self:IdInicial% AND
+				NFE.NFE_ID <= %Exp:Self:IdFinal% AND
+				NFE.%NOTDEL%
+			EndSql
+			Begin Transaction
+			DbSelectArea(cAlias)
+			DbGoTop()
+			While !(cAlias)->(Eof()) 
+				
+				dbSelectArea("SPED050")
+				MsGoto((cAlias)->R_E_C_N_O_)		
+			 
+			 	If SPED050->(SimpleLock()) .And. (SPED050->STATUSCANC == 0 .Or. SPED050->STATUSCANC == 3)
+					RecLock("SPED050")					
+					SPED050->STATUSCANC := 1
+					SPED050->STATUSMAIL := 3
+					SPED050->STATUS     := 7	
+					SPED050->NFE_PROT   := ""					
+				 	aadd(Self:NfeOk:ID,SPED050->NFE_ID)
+				EndIf				
+				DbSelectArea(cAlias)
+				DbSkip()
+				
+			EndDo
+			End Transaction
+			DbSelectArea(cAlias)
+			dbCloseArea()
+			DbSelectArea("SPED050")
+		EndIf
+	Else
+		If Select("SPED000")==0
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+		Else	
+			SetSoapFault("TOTVS SPED Services","Invalid Token")
+		EndIf
+		lRetorno := .F.
+	EndIf
+	If Empty(Self:NfeOk:ID)
+		Self:NfeOk:ID := {}
+	EndIf
+
+	FinishNfeSped()
+	Return(FinishSped(lRetorno))
+
+WSMETHOD CancelaNotas   WSRECEIVE UserToken,Id_Ent,Nfe                              WSSEND NfeOk     WSSERVICE NFESBRA
+
+	Local lRetorno   := .T.
+	Local nX         := 0
+	Local cModelo    := ""
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa o ambiente                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	InitSped()
+	InitNfeSped()
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Parametros                                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If Self:UserToken == "TOTVS" .And. Select("SPED000")<>0
+		If lRetorno
+			If !Empty(Self:ID_ENT)
+				DbSelectArea("SPED001")
+				dbSetOrder(1)
+				If !DbSeek(Self:ID_ENT)
+					SetSoapFault("TOTVS SPED Services","001 - Codigo da entidade invalido")
+					lRetorno := .F.
+				EndIf
+			Else
+				SetSoapFault("TOTVS SPED Services","002 - Codigo da entidade em branco")
+				lRetorno := .F.	
+			EndIf
+		EndIf
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Valida as notas fiscais antes da gravaçao                    ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ		
+		If lRetorno
+			nAmbiente   := Val(SubStr(SpedGetMv("MV_AMBIENT",Self:ID_ENT),1,1))
+			nModalidade := Val(SubStr(SpedGetMv("MV_MODALID",Self:ID_ENT),1,1))
+			Begin Transaction
+		    For nX := 1 To Len(Self:Nfe:Notas)
+				dbSelectArea("SPED050")
+				dbSetOrder(1)
+				If DbSeek(Self:ID_ENT+Self:Nfe:NOTAS[nX]:ID)
+					If SPED050->(SimpleLock()) .And. (SPED050->STATUSCANC == 0 .Or. SPED050->STATUSCANC == 3)
+					    RecLock("SPED050")
+					    SPED050->STATUSCANC := 	1
+					    SPED050->STATUSMAIL := 3
+					    SPED050->STATUS     := 7
+					    SPED050->NFE_PROT   := ""
+					    
+   						aadd(Self:NfeOk:ID,SPED050->NFE_ID)
+					EndIf
+				Else
+					If !Empty(Self:Nfe:NOTAS[nX]:XML)					
+						cModelo := SpedNfeId(Self:Nfe:NOTAS[nX]:XML,"Id")
+						cModelo := StrTran(cModelo,"NFe","")
+						cModelo := StrTran(cModelo,"CTe","")
+						cModelo := SubStr(cModelo,21,02)
+						
+						RecLock("SPED050",.T.)
+						SPED050->ID_ENT    := Self:ID_ENT
+						SPED050->NFE_ID    := Self:Nfe:Notas[nX]:ID						
+						If SPED050->(FieldPos("MODELO"))<>0
+							SPED050->MODELO    := cModelo
+						EndIf
+						SPED050->DATE_NFE  := Date()
+						SPED050->TIME_NFE  := Time()
+						SPED050->AMBIENTE  := nAmbiente
+						SPED050->MODALIDADE:= nModalidade
+						SPED050->XML_ERP   := Self:Nfe:NOTAS[nX]:XML
+						SPED050->XML_SIGCAN:= ""
+						SPED050->STATUSCANC:= 	1
+						SPED050->STATUS    := 7	
+						SPED050->NFE_PROT  := ""						
+						aadd(Self:NfeOk:ID,SPED050->NFE_ID)
+					EndIf
+				EndIf
+			Next nX
+			End Transaction			
+		EndIf
+	Else
+		If Select("SPED000")==0
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+		Else	
+			SetSoapFault("TOTVS SPED Services","Invalid Token")
+		EndIf
+		lRetorno := .F.
+	EndIf
+	If Empty(Self:NfeOk:ID)
+		Self:NfeOk:ID := {}
+	EndIf
+
+	FinishNfeSped()
+	Return(FinishSped(lRetorno))
+
+
+WSMETHOD RetornaFaixa WSRECEIVE UserToken,Id_Ent,IdInicial,IDFinal,DiasparaExclusao,DataDe,DataAte,CNPJDESTInicial,CNPJDESTFinal WSSEND NfeAutorizada WSSERVICE NFESBRA
+
+	Local lRetorno   := .T.
+	Local cAlias     := GetNextAlias()
+	Local aNota      := {}
+	Local nBytes     := 0
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Tratamento dos Parametros novos                                         ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If Empty(self:DataDe)
+		self:DataDe:= Stod(Space(8))
+	EndIf 
+	If Empty(self:DataAte)
+		self:DataAte:= Stod("20491231")
+	EndIf
+    If Empty(self:CNPJDESTInicial)
+		self:CNPJDESTInicial := ""
+	EndIf
+    If Empty(self:CNPJDESTFinal)
+		self:CNPJDESTFinal := "99999999999999"
+	EndIf
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa o ambiente                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	InitSped()
+	InitNfeSped()
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Parametros                                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If Self:UserToken == "TOTVS" .And. Select("SPED000")<>0
+		If lRetorno
+			If !Empty(Self:ID_ENT)
+				DbSelectArea("SPED001")
+				dbSetOrder(1)
+				If !DbSeek(Self:ID_ENT)
+					SetSoapFault("TOTVS SPED Services","001 - Codigo da entidade invalido")
+					lRetorno := .F.
+				EndIf
+			Else
+				SetSoapFault("TOTVS SPED Services","002 - Codigo da entidade em branco")
+				lRetorno := .F.	
+			EndIf
+		EndIf
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Valida as notas fiscais antes da gravaçao                    ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ		
+		If lRetorno
+			Self:NfeAutorizada:Notas := {}
+			Begin Transaction			
+				BeginSql Alias cAlias
+					SELECT R_E_C_N_O_ 
+					FROM SPED050
+					WHERE 
+					ID_ENT = %Exp:Self:ID_ENT% AND
+					NFE_ID >= %Exp:Self:IdInicial% AND
+					NFE_ID <= %Exp:Self:IdFinal% AND
+					DATE_NFE >= %Exp:Dtos(Self:DataDe)% AND
+					DATE_NFE <= %Exp:Dtos(Self:DataAte)% AND
+					CNPJDEST >= %Exp:Self:CNPJDESTInicial% AND
+					CNPJDEST <= %Exp:Self:CNPJDESTFinal% AND
+					%NOTDEL%
+					ORDER BY ID_ENT,NFE_ID
+				EndSql
+				dbSelectArea(cAlias)
+				dbGotop()
+				While !Eof()
+					dbSelectArea("SPED050")
+					dbSetOrder(1)
+					DbGoto((cAlias)->R_E_C_N_O_ )
+					If (Self:DiasparaExclusao == Nil .Or. Self:DiasparaExclusao == 0 .Or. SPED050->(SimpleLock()))
+					
+						aNota := WsClassNew("NFES3")
+						aNota:ID        := SPED050->NFE_ID
+						aNota:NFE       := WsClassNew("NFEPROTOCOLO")
+						aNota:NFE:XML   := AllTrim(IIF(Empty(SPED050->XML_SIG),SPED050->XML_ERP,SPED050->XML_SIG))
+						
+						nBytes += Len(aNota:NFE:XML)
+	
+						dbSelectArea("SPED054")
+						dbSetOrder(3)
+						If DbSeek(SPED050->ID_ENT+SPED050->NFE_ID+"100")
+							aNota:NFE:PROTOCOLO := SPED054->NFE_PROT
+							aNota:NFE:XMLPROT   := AllTrim(SPED054->XML_PROT)
+							
+							nBytes += Len(aNota:NFE:XMLPROT)
+							
+						EndIf
+						DEFAULT aNota:NFE:PROTOCOLO       := ""
+						DEFAULT aNota:NFE:XMLPROT         := ""			
+						If !Empty(SPED050->XML_SIGCAN)
+							aNota:NFECANCELADA      := WsClassNew("NFEPROTOCOLO")
+							aNota:NFECANCELADA:XML  := AllTrim(SPED050->XML_SIGCAN)
+							
+							nBytes += Len(aNota:NFECANCELADA:XML)
+							
+							dbSelectArea("SPED054")
+							dbSetOrder(3)
+							If DbSeek(SPED050->ID_ENT+SPED050->NFE_ID+"101")
+								aNota:NFECANCELADA:PROTOCOLO       := SPED054->NFE_PROT
+								aNota:NFECANCELADA:XMLPROT         := AllTrim(SPED054->XML_PROT)
+								
+								nBytes += Len(aNota:NFECANCELADA:XMLPROT)
+							EndIf
+							If DbSeek(SPED050->ID_ENT+SPED050->NFE_ID+"102")
+								aNota:NFECANCELADA:PROTOCOLO       := SPED054->NFE_PROT
+								aNota:NFECANCELADA:XMLPROT         := AllTrim(SPED054->XML_PROT)
+								
+								nBytes += Len(aNota:NFECANCELADA:XMLPROT)
+							EndIf
+							DEFAULT aNota:NFECANCELADA:PROTOCOLO   := ""
+							DEFAULT aNota:NFECANCELADA:XMLPROT     := ""
+						EndIf
+						If Self:DiasparaExclusao <> Nil .And. Self:DiasparaExclusao <> 0
+						    RecLock("SPED050")
+						    SPED050->DELETEDATE := 	IIF(SPED050->DATE_NFE+60>SPED050->DATE_NFE+Self:DiasparaExclusao,SPED050->DATE_NFE+60,SPED050->DATE_NFE+Self:DiasparaExclusao)
+						EndIf
+						If nBytes > 450000 .And. Len(Self:NfeAutorizada:Notas)>1
+							Exit
+						EndIf
+					
+						aadd(Self:NfeAutorizada:Notas,aNota)
+						
+					EndIf
+					
+					dbSelectArea(cAlias)
+					dbSkip()
+				EndDo
+				dbSelectArea(cAlias)
+				dbCloseArea()
+				dbSelectArea("SPED050")
+			End Transaction
+		EndIf
+	Else
+		If Select("SPED000")==0
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+		Else	
+			SetSoapFault("TOTVS SPED Services","Invalid Token")
+		EndIf
+		lRetorno := .F.
+	EndIf
+	FinishNfeSped()
+	Return(FinishSped(lRetorno))
+
+WSMETHOD RetornaNotas   WSRECEIVE UserToken,Id_Ent,NfeID,DiasparaExclusao,Danfe             WSSEND NfeAutorizada  WSSERVICE NFESBRA
+
+	Local lRetorno   := .T.
+	Local nX         := 0
+	Local nBytes     := 0
+	Local aNota      := {}
+	Local nModalidade:= 0
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa o ambiente                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	InitSped()
+	InitNfeSped()
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Parametros                                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If Self:UserToken == "TOTVS" .And. Select("SPED000")<>0
+		If lRetorno
+			If !Empty(Self:ID_ENT)
+				DbSelectArea("SPED001")
+				dbSetOrder(1)
+				If !DbSeek(Self:ID_ENT)
+					SetSoapFault("TOTVS SPED Services","001 - Codigo da entidade invalido")
+					lRetorno := .F.
+				EndIf
+			Else
+				SetSoapFault("TOTVS SPED Services","002 - Codigo da entidade em branco")
+				lRetorno := .F.	
+			EndIf
+		EndIf
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Valida as notas fiscais antes da gravaçao                    ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ		
+		nModalidade := Val(SubStr(SpedGetMv("MV_MODALID",Self:ID_ENT),1,1))
+		If lRetorno
+			Self:NfeAutorizada:Notas := {}
+		    For nX := 1 To Len(Self:NfeID:Notas)				
+				dbSelectArea("SPED050")
+				dbSetOrder(1)
+				If DbSeek(Self:ID_ENT+Self:NfeID:Notas[nX]:ID)
+					If Self:DiasparaExclusao == Nil .Or. Self:DiasparaExclusao == 0 .Or. SPED050->(SimpleLock())
+						Begin Transaction					
+							aNota := WsClassNew("NFES3")
+							aNota:ID        := SPED050->NFE_ID
+							aNota:NFE       := WsClassNew("NFEPROTOCOLO")
+							If SPED050->MODALIDADE <> 5
+						   		aNota:NFE:XML   := AllTrim(IIF(Empty(SPED050->XML_SIG),SPED050->XML_ERP,SPED050->XML_SIG))
+							ElseIf Self:Danfe == 1
+						   		aNota:NFE:XML   := AllTrim(SPED050->XML_ERP)							
+							Else
+						   		aNota:NFE:XML   := AllTrim(SPED050->XML_DPEC)
+							EndIf
+							nBytes += Len(aNota:NFE:XML)
+							
+							dbSelectArea("SPED054")
+							dbSetOrder(3)
+							If DbSeek(SPED050->ID_ENT+SPED050->NFE_ID+"100")
+								aNota:NFE:PROTOCOLO := SPED054->NFE_PROT
+								aNota:NFE:XMLPROT   := AllTrim(SPED054->XML_PROT)
+								
+								nBytes += Len(aNota:NFE:XMLPROT)
+							EndIf
+							DEFAULT aNota:NFE:PROTOCOLO       := ""
+							DEFAULT aNota:NFE:XMLPROT         := ""			
+							If !Empty(SPED050->XML_SIGCAN)
+								aNota:NFECANCELADA      := WsClassNew("NFEPROTOCOLO")
+								aNota:NFECANCELADA:XML  := AllTrim(SPED050->XML_SIGCAN)
+								
+								nBytes += Len(aNota:NFECANCELADA:XML)
+								
+								dbSelectArea("SPED054")
+								dbSetOrder(3)
+								If DbSeek(SPED050->ID_ENT+SPED050->NFE_ID+"101")
+									aNota:NFECANCELADA:PROTOCOLO       := SPED054->NFE_PROT
+									aNota:NFECANCELADA:XMLPROT         := AllTrim(SPED054->XML_PROT)
+									
+									nBytes += Len(aNota:NFECANCELADA:XMLPROT)
+								EndIf
+								If DbSeek(SPED050->ID_ENT+SPED050->NFE_ID+"102")
+									aNota:NFECANCELADA:PROTOCOLO       := SPED054->NFE_PROT
+									aNota:NFECANCELADA:XMLPROT         := SPED054->XML_PROT
+									
+									nBytes += Len(aNota:NFECANCELADA:XMLPROT)
+								EndIf
+								DEFAULT aNota:NFECANCELADA:PROTOCOLO   := ""
+								DEFAULT aNota:NFECANCELADA:XMLPROT     := ""
+							EndIf
+							If Self:DiasparaExclusao <> Nil .And. Self:DiasparaExclusao <> 0
+							    RecLock("SPED050")
+							    SPED050->DELETEDATE := 	IIF(SPED050->DATE_NFE+60>SPED050->DATE_NFE+Self:DiasparaExclusao,SPED050->DATE_NFE+60,SPED050->DATE_NFE+Self:DiasparaExclusao)
+							EndIf
+	
+						End Transaction
+						If nBytes > 450000 .And. Len(Self:NfeAutorizada:Notas)>1
+							nX := Len(Self:NfeID:Notas)+1
+							Exit
+						EndIf
+						aadd(Self:NfeAutorizada:Notas,aNota)
+					EndIf
+				EndIf
+			Next nX
+		EndIf
+	Else
+		If Select("SPED000")==0
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+		Else	
+			SetSoapFault("TOTVS SPED Services","Invalid Token")
+		EndIf
+		lRetorno := .F.
+	EndIf
+	FinishNfeSped()
+	Return(FinishSped(lRetorno))
+
+WSMETHOD Estatisticas   WSRECEIVE UserToken,Id_Ent,DataInicial,DataFinal WSSEND Informacoes WSSERVICE NFESBRA
+
+	Local lRetorno   := .T.
+	Local cAlias     := GetNextAlias()
+	Local nAmbiente  := 0
+	Local cServico   := ""
+	Local nX         := 0
+	Local cCodigo    := ""	
+	Local cDescricao := ""
+	Local nQtde      := 0
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa o ambiente                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	InitSped()
+	InitNfeSped()
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Parametros                                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If Self:UserToken == "TOTVS" .And. Select("SPED000")<>0
+		If lRetorno
+			If !Empty(Self:ID_ENT)
+				DbSelectArea("SPED001")
+				dbSetOrder(1)
+				If !DbSeek(Self:ID_ENT)
+					SetSoapFault("TOTVS SPED Services","001 - Codigo da entidade invalido")
+					lRetorno := .F.
+				EndIf
+			Else
+				SetSoapFault("TOTVS SPED Services","002 - Codigo da entidade em branco")
+				lRetorno := .F.	
+			EndIf
+		EndIf
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Calculo das estatisticas - Nfe                                          ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		BeginSql Alias cAlias
+			SELECT NFE.AMBIENTE,case when NFE.STATUSCANC = 0 then "NF-e" else "Cancelamentos" end AS Servico,
+			NFE.STATUS,
+			NFE.STATUSCANC,
+			LOTEXNFE.CSTAT_SEFR,
+			LOTEXNFE.XMOT_SEFR,
+			COUNT(*) AS Qtde
+ 
+			FROM SPED050 NFE LEFT JOIN SPED054 LOTEXNFE 
+				ON (NFE.ID_ENT = LOTEXNFE.ID_ENT AND 
+					 NFE.NFE_ID = LOTEXNFE.NFE_ID AND 
+					 NFE.D_E_L_E_T_= ' ' AND 
+					 LOTEXNFE.D_E_L_E_T_= ' ')
+			WHERE
+				NFE.DATE_NFE >= %Exp:Dtos(Self:DataInicial)% AND
+				NFE.DATE_NFE <= %Exp:Dtos(Self:DataFinal)% AND 
+				NFE.ID_ENT = %Exp:Self:ID_ENT%
+			GROUP BY 
+				NFE.AMBIENTE,
+				NFE.STATUS,
+				NFE.STATUSCANC,
+				LOTEXNFE.CSTAT_SEFR,
+				LOTEXNFE.XMOT_SEFR
+			ORDER BY NFE.AMBIENTE,
+				NFE.STATUS,
+				NFE.STATUSCANC,
+				LOTEXNFE.CSTAT_SEFR,
+				LOTEXNFE.XMOT_SEFR
+		EndSql
+		
+		::Informacoes := {}
+		
+		While !Eof()
+		
+			nAmbiente  := (cAlias)->AMBIENTE
+			cServico   := (cAlias)->SERVICO
+			
+			aadd(::Informacoes,WsClassNew("ESTATISTICANFE"))
+			Atail(::Informacoes):Ambiente := (cAlias)->AMBIENTE
+			Atail(::Informacoes):Servico  := (cAlias)->SERVICO
+			Atail(::Informacoes):DETALHE  := {}
+
+			While !Eof() .And.;
+				nAmbiente  == (cAlias)->AMBIENTE .And.;
+				cServico   == (cAlias)->SERVICO
+				
+				cCodigo    := ""	
+				cDescricao := ""
+				nQtde      := 0
+
+				Do Case
+					Case !Empty((cAlias)->CSTAT_SEFR)
+						cCodigo    := (cAlias)->CSTAT_SEFR
+						cDescricao := AllTrim((cAlias)->XMOT_SEFR)
+						nQtde      := (cAlias)->Qtde
+					Case (cAlias)->STATUS <> 7
+						If (cAlias)->STATUS <> 3 .And. (cAlias)->STATUS <> 5
+							cCodigo    :=  "001"
+							cDescricao :=  "Processando"
+							nQtde      := (cAlias)->Qtde
+						Else
+							cCodigo    := "002"
+							cDescricao := "Recusadas"
+							nQtde      := (cAlias)->Qtde
+						EndIf
+					Case (cAlias)->STATUS == 7 .And. (cAlias)->STATUSCANC == 1
+						cCodigo    := "003"
+						cDescricao := "Processando"
+						nQtde      := (cAlias)->Qtde
+					Case (cAlias)->STATUS == 7 .And. (cAlias)->STATUSCANC == 2
+						cCodigo    := (cAlias)->CSTAT_SEFR
+						cDescricao := AllTrim((cAlias)->XMOT_SEFR)
+						nQtde      := (cAlias)->Qtde
+					Case (cAlias)->STATUS == 7 .And. (cAlias)->STATUSCANC == 3
+						cCodigo    := "004"
+						cDescricao := "Recusadas"
+						nQtde      := (cAlias)->Qtde
+				EndCase
+							
+				nX 	:= aScan(Atail(::Informacoes):DETALHE,{|x| x:CodMsgSef == cCodigo})
+				If nX == 0
+					aadd(Atail(::Informacoes):DETALHE,WsClassNew("DETALHEESTATISTICANFESEF"))
+					nX := Len(Atail(::Informacoes):DETALHE)
+				EndIf
+				Atail(::Informacoes):DETALHE[nX]:CodMsgSef  := cCodigo
+				Atail(::Informacoes):DETALHE[nX]:Mensagem   := cDescricao
+				DEFAULT Atail(::Informacoes):DETALHE[nX]:Quantidade := 0
+				Atail(::Informacoes):DETALHE[nX]:Quantidade += nQtde
+
+				dbSelectArea(cAlias)
+				dbSkip()
+			EndDo
+		EndDo
+		dbSelectArea(cAlias)
+		dbCloseArea()
+		dbSelectArea("SPED050")
+		
+		
+		BeginSql Alias cAlias
+			SELECT ID_ENT,AMBIENTE,CSTAT_SEF,XMOT_SEF,count(*) Qtde
+				FROM SPED052
+			WHERE 	DATE_LOTE >= %Exp:Dtos(Self:DataInicial)% AND
+					DATE_LOTE  <= %Exp:Dtos(Self:DataFinal)% AND 
+					ID_ENT = %Exp:Self:ID_ENT%
+			GROUP BY ID_ENT,AMBIENTE,CSTAT_SEF,XMOT_SEF
+			ORDER BY ID_ENT,AMBIENTE,CSTAT_SEF,XMOT_SEF
+		EndSql
+
+		While !Eof()
+		
+			nAmbiente  := (cAlias)->AMBIENTE
+			cServico   := "Envio de Lote"
+			
+			aadd(::Informacoes,WsClassNew("ESTATISTICANFE"))
+			Atail(::Informacoes):Ambiente := (cAlias)->AMBIENTE
+			Atail(::Informacoes):Servico  := cServico
+			Atail(::Informacoes):DETALHE  := {}
+
+			While !Eof() .And. 	nAmbiente  == (cAlias)->AMBIENTE
+			
+				cCodigo    := ""	
+				cDescricao := ""
+				nQtde      := 0
+				Do Case
+					Case !Empty((cAlias)->CSTAT_SEF)
+						cCodigo    := (cAlias)->CSTAT_SEF
+						cDescricao := AllTrim((cAlias)->XMOT_SEF)
+						nQtde      := (cAlias)->Qtde
+					OtherWise
+						cCodigo     := "001"
+						cDescricao  := "Processando"
+						nQtde       := (cAlias)->Qtde
+				EndCase
+				
+				nX 	:= aScan(Atail(::Informacoes):DETALHE,{|x| x:CodMsgSef == cCodigo})
+				If nX == 0
+					aadd(Atail(::Informacoes):DETALHE,WsClassNew("DETALHEESTATISTICANFESEF"))
+					nX := Len(Atail(::Informacoes):DETALHE)
+				EndIf
+				Atail(::Informacoes):DETALHE[nX]:CodMsgSef  := cCodigo
+				Atail(::Informacoes):DETALHE[nX]:Mensagem   := cDescricao
+				DEFAULT Atail(::Informacoes):DETALHE[nX]:Quantidade := 0
+				Atail(::Informacoes):DETALHE[nX]:Quantidade += nQtde
+				
+				dbSelectArea(cAlias)
+				dbSkip()
+			EndDo
+		EndDo
+		dbSelectArea(cAlias)
+		dbCloseArea()
+		dbSelectArea("SPED050")
+		
+		BeginSql Alias cAlias
+			SELECT ID_ENT,AMBIENTE,CSTAT_SEFR,XMOT_SEFR,count(*) Qtde
+				FROM SPED052
+			WHERE 	DATE_LOTE >= %Exp:Dtos(Self:DataInicial)% AND
+					DATE_LOTE  <= %Exp:Dtos(Self:DataFinal)% AND
+					CSTAT_SEFR <> ' '				
+			GROUP BY ID_ENT,AMBIENTE,CSTAT_SEFR,XMOT_SEFR
+			ORDER BY ID_ENT,AMBIENTE,CSTAT_SEFR,XMOT_SEFR
+		EndSql
+
+		While !Eof()
+		
+			nAmbiente  := (cAlias)->AMBIENTE
+			cServico   := "Retorno de Lote"
+			
+			aadd(::Informacoes,WsClassNew("ESTATISTICANFE"))
+			Atail(::Informacoes):Ambiente := (cAlias)->AMBIENTE
+			Atail(::Informacoes):Servico  := cServico
+			Atail(::Informacoes):DETALHE  := {}
+
+			While !Eof() .And. 	nAmbiente  == (cAlias)->AMBIENTE
+			
+				cCodigo    := (cAlias)->CSTAT_SEFR
+				cDescricao := AllTrim((cAlias)->XMOT_SEFR)
+				nQtde      := (cAlias)->Qtde
+			
+				nX 	:= aScan(Atail(::Informacoes):DETALHE,{|x| x:CodMsgSef == cCodigo})
+				If nX == 0
+					aadd(Atail(::Informacoes):DETALHE,WsClassNew("DETALHEESTATISTICANFESEF"))
+					nX := Len(Atail(::Informacoes):DETALHE)
+				EndIf
+				Atail(::Informacoes):DETALHE[nX]:CodMsgSef  := cCodigo
+				Atail(::Informacoes):DETALHE[nX]:Mensagem   := cDescricao
+				DEFAULT Atail(::Informacoes):DETALHE[nX]:Quantidade := 0
+				Atail(::Informacoes):DETALHE[nX]:Quantidade += nQtde
+
+				dbSelectArea(cAlias)
+				dbSkip()
+			EndDo
+		EndDo
+		dbSelectArea(cAlias)
+		dbCloseArea()
+		dbSelectArea("SPED050")
+		
+	Else
+		If Select("SPED000")==0
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+		Else	
+			SetSoapFault("TOTVS SPED Services","Invalid Token")
+		EndIf
+		lRetorno := .F.
+	EndIf
+	FinishNfeSped()
+	Return(FinishSped(lRetorno))
+
+WSMETHOD ConsultaProtocoloNFe   WSRECEIVE UserToken,Id_Ent,NFeConsultaProtocoloID,chvNFE WSSEND NFeProtocolo WSSERVICE NFESBRA	
+
+	Local lRetorno    := .T.
+	Local lFalhou     := .F.
+	Local nAmbiente   := 0
+	Local nModalidade := 0
+	Local cChvNFe     := ""
+	Local cXml        := ""
+	Local cAviso      := ""
+	Local cErro       := ""
+	Local cModelo     := ""
+    Local cUF		  := ""
+	Local nRegDPEC    := ""
+	Private oXml      := Nil
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa o ambiente                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	InitSped()
+	InitNfeSped()
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Parametros                                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If Self:UserToken == "TOTVS" .And. Select("SPED000") <> 0
+		If lRetorno
+			If !Empty(Self:ID_ENT)
+				DbSelectArea("SPED001")
+				dbSetOrder(1)
+				If !DbSeek(Self:ID_ENT)
+					SetSoapFault("TOTVS SPED Services","001 - Codigo da entidade invalido")
+					lRetorno := .F.
+				EndIf
+			Else
+				SetSoapFault("TOTVS SPED Services","002 - Codigo da entidade em branco")
+				lRetorno := .F.	
+			EndIf
+		EndIf
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Consultada a NFe                                                        ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		nAmbiente   := Val(SubStr(SpedGetMv("MV_AMBIENT",Self:ID_ENT),1,1))
+		nModalidade := Val(SubStr(SpedGetMv("MV_MODALID",Self:ID_ENT),1,1))
+		If Self:chvNFE <> Nil
+			//Consulta direto pela chave de acesso da NF-e
+			cChvNFe := Self:chvNFE
+			cUF     := GetUFCode(SUBSTR(cChvNFe,1,2))
+		ElseIf Self:NFeConsultaProtocoloID <> Nil
+			DbSelectArea("SPED050")
+			dbSetOrder(1)
+			If DbSeek(Self:ID_ENT+Self:NFeConsultaProtocoloID)
+				cChvNFe    := SpedNfeId(SPED050->XML_ERP,"Id")
+				nAmbiente  := IIF(SPED050->AMBIENTE==0,nAmbiente,SPED050->AMBIENTE)
+				nModalidade:= IIF(SPED050->MODALIDADE==0,nModalidade,SPED050->MODALIDADE)
+				nRegDPEC   := SPED050->REG_DPEC
+			Else
+				lFalhou := .T.
+				cChvNFe := Self:NFeConsultaProtocoloID
+			EndIf
+		Else
+			SetSoapFault("TOTVS SPED Services","Informar a chave ou o protocolo da Nf-e")
+			lRetorno := .F.		
+		EndIf    
+		If lRetorno
+			cModelo := StrTran(cChvNFe,"NFe","")
+			cModelo := StrTran(cModelo,"CTe","")
+			cModelo := SubStr(cModelo,21,02)	
+			NfeConsNfe(nAmbiente,nModalidade,cChvNFe,"","","",@cXML,cModelo,cUF,nRegDPEC)
+			oXml := XmlParser(cXML,"_",@cAviso,@cErro)
+			If !SPED050->MODALIDADE == 5
+				If oXml <> Nil			
+					If Self:chvNFE <> Nil 
+					::NfeProtocolo:ID       := Self:chvNFE
+					Else
+					::NfeProtocolo:ID       := Self:NFeConsultaProtocoloID
+					EndIF
+					If Type("oXml:_RETCONSSITNFE:_INFPROT:_TPAMB")=="O"
+						::NfeProtocolo:AMBIENTE := Val(oXml:_RETCONSSITNFE:_INFPROT:_TPAMB:TEXT)
+					EndIf
+					If Type("oXml:_RETCONSSITNFE:_VERSAO")=="O"
+						::NfeProtocolo:VERSAO   := oXml:_RETCONSSITNFE:_VERSAO:TEXT
+					EndIf
+					::NfeProtocolo:CODRETNFE:= oXml:_RETCONSSITNFE:_INFPROT:_CSTAT:TEXT
+					::NfeProtocolo:MSGRETNFE:= oXml:_RETCONSSITNFE:_INFPROT:_XMOTIVO:TEXT			
+					Do Case 
+						Case oXml:_RETCONSSITNFE:_INFPROT:_CSTAT:TEXT $ "100,101,102"
+							::NfeProtocolo:RECBTO   := Stod(SubStr(StrTran(oXml:_RETCONSSITNFE:_INFPROT:_DHRECBTO:TEXT,"-",""),1,8))
+							::NfeProtocolo:PROTOCOLO:= oXml:_RETCONSSITNFE:_INFPROT:_NPROT:TEXT
+						Case lFalhou .And. oXml:_RETCONSSITNFE:_INFPROT:_CSTAT:TEXT $ "215,243"
+							SetSoapFault("TOTVS SPED Services","004 - Nota fiscal eletrônica não encontrada")
+							lRetorno := .F.					
+						OtherWise
+							::NfeProtocolo:RECBTO   := Ctod("")
+							::NfeProtocolo:PROTOCOLO:= ""
+					EndCase
+				Else
+					SetSoapFault("TOTVS SPED Services","003 - Falha no retorno da SEFAZ. Erro informado: "+AllTrim(cAviso)+AllTrim(cErro))
+					lRetorno := .F.
+				EndIf		
+		    Else
+		    	If oXml <> Nil			
+					::NfeProtocolo:ID       := Self:NFeConsultaProtocoloID
+					If Type("oXml:_RETCONSDPEC:_TPAMB")=="O"
+						::NfeProtocolo:AMBIENTE := Val(oXml:_RETCONSDPEC:_TPAMB:TEXT)
+					EndIf
+					If Type("oXml:_RETCONSDPEC:_VERSAO")=="O"
+						::NfeProtocolo:VERSAO   := oXml:_RETCONSDPEC:_VERSAO:TEXT
+					EndIf
+					::NfeProtocolo:CODRETNFE:= oXml:_RETCONSDPEC:_CSTAT:TEXT
+					::NfeProtocolo:MSGRETNFE:= oXml:_RETCONSDPEC:_XMOTIVO:TEXT			
+					Do Case 
+						Case oXml:_RETCONSDPEC:_CSTAT:TEXT $ "125"
+							::NfeProtocolo:RECBTO   := Stod(SubStr(StrTran(oXml:_RETCONSDPEC:_INFDPECREG:_DHREGDPEC:TEXT,"-",""),1,8))
+							::NfeProtocolo:PROTOCOLO:= oXml:_RETCONSSITNFE:_INFDPECREG:_NREGDPEC:TEXT
+						Case lFalhou .And. oXml:_RETCONSSITNFE:_INFPROT:_CSTAT:TEXT $ "126,127"
+							SetSoapFault("TOTVS SPED Services","004 - DPEC NÃO ENCONTRADO")
+							lRetorno := .F.					
+						OtherWise
+							::NfeProtocolo:RECBTO   := Ctod("")
+							::NfeProtocolo:PROTOCOLO:= ""
+					EndCase
+				Else
+					SetSoapFault("TOTVS SPED Services","003 - Falha no retorno da SEFAZ. Erro informado: "+AllTrim(cAviso)+AllTrim(cErro))
+					lRetorno := .F.
+				EndIf
+			EndIf	
+		EndIf
+	Else
+		If Select("SPED000")==0
+			SetSoapFault("TOTVS SPED Services","Bad configuration")
+		Else	
+			SetSoapFault("TOTVS SPED Services","Invalid Token")
+		EndIf
+		lRetorno := .F.
+	EndIf
+	FinishNfeSped()
+	Return(FinishSped(lRetorno))
+		
+WSMETHOD MonitorStatusSefaz WSRECEIVE UserToken  WSSEND MonitorSefazes WSSERVICE NFESBRA
+	Local aResult    := {}
+	Local aUF        := GetUFCode()
+	Local lRetorno   := .T.
+	Local nX         := 0
+	Local nY         := 0
+	Local cAmbiente  := ""	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Parametros                                                              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If Self:UserToken == "TOTVS"
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Executa o servico de status                                  ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		::MonitorSefazes := {}
+		For nY := 1 To 2
+			If nY == 1
+				cAmbiente   := "1"
+			Else
+				cAmbiente   := "2"
+			EndIf
+			For nX := 1 to Len(aUF)	
+				If aUF[nX][01] <> "EX"
+					StartJob("_MonitorStatusSEFAZ",GetEnvServer(),.F.,aUF[nX][01],cAmbiente)
+					Sleep(1200)
+				EndIf
+			Next nX
+			Sleep(2000)
+			For nX := 1 to Len(aUF)					
+				If aUF[nX][01] <> "EX"
+					aResult := {}
+					GetGlbVars("MonitorStatusSefaz"+aUF[nX][01]+cAmbiente,aResult)
+					If !Empty(aResult)
+						aadd(::MonitorSefazes,WsClassNew("MONITORONLINESEFAZ"))
+							
+						Atail(::MonitorSefazes):Ambiente       := aResult[01]
+						Atail(::MonitorSefazes):VersaoMensagem := aResult[02]
+						Atail(::MonitorSefazes):StatusCodigo   := aResult[03]
+						Atail(::MonitorSefazes):StatusMensagem := aResult[04]
+						Atail(::MonitorSefazes):UFOrigem       := aResult[05]
+						Atail(::MonitorSefazes):UFResposta     := aResult[06]
+						Atail(::MonitorSefazes):TempoMedioSEF  := aResult[07]
+						Atail(::MonitorSefazes):Motivo         := aResult[08]
+						Atail(::MonitorSefazes):Observacao     := aResult[09]
+						Atail(::MonitorSefazes):Sugestao       := aResult[10]
+					EndIf
+				EndIf
+			Next nX
+		Next nY
+	Else
+		SetSoapFault("TOTVS SPED Services","Invalid Token")
+		lRetorno := .F.
+	EndIf
+	Return(lRetorno)
+	
+Function _MonitorStatusSEFAZ(cUF,cAmbiente)
+
+Local aUF     := {0,"","","","","",0,"","","",Date(),Time()}
+Local aResult := {}
+Local aNFe    := {}
+Local cAviso  := ""
+Local cErro   := ""
+Local dDataIni:= Date()
+Local cHoraIni:= "00:00:00"
+Local oWsNFe
+
+Private oXmlResult
+
+GetGlbVars("MonitorStatusSefaz"+cUF+cAmbiente,aResult)
+
+If !Empty(aResult)
+	dDataIni := aResult[11]
+	cHoraIni := aResult[12]
+	SomaDiaHor(@dDataIni,@cHoraIni,05/60)
+EndIf
+
+If (dDataIni <> Date() .Or. cHoraIni == "00:00:00" .Or. cHoraIni < SubStr(Time(),1,5))
+	aNfe   := NfeStatusSEF(,cUF,cAmbiente,"1","1.10")
+						
+	oWsNfe := WSNfeStatusServico():New()
+	oWsNfe:_URL := cURL := aNFe[3]
+	oWsNfe:cnfeCabecMsg := aNFe[1]
+	oWsNfe:cnfeDadosMsg := aNFe[2]
+	If oWsNfe:nfeStatusServicoNF()
+		oXmlResult := XmlParser(EncodeUTF8(oWsNfe:cnfeStatusServicoNFResult),"_",@cAviso,@cErro)
+		If Empty(cAviso) .And. Empty(cErro)									
+			aUF[01] := Val(cAmbiente)
+			aUF[02] := oXmlResult:_RETCONSSTATSERV:_versao:TEXT
+			aUF[03] := oXmlResult:_RETCONSSTATSERV:_CSTAT:TEXT
+			aUF[04] := GetMsgSef(oXmlResult:_RETCONSSTATSERV:_CSTAT:TEXT)
+			aUF[05] := cUF
+			If Type("oXmlResult:_RETCONSSTATSERV:_CUF")=="O" .And. !Empty(oXmlResult:_RETCONSSTATSERV:_CUF:TEXT)
+				aUF[06] := GetUFCode(oXmlResult:_RETCONSSTATSERV:_CUF:TEXT,.T.)
+			EndIf
+			If Type("oXmlResult:_RETCONSSTATSERV:_TMED")=="O"
+				aUF[07] := Val(oXmlResult:_RETCONSSTATSERV:_TMED:TEXT)
+			EndIf
+			aUF[08] := oXmlResult:_RETCONSSTATSERV:_XMOTIVO:TEXT
+			If Type("oXmlResult:_RETCONSSTATSERV:_XOBS:TEXT")<>"U" .And. !Empty(oXmlResult:_RETCONSSTATSERV:_XOBS:TEXT)
+				aUF[09] := oXmlResult:_RETCONSSTATSERV:_XOBS:TEXT
+			EndIf
+			Do Case
+				Case AllTrim(oXmlResult:_RETCONSSTATSERV:_CSTAT:TEXT) $ "238,239,215"
+					aUF[10] := "Verifique a versão do layout da NFe"
+				Case !AllTrim(oXmlResult:_RETCONSSTATSERV:_CSTAT:TEXT) $ "107,289,226"
+					aUF[10] := "Autorizada operação em contigência"
+			EndCase
+		Else
+			aUF[01] := Val(cAmbiente)
+			aUF[02] := aNFe[4]
+			aUF[03] := "999"
+			aUF[04] := "Erro na SEFAZ: "+AllTrim(cAviso)+" "+AllTrim(cErro)
+			aUF[05] := cUF
+			aUF[06] := cUF
+			aUF[10] := "Contacte a Totvs e comunique o codigo do status"
+		EndIf
+	Else		
+		aUF[01] := Val(cAmbiente)
+		aUF[02] := aNfe[4]
+		aUF[03] := "999"
+		aUF[04] := "Falha de comunicação"
+		aUF[05] := cUF
+		aUF[06] := cUF
+		aUF[10] := "Autorizada operação em contigência"
+	EndIf
+	
+	aUF[10] += " Ultimo acesso: "+SpedDateConv(Date(),"DDMM")+"-"+Time()
+	
+	PutGlbVars("MonitorStatusSefaz"+cUF+cAmbiente,aUF)
+EndIf
+Return(Nil)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Definicao do Web Service                                                ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+WSSERVICE NFEEBRA	;
+	DESCRIPTION "<b>Serviço de administração das notas fiscais eletrônicas de entrada do Brasil.</b><br><br>Este serviço permite a total integração com a nota fiscal eletrônica do Brasil utilizando os web services disponibilizados pelo projeto SPED."  ;
+	NAMESPACE "http://webservices.totvs.com.br/nfeebra.apw"
+
+	WSDATA UserToken            AS STRING
+	WSDATA Id_Ent               AS STRING
+	WSDATA NFe                  AS NFE
+	WSDATA NFeOk                AS NFESID
+	WSDATA NFeID                AS NFESID
+	WSDATA StatusSefaz          AS STRING
+	WSDATA Monitor              AS ARRAY OF MONITORNFE
+	
+	WSMETHOD ValidaNfe      DESCRIPTION "<b>Método de validacao de uma Nfe.</b><br><br>Este método deve ser utilizado para a verificação da autêncidade de uma Nfe, quando da recepção do mesmo. Verifica a validade do certificado digital, a veracidade da assinatura eletrônica e se esta autorizada junto ao SEFAZ, retornado apenas os Ids que foram validados"
+	WSMETHOD MonitorSefaz   DESCRIPTION "<b>Método de monitoramento do situaçXao dos serviços da Nfe do Brasil no SEFAZ de origem</b><br><br>Este método deve ser utilizado para verificar a situação dos serviços de web services do SEFAZ de origem e o tempo de espera para os lotes de processamento."
+	WSMETHOD MonitorWF      DESCRIPTION "<b>Método de monitoramento do workflow de recepção das Notas fiscais eletrônicas</b><br><br>Este método deve ser utilizado para demonstrar as notas fiscais recebidas e que ainda não foram recuperadas.<br>Lembre-se que somente as notas fiscais válidas poderam ser recuperadas."
+	WSMETHOD RetornaNota    DESCRIPTION "<b>Método de recuperação das Notas fiscais eletrônicas recebidas.</b><br><br>Este método deve ser utilizado para recuperar o XML das notas fiscais eletrônicas recebidas.<br>Lembre-se que somente as notas fiscais válidas poderam ser recuperadas."
+	WSMETHOD ExcluiNota     DESCRIPTION "<b>Método de exclusão das Notas fiscais eletrônicas recebidas.</b><br><br>Este método deve ser utilizado para excluir as notas fiscais eletrônica recebidas. Em caso se sucesso na exclusão será retornado o ID das notas."
+ENDWSSERVICE
+
+WSMETHOD ValidaNfe      WSRECEIVE UserToken,Id_Ent,NFe           WSSEND NfeOk       WSSERVICE NFEEBRA
+WSMETHOD MonitorSefaz   WSRECEIVE UserToken,Id_Ent               WSSEND StatusSefaz WSSERVICE NFEEBRA
+WSMETHOD MonitorWF      WSRECEIVE UserToken,Id_Ent               WSSEND Monitor     WSSERVICE NFEEBRA
+WSMETHOD RetornaNota    WSRECEIVE UserToken,Id_Ent,NFeID         WSSEND Nfe         WSSERVICE NFEEBRA
+WSMETHOD ExcluiNota     WSRECEIVE UserToken,Id_Ent,NFeID         WSSEND NfeOk       WSSERVICE NFEEBRA
+
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³NfeRecomen³ Autor ³Eduardo Riera          ³ Data ³23.06.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Funcao de tratamento dos lotes da Nfe do Brasil p/ o Monitor³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1: Alias com as tabelas de retorno                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao Efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function NfeRecomendacao(cAlias)
+
+Local cPrbTotvs := "242,238,214,225,252,226,247,227"
+Local cPrbDpec  := "108,109,203,284,284,294,479"
+Local aMsg      := {}
+Local cRetorno  := ""
+Local nTempo    := 0
+Local nEspera := (Val(SpedGetMV("MV_CFGTIME",(cAlias)->ID_ENT))/60/60)*2
+
+aadd(aMsg,"001 - Emissão de DANFE autorizada")
+aadd(aMsg,"002 - Não foi possível assinar a Nfe - entre em contato com o responsável")
+aadd(aMsg,"003 - A Nfe ainda não foi assinada - aguarde a assinatura")
+aadd(aMsg,"004 - Lote ainda não transmitido, verifique o status da SEFAZ")
+aadd(aMsg,"005 - Lote recusado, verifique o motivo da SEFAZ")
+aadd(aMsg,"006 - ")
+aadd(aMsg,"007 - Autorizada operação em contigência")
+aadd(aMsg,"008 - Autorizada manutenção da operação em contigência")
+aadd(aMsg,"009 - Aguardar processamento do lote")
+aadd(aMsg,"010 - Lote não autorizado. Corrija o problema e retransmita as notas fiscais eletrônicas")
+aadd(aMsg,"011 - Entre em contato com a SEFAZ, verifique a versão de layout suportada e atualize os parâmetros do sistema")
+aadd(aMsg,"012 - Lote não autorizado. Verifique os motivos junto a SEFAZ")
+aadd(aMsg,"013 - NFe não autorizada. Verifique os motivos junto a SEFAZ")
+aadd(aMsg,"014 - NFe não autorizada. Corrija o problema e retransmita as notas fiscais eletrônicas")
+aadd(aMsg,"015 - Cancelamento autorizado")
+aadd(aMsg,"016 - Cancelamento não transmitido, verifique o status da SEFAZ")
+aadd(aMsg,"017 - Cancelamento não autorizado. Verifique os motivos junto a SEFAZ")
+aadd(aMsg,"018 - Dpec autorizado. Emissão de DANFE autorizada")
+If (cAlias)->MODALIDADE == 5
+	//-->MENSAGENS DO DPEC
+		Do Case
+  	  		//--> Dpec Autorizado
+  			Case (cAlias)->CSTAT_SEF $ "124"
+  				cRetorno := aMsg[018]
+ 			//--> Lote transmitido com erro
+    		Case (cAlias)->CSTAT_SEF $ cPrbDpec
+  				cRetorno := aMsg[012]+". "+(cAlias)->CSTAT_SEFR+"/"+AllTrim(GetMsgSEF((cAlias)->CSTAT_SEFR,(cAlias)->XMOT_SEFR))
+  			
+  			//--> Lote transmitido e recusado
+  			Case (cAlias)->CSTAT_SEF $ "108,109"
+				cRetorno := aMsg[006]+" "+AllTrim(GetMsgSEF((cAlias)->CSTAT_SEF,(cAlias)->XMOT_SEF))	 	
+  			Case (cAlias)->CSTAT_SEF$"239
+				cRetorno := aMsg[011]
+  			
+  			//Lote Não transmitido
+  			Case (cAlias)->STATUS <=3	
+				Do Case
+					Case (cAlias)->STATUS == 1
+						cRetorno := aMsg[003]
+					Case (cAlias)->STATUS == 2
+   						cRetorno := aMsg[004]
+					Case (cAlias)->STATUS == 3
+						cRetorno := aMsg[002]
+   		 		End Case
+   			OtherWise
+				cRetorno := aMsg[010]+". "+(cAlias)->CSTAT_SEFR+"/"+AllTrim(GetMsgSEF((cAlias)->CSTAT_SEFR,(cAlias)->XMOT_SEFR))
+   		EndCase
+Else   
+Do Case
+	//--> NFe autorizada
+	Case !Empty((cAlias)->NFE_PROT)
+		If (cAlias)->STATUSCANC==0
+			cRetorno := aMsg[001]
+		Else
+			cRetorno := aMsg[015]
+		EndIf
+	//--> Lote não transmitido
+	Case (cAlias)->STATUS <=3	
+		Do Case
+			Case (cAlias)->STATUS == 1
+				cRetorno := aMsg[003]
+			Case (cAlias)->STATUS == 2
+				cRetorno := aMsg[004]
+			Case (cAlias)->STATUS == 3
+				cRetorno := aMsg[002]
+		EndCase
+	//--> Lote transmitido e recusado
+	Case !Empty((cAlias)->RECIBO_SEF) .And. !(cAlias)->CSTAT_SEF == "103"
+	
+		Do Case
+			Case (cAlias)->CSTAT_SEF $ "108,109"
+				cRetorno := aMsg[006]+" "+AllTrim(GetMsgSEF((cAlias)->CSTAT_SEF,(cAlias)->XMOT_SEF))
+			Case (cAlias)->CSTAT_SEF $ "239
+				cRetorno := aMsg[011]
+			Case (cAlias)->CSTAT_SEF $ cPrbTotvs
+				cRetorno := "999 - "+(cAlias)->CSTAT_SEFR+"/"+AllTrim(GetMsgSEF((cAlias)->CSTAT_SEFR,(cAlias)->XMOT_SEFR))+". "+;
+										"Retorno inesperado, entre em contato com a Totvs."
+			OtherWise
+				cRetorno := aMsg[005]+". "+(cAlias)->CSTAT_SEFR+"/"+AllTrim(GetMsgSEF((cAlias)->CSTAT_SEFR,(cAlias)->XMOT_SEFR))
+		EndCase
+	//--> Lote transmitido e sem retorno
+	Case ((cAlias)->STATUSLOTE==1) .Or. (cAlias)->CSTAT_SEFR $ "105,108,109"
+		
+		nTempo :=  SubtHoras((cAlias)->DTREC_SEF,(cAlias)->HRREC_SEF,Date(),Time())
+		Do Case
+			Case Val(SubStr(SpedGetMv("MV_MODALID",(cAlias)->ID_ENT),1,1))==1 .And. nTempo > nEspera
+				cRetorno := aMsg[007]
+			Case Val(SubStr(SpedGetMv("MV_MODALID",(cAlias)->ID_ENT),1,1))==2 .And. nTempo > nEspera
+				cRetorno := aMsg[008]
+			Case nTempo <= nEspera
+				cRetorno := aMsg[009]
+		EndCase
+	//--> Lote transmitido com erro
+	Case !Empty((cAlias)->CSTAT_SEFR) .And. !(cAlias)->CSTAT_SEFR $ "104"		
+		Do Case
+			Case (cAlias)->CSTAT_SEF$"239
+				cRetorno := aMsg[011]
+			Case (cAlias)->CSTAT_SEFR $ cPrbTotvs
+				cRetorno := "999 - "+(cAlias)->CSTAT_SEFR+"/"+AllTrim(GetMsgSEF((cAlias)->CSTAT_SEFR,(cAlias)->XMOT_SEFR))+". Retorno inexperado, entre em contato com a Totvs."
+			Case (cAlias)->CSTAT_SEF$"110"
+				cRetorno := aMsg[012]+". "+(cAlias)->CSTAT_SEFR+"/"+AllTrim(GetMsgSEF((cAlias)->CSTAT_SEFR,(cAlias)->XMOT_SEFR))
+			OtherWise
+				cRetorno := aMsg[010]+". "+(cAlias)->CSTAT_SEFR+"/"+AllTrim(GetMsgSEF((cAlias)->CSTAT_SEFR,(cAlias)->XMOT_SEFR))
+		EndCase
+	//--> Cancelamento e inutilização
+	Case (cAlias)->STATUS==7
+		Do Case
+			Case (cAlias)->STATUSCANC==1
+				cRetorno := aMsg[016]
+			OtherWise
+				cRetorno := aMsg[017]			
+		EndCase	
+	//--> Verifica a Situacao da NFe transmitida
+	OtherWise
+		Do Case
+			Case (cAlias)->CSTAT_NFE $ "110,301,302"
+				cRetorno := aMsg[013]+". "+(cAlias)->CSTAT_NFE+"/"+AllTrim(GetMsgSEF((cAlias)->CSTAT_NFE,(cAlias)->XMOT_NFE))
+			Case (cAlias)->CSTAT_NFE $  cPrbTotvs
+				cRetorno := "999 - "+(cAlias)->CSTAT_SEFR+"/"+AllTrim(GetMsgSEF((cAlias)->CSTAT_SEFR,(cAlias)->XMOT_SEFR))+". Retorno inexperado, entre em contato com a Totvs."
+			Case Empty((cAlias)->CSTAT_NFE)
+				cRetorno := aMsg[004]
+			OtherWise
+				cRetorno := aMsg[014]+". "+(cAlias)->CSTAT_NFE+"/"+AllTrim(GetMsgSEF((cAlias)->CSTAT_NFE,(cAlias)->XMOT_NFE))
+	EndCase			
+EndCase	
+EndIf
+Return(cRetorno)
+
+Return(FinishSped(lRetorno))

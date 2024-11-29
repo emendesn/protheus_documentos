@@ -1,0 +1,202 @@
+Group Totvs Services SPED
+   Version=7.0
+   VSSDB=
+   HasProperties=1
+   Properties
+      BeforeApply=
+      AfterApply=
+      Icon=
+      ID=
+      Version=
+      PalmName=
+      OutPut=
+   End
+   ProjectsCount=5
+   Project Genérico
+      FoldersCount=4
+      Folder FrameWork
+         VSSPath=Fontes
+         FilesCount=3
+         File \ver811\fiscal\sped\TotvsServiceSped\sped_fw01.prx
+             Type=T
+         End
+         File \VER811\Fiscal\SPED\TotvsServiceSped\sped_fw02.prx
+             Type=T
+         End
+         File \VER811\Fiscal\SPED\TotvsServiceSped\TLayOutTax.prx
+             Type=T
+         End
+      End
+      Folder WS Generico
+         VSSPath=Nova Pasta2
+         FilesCount=2
+         File \VER811\Fiscal\SPED\TotvsServiceSped\SPED_WSADM01.PRX
+             Type=T
+         End
+         File \VER811\Fiscal\SPED\TotvsServiceSped\SPED_WSfw01.PRX
+             Type=T
+         End
+      End
+      Folder WSC Generico
+         VSSPath=Nova Pasta3
+         FilesCount=2
+         File \VER811\Fiscal\SPED\Genericos\SPED_WSCFW.PRW
+             Type=T
+         End
+         File \VER811\Fiscal\SPED\Genericos\SPED_WSCADM.PRW
+             Type=T
+         End
+      End
+      Folder Lib
+         VSSPath=Nova Pasta4
+         FilesCount=7
+         File \ver811\matxfuna.prx
+             Type=T
+         End
+         File \ver811\matxfunb.prx
+             Type=T
+         End
+         File \ver811\matxfunc.prx
+             Type=T
+         End
+         File \ver811\sigavld.prx
+             Type=T
+         End
+         File \ver811\tecxfun.prx
+             Type=T
+         End
+         File \ver811\webservices\lib\WSXLIB.PRX
+             Type=T
+         End
+         File \ver811\WebServices\Lib\WSXLIB.PRX
+             Type=T
+         End
+      End
+   End
+   Project Nota Eletrônica
+      FoldersCount=5
+      Folder WSC SEFAZNFe
+         VSSPath=Nova Pasta1
+         FilesCount=7
+         File \VER811\Fiscal\SPED\TotvsServiceSped\WscSEFAZNfeCancelamento.prw
+             Type=T
+         End
+         File \VER811\Fiscal\SPED\TotvsServiceSped\WscSEFAZNfeConsulta.prw
+             Type=T
+         End
+         File \VER811\Fiscal\SPED\TotvsServiceSped\WscSEFAZNfeInutilizacao.prw
+             Type=T
+         End
+         File \VER811\Fiscal\SPED\TotvsServiceSped\WscSEFAZNfeRecepcao.prw
+             Type=T
+         End
+         File \VER811\Fiscal\SPED\TotvsServiceSped\WscSEFAZNfeRetRecepcao.prw
+             Type=T
+         End
+         File \VER811\Fiscal\SPED\TotvsServiceSped\WscSEFAZNfeStatusServico.prw
+             Type=T
+         End
+         File \VER811\Fiscal\SPED\TotvsServiceSped\WscSEFAZCadConsultaCadastro.prw
+             Type=T
+         End
+      End
+      Folder WS NFe
+         VSSPath=Nova Pasta2
+         FilesCount=1
+         File \VER811\Fiscal\SPED\TotvsServiceSped\sped_wsnfebra.prx
+             Type=T
+         End
+      End
+      Folder WF
+         VSSPath=Nova Pasta4
+         FilesCount=1
+         File \VER811\Fiscal\SPED\TotvsServiceSped\sped_wf.prx
+             Type=T
+         End
+      End
+      Folder WS Genérico
+         VSSPath=Nova Pasta6
+         FilesCount=4
+         File \ver811\fiscal\Sped\TotvsServiceSped\SPED_WSCFG01.PRX
+             Type=T
+         End
+         File \ver811\fiscal\Sped\NFE\SPED_WSCCFGNFE.prw
+             Type=T
+         End
+         File \ver811\fiscal\Sped\NFE\SPED_WSCNFEEBRA.prw
+             Type=T
+         End
+         File \ver811\fiscal\Sped\NFE\SPED_WSCNFESBRA.prw
+             Type=T
+         End
+      End
+      Folder WSC SEFAZCTe
+         VSSPath=Nova Pasta6
+         FilesCount=6
+         File \VER811\Fiscal\SPED\TotvsServiceSped\WscSEFAZCteStatusServico.prx
+             Type=T
+         End
+         File \VER811\Fiscal\SPED\TotvsServiceSped\WscSEFAZCTeCancelamento.prw
+             Type=T
+         End
+         File \VER811\Fiscal\SPED\TotvsServiceSped\WscSEFAZCTeConsulta.prw
+             Type=T
+         End
+         File \VER811\Fiscal\SPED\TotvsServiceSped\WscSEFAZCTeInutilizacao.prw
+             Type=T
+         End
+         File \VER811\Fiscal\SPED\TotvsServiceSped\WscSEFAZCTeRecepcao.prw
+             Type=T
+         End
+         File \VER811\Fiscal\SPED\TotvsServiceSped\WscSEFAZCTeRetRecepcao.prw
+             Type=T
+         End
+      End
+   End
+   Project Contabil
+      FoldersCount=2
+      Folder WS Entidades
+         VSSPath=Nova Pasta1
+         FilesCount=3
+         File \VER811\Fiscal\SPED\TotvsServiceSped\SPED_WSCTB01.PRX
+             Type=T
+         End
+         File \VER811\Fiscal\SPED\TotvsServiceSped\SPED_WSCTB02.PRX
+             Type=T
+         End
+         File \VER811\Fiscal\SPED\TotvsServiceSped\SPED_WSCTB03.PRX
+             Type=T
+         End
+      End
+      Folder WSC Entidades
+         VSSPath=Nova Pasta2
+         FilesCount=3
+         File \VER811\Fiscal\SPED\Contabil\SPEDWSCCTBMOVIMENTOS.PRW
+             Type=T
+         End
+         File \VER811\Fiscal\SPED\Contabil\SPEDWSCCTBDEMONSTRACOESCONTABEIS.PRW
+             Type=T
+         End
+         File \VER811\Fiscal\SPED\Contabil\SPEDWSCCTBENTIDADES.PRW
+             Type=T
+         End
+      End
+   End
+   Project Fiscal
+      FoldersCount=0
+   End
+   Project site
+      FoldersCount=1
+      Folder MonitorSefaz
+         VSSPath=Nova Pasta1
+         FilesCount=2
+         File \VER811\Fiscal\SPED\TotvsServiceSped\MonitorSefaz.aph
+             Type=T
+         End
+         File \VER811\Fiscal\SPED\TotvsServiceSped\MonitorSefaz.Prw
+             Type=T
+         End
+      End
+   End
+   BatchBuild_Item0=Lib · DBF710
+End

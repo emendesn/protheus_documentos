@@ -1,0 +1,499 @@
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "APWEBSRV.CH"
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³WSCTB03   ³ Rev.  ³Eduardo Riera          ³ Data ³30.05.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Servico de manutencao das tabelas do projeto do SPED Conta- ³±±
+±±³          ³bil.                                                        ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³Esta rotina tem como objetivo efetuar a manutencao nas tabe-³±±
+±±³          ³las do SPED Contabil.                                       ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Observacao³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Totvs SPED Services Gateway                                ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Definicao das estruturas do Web Services                                ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+WSSTRUCT SPED_CTBDEMONSTRATIVORTF
+	WSDATA ID_ENT         AS STRING
+	WSDATA ORDEM          AS INTEGER
+	WSDATA DTINI          AS DATE
+	WSDATA DTFIM          AS DATE
+	WSDATA TEXTO          AS STRING OPTIONAL
+	WSDATA NOMEDEM        AS STRING
+	WSDATA ARQRTF         AS BASE64BINARY
+ENDWSSTRUCT
+
+WSSTRUCT SPED_CTBDEMONSTRATIVOS
+	WSDATA ID_ENT         AS STRING
+	WSDATA ORDEM          AS INTEGER
+	WSDATA DTINI          AS DATE
+	WSDATA DTFIM          AS DATE
+	WSDATA TEXTO          AS STRING OPTIONAL
+	WSDATA DEMONSTRACAO   AS ARRAY OF SPED_CTBLCTODODEMONSTRATIVO
+ENDWSSTRUCT
+
+WSSTRUCT SPED_CTBLCTODODEMONSTRATIVO
+	WSDATA COD_CTA_AGL      AS STRING
+	WSDATA NIVEL_CTA_AGL    AS INTEGER
+	WSDATA IND_VALOR        AS STRING
+	WSDATA DESCRICAO        AS STRING
+	WSDATA VALOR            AS FLOAT
+ENDWSSTRUCT
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Definicao do Web Service                                                ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+WSSERVICE SPEDCTBDEMONSTRACOESCONTABEIS;
+	DESCRIPTION "Serviço das entidades do SPED Contabíl referente aos demonstrativos contabéis"  ;
+	NAMESPACE "http://webservices.totvs.com.br/spedctbdemonstracoescontabeis.apw"
+
+WSDATA USERTOKEN            AS STRING
+WSDATA DEMONSTRATIVO        AS SPED_CTBDEMONSTRATIVOS
+WSDATA DEMONSTRATIVORTF     AS SPED_CTBDEMONSTRATIVORTF
+WSDATA MSG                  AS STRING
+
+WSMETHOD CtbBalancoPatrimonial     DESCRIPTION "Serviço de administração do balanço patrimonial do exercicio contabil"
+WSMETHOD CtbDRE                    DESCRIPTION "Serviço de administração do demonstrativo de resultados do exercicio contabil"
+WSMETHOD CtbOutrasRTF              DESCRIPTION "Serviço de administraçao de outras informações contabeis do exercicio contabil"
+
+ENDWSSERVICE
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³CtbBP     ³ Rev.  ³Eduardo Riera          ³ Data ³30.05.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Servico de manutencao da tabela de balanco patrimonial do   ³±±
+±±³          ³projeto SPED                                                ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³Esta rotina tem como objetivo efetuar a manutencao na tabela³±±
+±±³          ³do balanco patrimonial do projeto SPED                      ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Observacao³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Totvs SPED Services Gateway                                ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+WSMETHOD CtbBalancoPatrimonial WSRECEIVE USERTOKEN,Demonstrativo WSSEND MSG WSSERVICE SPEDCTBDEMONSTRACOESCONTABEIS
+
+Local lRetorno := .T.
+Local nX       := 0
+Local cQuery   := ""
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Inicializa o ambiente                                                   ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+InitSped()
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Parametros                                                              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If ::UserToken == "TOTVS"
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Valida parametros                                                       ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If lRetorno
+		If !Empty(::Demonstrativo:ID_ENT)
+			dbSelectArea("SPED001")
+			dbSetOrder(1)
+			If !MsSeek(::Demonstrativo:ID_ENT)
+				SetSoapFault("TOTVS SPED Services","001 - Codigo da entidade invalido")
+				lRetorno := .F.
+			EndIf
+		Else
+			SetSoapFault("TOTVS SPED Services","002 - Codigo da entidade em branco")
+			lRetorno := .F.	
+		EndIf
+	EndIf
+	If lRetorno
+		dbSelectArea("SPED200")
+		dbSetOrder(1)
+		If !MsSeek(::Demonstrativo:ID_ENT+STR(::Demonstrativo:ORDEM,18))
+			SetSoapFault("TOTVS SPED Services","003 -  Número do livro contabíl inválido")
+			lRetorno := .F.
+		EndIf
+	EndIf
+	If lRetorno
+		If ::Demonstrativo:DtIni > ::Demonstrativo:DtFim .Or.;
+			::Demonstrativo:DtFim <> LastDay(::Demonstrativo:DtFim) .Or.;
+			::Demonstrativo:DtIni <> FirstDay(::Demonstrativo:DtIni)
+			SetSoapFault("TOTVS SPED Services","004 - Período contabil invalido")
+			lRetorno := .F.
+		EndIf
+    EndIf
+	For nX := 1 To Len(::Demonstrativo:Demonstracao)
+		::Demonstrativo:Demonstracao[nX]:COD_CTA_AGL := PadR(::Demonstrativo:Demonstracao[nX]:COD_CTA_AGL,Len(SPED140->COD_AGL))
+		If lRetorno
+			dbSelectArea("SPED140")
+			dbSetOrder(2)
+			If !MsSeek(::Demonstrativo:ID_ENT+::Demonstrativo:Demonstracao[nX]:COD_CTA_AGL)
+				SetSoapFault("TOTVS SPED Services"+CRLF+;
+				"Conta: "+::Demonstrativo:Demonstracao[nX]:COD_CTA_AGL;
+				,"005 - Conta aglutinadora não informada")
+				lRetorno := .F.
+				Exit
+		    EndIf
+		EndIf
+		If lRetorno
+			If Empty(::Demonstrativo:Demonstracao[nX]:IND_VALOR) .Or. !::Demonstrativo:Demonstracao[nX]:IND_VALOR$"D,C"
+				SetSoapFault("TOTVS SPED Services","006 - Indicador de valor inválido. Os valores válidos são: D ou C")
+				lRetorno := .F.
+			EndIf
+		EndIf
+		If lRetorno
+	 		Begin Transaction
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Inclui a demonstracao se for necessario                                 ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	 		If nX == 1
+				dbSelectArea("SPED300")
+				dbSetOrder(1)
+				If MsSeek(::Demonstrativo:ID_ENT+STR(::Demonstrativo:ORDEM,18)+DTOS(::Demonstrativo:DTINI)+DTOS(::Demonstrativo:DTFIM))
+					RecLock("SPED300",.F.)
+					cQuery := "DELETE "
+					cQuery += "FROM SPED300A "
+					cQuery += "WHERE "
+					cQuery += "ID_ENT='"+::Demonstrativo:ID_ENT+"' AND "
+					cQuery += "ORDEM="+STR(::Demonstrativo:ORDEM,18)+" AND "
+					cQuery += "DTINI>= '"+DTOS(::Demonstrativo:DTINI)+"' AND "
+					cQuery += "DTFIM<= '"+DTOS(::Demonstrativo:DTFIM)+"' AND "
+					cQuery += "TIPO_DEM= '1' "
+					If TcSqlExec(cQuery) <> 0
+						SetSoapFault("TOTVS SPED Services",TcSqlError())
+						Return(FinishSped(.F.))
+					EndIf
+				Else
+					RecLock("SPED300",.T.)
+					SPED300->ID_ENT    := ::Demonstrativo:ID_ENT
+					SPED300->ORDEM     := ::Demonstrativo:ORDEM
+					SPED300->DTINI     := ::Demonstrativo:DTINI
+					SPED300->DTFIM     := ::Demonstrativo:DTFIM
+				EndIf
+				SPED300->CABDEM := IIF(!Empty(::Demonstrativo:TEXTO),::Demonstrativo:TEXTO,SPED300->CABDEM)
+			EndIf
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Balanco patrimonial                                                     ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ			
+			RecLock("SPED300A",.T.)
+			SPED300A->ID_ENT    := ::Demonstrativo:ID_ENT
+			SPED300A->ORDEM     := ::Demonstrativo:ORDEM
+			SPED300A->DTINI     := ::Demonstrativo:DTINI
+			SPED300A->DTFIM     := ::Demonstrativo:DTFIM
+			SPED300A->TIPO_DEM  := '1'
+			SPED300A->COD_AGL   := ::Demonstrativo:Demonstracao[nX]:COD_CTA_AGL
+			SPED300A->NIVEL     := ::Demonstrativo:Demonstracao[nX]:NIVEL_CTA_AGL
+			SPED300A->DESCRI    := ::Demonstrativo:Demonstracao[nX]:DESCRICAO
+			SPED300A->INDVALOR  := ::Demonstrativo:Demonstracao[nX]:IND_VALOR
+			SPED300A->VALOR     := ::Demonstrativo:Demonstracao[nX]:VALOR		
+			End Transaction
+		EndIf
+	Next nX
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Preenche a variavel de retorno do WS                                    ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	::MSG := "Ok"
+Else
+	SetSoapFault("TOTVS SPED Services","Invalid Token")
+	lRetorno := .F.
+EndIf
+Return(FinishSped(lRetorno))
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³CtbDRE    ³ Rev.  ³Eduardo Riera          ³ Data ³30.05.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Servico de manutencao da tabela de DRE do projeto SPED      ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³Esta rotina tem como objetivo efetuar a manutencao na tabela³±±
+±±³          ³do DRE do projeto SPED                                      ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Observacao³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Totvs SPED Services Gateway                                ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+WSMETHOD CtbDRE  WSRECEIVE USERTOKEN,Demonstrativo WSSEND MSG WSSERVICE SPEDCTBDEMONSTRACOESCONTABEIS
+
+Local lRetorno := .T.
+Local nX       := 0
+Local cQuery   := ""
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Inicializa o ambiente                                                   ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+InitSped()
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Parametros                                                              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If ::UserToken == "TOTVS"
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Valida parametros                                                       ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If lRetorno
+		If !Empty(::Demonstrativo:ID_ENT)
+			dbSelectArea("SPED001")
+			dbSetOrder(1)
+			If !MsSeek(::Demonstrativo:ID_ENT)
+				SetSoapFault("TOTVS SPED Services","001 - Codigo da entidade invalido")
+				lRetorno := .F.
+			EndIf
+		Else
+			SetSoapFault("TOTVS SPED Services","002 - Codigo da entidade em branco")
+			lRetorno := .F.	
+		EndIf
+	EndIf
+	If lRetorno
+		dbSelectArea("SPED200")
+		dbSetOrder(1)
+		If !MsSeek(::Demonstrativo:ID_ENT+STR(::Demonstrativo:ORDEM,18))
+			SetSoapFault("TOTVS SPED Services","003 -  Número do livro contabíl inválido")
+			lRetorno := .F.
+		EndIf
+	EndIf	
+	If lRetorno
+		If ::Demonstrativo:DtIni > ::Demonstrativo:DtFim .Or.;
+			::Demonstrativo:DtFim <> LastDay(::Demonstrativo:DtFim) .Or.;
+			::Demonstrativo:DtIni <> FirstDay(::Demonstrativo:DtIni)
+			SetSoapFault("TOTVS SPED Services","004 - Período contabil invalido")
+			lRetorno := .F.
+		EndIf
+    EndIf
+	For nX := 1 To Len(::Demonstrativo:Demonstracao)
+		::Demonstrativo:Demonstracao[nX]:COD_CTA_AGL := PadR(::Demonstrativo:Demonstracao[nX]:COD_CTA_AGL,Len(SPED140->COD_AGL))
+		If lRetorno
+			dbSelectArea("SPED140")
+			dbSetOrder(2)
+			If !MsSeek(::Demonstrativo:ID_ENT+::Demonstrativo:Demonstracao[nX]:COD_CTA_AGL)
+				SetSoapFault("TOTVS SPED Services"+CRLF+;
+				"Conta: "+::Demonstrativo:Demonstracao[nX]:COD_CTA_AGL;
+				,"005 - Conta aglutinadora não informada")
+				lRetorno := .F.
+				Exit
+		    EndIf
+		EndIf
+		If lRetorno
+			If Empty(::Demonstrativo:Demonstracao[nX]:IND_VALOR) .Or. !::Demonstrativo:Demonstracao[nX]:IND_VALOR$"D,R,P,N"
+				SetSoapFault("TOTVS SPED Services","006 - Indicador de valor inválido. Os valores válidos são: D,R,P ou N")
+				lRetorno := .F.
+			EndIf
+		EndIf
+		If lRetorno
+	 		Begin Transaction
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Inclui a demonstracao se for necessario                                 ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	 		If nX == 1
+				dbSelectArea("SPED300")
+				dbSetOrder(1)
+				If MsSeek(::Demonstrativo:ID_ENT+STR(::Demonstrativo:ORDEM,18)+DTOS(::Demonstrativo:DTINI)+DTOS(::Demonstrativo:DTFIM))
+					RecLock("SPED300",.F.)
+					cQuery := "DELETE "
+					cQuery += "FROM SPED300A "
+					cQuery += "WHERE "
+					cQuery += "ID_ENT='"+::Demonstrativo:ID_ENT+"' AND "
+					cQuery += "ORDEM="+STR(::Demonstrativo:ORDEM,18)+" AND "
+					cQuery += "DTINI>= '"+DTOS(::Demonstrativo:DTINI)+"' AND "
+					cQuery += "DTFIM<= '"+DTOS(::Demonstrativo:DTFIM)+"' AND "
+					cQuery += "TIPO_DEM= '2' "
+					If TcSqlExec(cQuery) <> 0
+						SetSoapFault("TOTVS SPED Services",TcSqlError())
+						Return(FinishSped(.F.))
+					EndIf
+				Else
+					RecLock("SPED300",.T.)
+					SPED300->ID_ENT    := ::Demonstrativo:ID_ENT
+					SPED300->ORDEM     := ::Demonstrativo:ORDEM
+					SPED300->DTINI     := ::Demonstrativo:DTINI
+					SPED300->DTFIM     := ::Demonstrativo:DTFIM
+				EndIf
+				SPED300->CABDEM := IIF(!Empty(::Demonstrativo:TEXTO),::Demonstrativo:TEXTO,SPED300->CABDEM)
+			EndIf
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Balanco patrimonial                                                     ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ			
+			RecLock("SPED300A",.T.)
+			SPED300A->ID_ENT    := ::Demonstrativo:ID_ENT
+			SPED300A->ORDEM     := ::Demonstrativo:ORDEM
+			SPED300A->DTINI     := ::Demonstrativo:DTINI
+			SPED300A->DTFIM     := ::Demonstrativo:DTFIM
+			SPED300A->TIPO_DEM  := '2'
+			SPED300A->COD_AGL   := ::Demonstrativo:Demonstracao[nX]:COD_CTA_AGL
+			SPED300A->NIVEL     := ::Demonstrativo:Demonstracao[nX]:NIVEL_CTA_AGL
+			SPED300A->DESCRI    := ::Demonstrativo:Demonstracao[nX]:DESCRICAO
+			SPED300A->INDVALOR  := ::Demonstrativo:Demonstracao[nX]:IND_VALOR
+			SPED300A->VALOR     := ::Demonstrativo:Demonstracao[nX]:VALOR		
+			End Transaction
+		EndIf
+	Next nX
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Preenche a variavel de retorno do WS                                    ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	::MSG := "Ok"
+Else
+	SetSoapFault("TOTVS SPED Services","Invalid Token")
+	lRetorno := .F.
+EndIf
+Return(FinishSped(lRetorno))
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³CtbOutrasR³ Rev.  ³Eduardo Riera          ³ Data ³30.05.2007³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Servico de manutencao da tabela de outras demonstracoes     ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³Esta rotina tem como objetivo efetuar a manutencao na tabela³±±
+±±³          ³do outras demonstracoes do projeto SPED.                    ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Observacao³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Totvs SPED Services Gateway                                ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+WSMETHOD CtbOutrasRTF WSRECEIVE USERTOKEN,DemonstrativoRTF WSSEND MSG WSSERVICE SPEDCTBDEMONSTRACOESCONTABEIS
+
+Local lRetorno := .T.
+Local nX       := 0
+Local cQuery   := ""
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Inicializa o ambiente                                                   ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+InitSped()
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Parametros                                                              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If ::UserToken == "TOTVS"
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Valida parametros                                                       ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	::DemonstrativoRTF:NOMEDEM := PadR(::DemonstrativoRTF:NOMEDEM,Len(SPED300B->NOMEDEM))	
+	If lRetorno
+		If !Empty(::DemonstrativoRTF:ID_ENT)
+			dbSelectArea("SPED001")
+			dbSetOrder(1)
+			If !MsSeek(::DemonstrativoRTF:ID_ENT)
+				SetSoapFault("TOTVS SPED Services","001 - Codigo da entidade invalido")
+				lRetorno := .F.
+			EndIf
+		Else
+			SetSoapFault("TOTVS SPED Services","002 - Codigo da entidade em branco")
+			lRetorno := .F.	
+		EndIf
+	EndIf
+	If lRetorno
+		dbSelectArea("SPED200")
+		dbSetOrder(1)
+		If !MsSeek(::DemonstrativoRTF:ID_ENT+STR(::DemonstrativoRTF:ORDEM,18))
+			SetSoapFault("TOTVS SPED Services","003 -  Número do livro contabíl inválido")
+			lRetorno := .F.
+		EndIf
+	EndIf	
+
+	If lRetorno
+		If ::DemonstrativoRTF:DtIni > ::DemonstrativoRTF:DtFim .Or.;
+			::DemonstrativoRTF:DtFim <> LastDay(::DemonstrativoRTF:DtFim) .Or.;
+			::DemonstrativoRTF:DtIni <> FirstDay(::DemonstrativoRTF:DtIni)
+			SetSoapFault("TOTVS SPED Services","004 - Período contabil invalido")
+			lRetorno := .F.
+		EndIf
+    EndIf
+	If lRetorno
+ 		Begin Transaction
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Inclui a demonstracao se for necessario                                 ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+ 		dbSelectArea("SPED300")
+		dbSetOrder(1)
+		If MsSeek(::DemonstrativoRTF:ID_ENT+STR(::DemonstrativoRTF:ORDEM,18)+DTOS(::DemonstrativoRTF:DTINI)+DTOS(::DemonstrativoRTF:DTFIM))
+			RecLock("SPED300",.F.)
+			cQuery := "DELETE "
+			cQuery += "FROM SPED300B "
+			cQuery += "WHERE "
+			cQuery += "ID_ENT='"+::DemonstrativoRTF:ID_ENT+"' AND "
+			cQuery += "ORDEM='"+STR(::DemonstrativoRTF:ORDEM,18)+"' AND "
+			cQuery += "DTINI= '"+DTOS(::DemonstrativoRTF:DTINI)+"' AND "
+			cQuery += "DTFIM= '"+DTOS(::DemonstrativoRTF:DTINI)+"' AND "
+			cQuery += "NOMEDEM= '"+::DemonstrativoRTF:NOMEDEM+"' "
+			If TcSqlExec(cQuery) <> 0
+				SetSoapFault("TOTVS SPED Services",TcSqlError())
+				Return(FinishSped(.F.))
+			EndIf
+		Else
+			RecLock("SPED300",.T.)
+			SPED300->ID_ENT    := ::DemonstrativoRTF:ID_ENT
+			SPED300->ORDEM     := ::DemonstrativoRTF:ORDEM
+			SPED300->DTINI     := ::DemonstrativoRTF:DTINI
+			SPED300->DTFIM     := ::DemonstrativoRTF:DTFIM
+		EndIf
+		SPED300->CABDEM := IIF(!Empty(::DemonstrativoRTF:TEXTO),::DemonstrativoRTF:TEXTO,SPED300->CABDEM)
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Balanco patrimonial                                                     ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ			
+		RecLock("SPED300B",.T.)
+		SPED300B->ID_ENT    := ::DemonstrativoRTF:ID_ENT
+		SPED300B->ORDEM     := ::DemonstrativoRTF:ORDEM
+		SPED300B->DTINI     := ::DemonstrativoRTF:DTINI
+		SPED300B->DTFIM     := ::DemonstrativoRTF:DTFIM
+		SPED300B->NOMEDEM   := ::DemonstrativoRTF:NOMEDEM
+		SPED300A->ARQRTF    := ::DemonstrativoRTF:ARQRTF
+		End Transaction
+	EndIf
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Preenche a variavel de retorno do WS                                    ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	::MSG := "Ok"
+Else
+	SetSoapFault("TOTVS SPED Services","Invalid Token")
+	lRetorno := .F.
+EndIf
+Return(FinishSped(lRetorno))
+

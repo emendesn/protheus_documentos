@@ -1,0 +1,1 @@
+delete from TOP_FIELD where FIELD_TABLE like '%1892'

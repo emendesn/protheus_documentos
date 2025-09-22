@@ -1,0 +1,285 @@
+<!-- saved from url=(0022)http://internet.e-mail -->
+<html>
+
+<head>
+<meta http-equiv="Content-Type"
+content="text/html; charset=iso-8859-1">
+<meta name="GENERATOR" content="Microsoft FrontPage Express 2.0">
+<title>Liberação de Credito</title>
+</head>
+
+<body background="file:///e:/ap6/workflow/evento/fundo609.jpg"
+bgcolor="#FFFFFF" bgproperties="fixed">
+
+<form action="MAILTO:%WFMAILTO%" method="POST">
+    <p align="right"><strong><span style="text-transform: uppercase"></strong><font color="#FF0000"
+    size="3" face="Arial"><strong>Liberação de Crédito</strong></font><font
+    color="#FFFFFF" size="3"></font></p>
+    <p><br>
+    <br>
+    <input name="cAprovac" type="hidden" id="cAprovac" value="%cAprov%">
+    <br>
+    </p>
+    <table border="0" cellspacing="0" width="100%">
+        <tr>
+            <td width="9%">&nbsp;</td>
+            <td width="40%"><div align="center"><center><table
+            border="0" cellspacing="0" width="100%">
+                <tr>
+                    <td width="55%" bgcolor="#DFEFFF"
+                    bordercolor="#FFFFFF"><p align="left"><font
+                    size="4" face="Arial"><strong>Cliente</strong></font></p>
+                    </td>
+                    <td width="45%" bgcolor="#DFEFFF"
+                    bordercolor="#FFFFFF"><p align="right"><font
+                    size="4" face="Arial"><b>Pedido Venda </b>:
+                    %c5_num%</font></p>
+                    </td>
+                </tr>
+            </table>
+            </center></div><div align="center"><center><table
+            border="0" width="100%" height="50">
+                <tr>
+                    <td valign="top" width="132%" height="20"><font
+                    size="2" face="Arial"><b>Nome</b> :
+                    %c5_cliente% - %a1_nome%</font></td>
+                </tr>
+                <tr>
+                    <td width="100%" height="18"><font size="2"
+                    face="Arial"><b>Endereço</b>: %a1_end%</font></td>
+                </tr>
+            </table>
+            </center></div><table border="0" width="100%"
+            height="26">
+                <tr>
+                    <td width="51%" height="22"><font size="2"
+                    face="Arial"><b>Município/UF</b>: %a1_mun% -
+                    %a1_est%</font></td>
+                    <td width="13%" height="22"><font size="2"
+                    face="Arial"><b>CNPJ/CPF</b>:&nbsp;</font></td>
+                    <td width="36%" height="22"><p align="left"><font
+                    size="2" face="Arial">%a1_cgc%</font></p>
+                    </td>
+                </tr>
+            </table>
+            <table border="0" width="679">
+                <tr>
+                    <td width="340"><font size="2" face="Arial"><b>I.
+                    E.</b> : %a1_inscr%</font></td>
+                    <td width="81" height="22"><font size="2"
+                    face="Arial"><b>C.C.M </b>.:&nbsp;</font></td>
+                    <td width="238"><font size="2" face="Arial">%a1_inscrm%</font></td>
+                </tr>
+            </table>
+            <table border="0" width="100%">
+                <tr>
+                    <td width="51%" height="1"><font size="2"
+                    face="Arial"><b>Cond.Pagto.:</b> %c5_condpag%
+                    - %e4_descri%</font></td>
+                    <td width="49%" height="1"><font size="2"
+                    face="Arial"><b>Vendedor </b>: %c5_vend1% -
+                    %a3_nome%</font></td>
+                </tr>
+            </table>
+            <table border="1" cellpadding="2" cellspacing="1"
+            width="677">
+                <tr>
+                    <td width="50" bgcolor="#DFEFFF" height="19"><p
+                    align="center"><font face="Arial">Item</font></p>
+                    </td>
+                    <td width="234" bgcolor="#DFEFFF" height="19"><p
+                    align="center"><font face="Arial">Descrição
+                    Produto</font></p>
+                    </td>
+                    <td width="73" bgcolor="#DFEFFF" height="19"><font
+                    face="Arial">Prev. Entrega</font> </td>
+                    <td width="55" bgcolor="#DFEFFF" height="19"><p
+                    align="center"><font face="Arial">Unid<strong>.</strong></font></p>
+                    </td>
+                    <td width="58" bgcolor="#DFEFFF" height="19"><p
+                    align="center"><font face="Arial">Qtde<strong>.</strong></font></p>
+                    </td>
+                    <td width="69" bgcolor="#DFEFFF" height="19"><p
+                    align="center"><font face="Arial">Vlr.Unit.</font></p>
+                    </td>
+                    <td width="78" bgcolor="#DFEFFF" height="19"><p
+                    align="center"><font face="Arial">Vlr. Total</font></p>
+                    </td>
+                </tr>
+                <tr>
+                    <td width="50" height="18"><font size="2"
+                    face="Arial">%it.it%</font></td>
+                    <td width="234" height="18"><font size="2"
+                    face="Arial">%it.codprod% - %it.desc%</font></td>
+                    <td width="73" height="18"><font size="2"
+                    face="Arial">%it.prev%</font></td>
+                    <td width="55" height="18"><font size="2"
+                    face="Arial">%it.um%</font></td>
+                    <td width="58" height="18"><p align="right"><font
+                    size="2" face="Arial">%it.qtd%</font></p>
+                    </td>
+                    <td width="69" height="18"><p align="right"><font
+                    size="2" face="Arial">%it.vlruni%</font></p>
+                    </td>
+                    <td width="78" height="18"><p align="right"><font
+                    size="2" face="Arial">%it.vlrtot%</font></p>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="6" width="520"><p align="right"><font
+                    size="2" face="Arial"><strong>Valor Total</strong></font><strong>
+                    </strong></p>
+                    </td>
+                    <td width="78"><p align="right"><font
+                    size="2" face="Arial">%vlrtot%</font></p>
+                    </td>
+                </tr>
+            </table>
+            <div align="center"><center><table border="0"
+            cellspacing="1" width="100%" height="46">
+                <tr>
+                    <td height="14">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td width="100%" bgcolor="#DFEFFF"
+                    height="24"><p align="left"><font size="4"
+                    face="Arial"><strong>Dados Financeiros</strong></font></p>
+                    </td>
+                </tr>
+            </table>
+            </center></div><div align="center"><center><table
+            border="0" width="618">
+                <tr>
+                    <td width="186"><font size="2" face="Arial">Limite
+                    de Crédito:</font></td>
+                    <td align="right" width="116"><font size="2"
+                    face="Arial">%a1_lc%</font></td>
+                    <td width="6">&nbsp;</td>
+                    <td width="154"><font size="2" face="Arial">Titulos
+                    Protestados:</font></td>
+                    <td align="right" width="124"><font size="2"
+                    face="Arial">%a1_titprot%</font></td>
+                </tr>
+                <tr>
+                    <td width="186"><font size="2" face="Arial">Saldo
+                    de Duplicatas:</font></td>
+                    <td align="right" width="116"><font size="2"
+                    face="Arial">%a1_saldup%</font></td>
+                    <td width="6">&nbsp;</td>
+                    <td width="154"><font size="2" face="Arial">Cheques
+                    Devolvidos:</font></td>
+                    <td align="right" width="124"><font size="2"
+                    face="Arial">%a1_chqdevo%</font></td>
+                </tr>
+                <tr>
+                    <td width="186"><font size="2" face="Arial">Pedidos
+                    Liberados:</font></td>
+                    <td align="right" width="116"><font size="2"
+                    face="Arial">%a1_salpedl%</font></td>
+                    <td width="6">&nbsp;</td>
+                    <td width="154"><font size="2" face="Arial">Maior
+                    Compra:</font></td>
+                    <td align="right" width="124"><font size="2"
+                    face="Arial">%a1_mcompra%</font></td>
+                </tr>
+                <tr>
+                    <td width="186"><font size="2" face="Arial">Saldo
+                    Limite de Crédito:</font></td>
+                    <td align="right" width="116"><font size="2"
+                    face="Arial">%a1_sallim%</font></td>
+                    <td width="6">&nbsp;</td>
+                    <td width="154"><font size="2" face="Arial">Maior
+                    Duplicata:</font></td>
+                    <td align="right" width="124"><font size="2"
+                    face="Arial">%a1_maidupl%</font></td>
+                </tr>
+                <tr>
+                  <td width="186"><font size="2" face="Arial">Pedido Atual:</font></td>
+                  <td align="right" width="116"><font size="2"
+                    face="Arial">%a1_pedatu%&nbsp;</font></td>
+                    <td width="6">&nbsp;</td>
+                    <td width="154"><font size="2" face="Arial">Media
+                    de Atrasos:</font></td>
+                    <td align="right" width="124"><font size="2"
+                    face="Arial">%a1_atr%</font></td>
+                </tr>
+                <tr>
+                  <td width="186"><font size="2" face="Arial">Saldo de Pedidos:</font></td>
+                  <td align="right" width="116"><font size="2"
+                    face="Arial">%a1_salped%</font></td>
+                    <td width="6">&nbsp;</td>
+                    <td width="154"><font size="2" face="Arial">Vencto
+                    Limite Credito:</font></td>
+                    <td align="right" width="124"><font size="2"
+                    face="Arial">%a1_venclc%</font></td>
+                </tr>
+                <tr>
+                  <td width="186"><font size="2" face="Arial">Primeira compra:</font></td>
+                  <td align="right" width="116"><font size="2"
+                    face="Arial">%a1_pricom%</font></td>
+                    <td width="6">&nbsp;</td>
+                    <td width="154"><font size="2" face="Arial">Atraso
+                    atual:</font></td>
+                    <td align="right" width="124"><font size="2"
+                    face="Arial">%a1_matr%</font></td>
+                </tr>
+                <tr>
+                  <td width="186"><font size="2" face="Arial">Compras realizadas:</font></td>
+                  <td align="right" width="116"><font size="2"
+                    face="Arial">%a1_nrocom%</font></td>
+                    <td width="6">&nbsp;</td>
+                    <td width="154"><font size="2" face="Arial">Ultima
+                    Compra:</font></td>
+                    <td align="right" width="124"><font size="2"
+                    face="Arial">%a1_ultcom%</font></td>
+                </tr>
+                <tr>
+                  <td width="186"><font size="2" face="Arial">Data ult. tit Protestado:</font></td>
+                  <td align="right" width="116"><font size="2"
+                    face="Arial">%a1_dtultit%</font></td>
+                    <td width="6">&nbsp;</td>
+                    <td width="154"><font size="2" face="Arial">Vendas
+                    Acumuladas:</font></td>
+                    <td align="right" width="124"><font size="2"
+                    face="Arial">%a1_vacum%</font></td>
+                </tr>
+                <tr>
+                    <td width="186">&nbsp;</td>
+                    <td align="right" width="116">&nbsp;</td>
+                    <td width="6">&nbsp;</td>
+                    <td width="154"><font size="2" face="Arial">Data
+                    ult. cheque devolvido:</font></td>
+                    <td align="right" width="124"><font size="2"
+                    face="Arial">%a1_dtulchq%</font></td>
+                </tr>
+            </table>
+            </center></div><table border="0" width="100%">
+                <tr>
+                    <td width="100%"><font face="Arial"><input
+                    type="radio" checked name="Aprovacao"
+                    value="%Aprovacao%S">Crédito
+                    Aprovado&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <input
+                    type="radio" name="Aprovacao"
+                    value="%Aprovacao%N">Crédito Rejeitado</font>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp; </td>
+                </tr>
+                <tr>
+                    <td width="101%" height="118">Favor
+                    especificar motivo: <blockquote>
+                        <p><textarea name="S1" rows="3" cols="64">%obs%</textarea></p>
+                    </blockquote>
+                    </td>
+                </tr>
+            </table>
+            <p><font face="Arial"><input type="submit" name="B1"
+            value="Enviar"></font><input type="reset" name="B2"
+            value="Limpar"></p>
+            </td>
+        </tr>
+    </table>
+</form>
+</body>
+</html>
